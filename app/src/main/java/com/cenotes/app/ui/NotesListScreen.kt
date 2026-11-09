@@ -56,6 +56,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
@@ -440,21 +441,24 @@ private fun SideMenu(
         selectedIconColor = MaterialTheme.colorScheme.primary,
         selectedTextColor = MaterialTheme.colorScheme.onSurface,
     )
+    // Like Google Keep: a narrow panel (not the full width), square on the right, with the
+    // selected item as a pill that runs from the left edge.
     ModalDrawerSheet(
+        modifier = Modifier.width(DrawerWidth),
         drawerContainerColor = LocalGlass.current.menu,
-        drawerShape = RoundedCornerShape(topEnd = 32.dp, bottomEnd = 32.dp),
+        drawerShape = RectangleShape,
     ) {
         Column(
             Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 12.dp),
+                .padding(end = 12.dp),
         ) {
             Text(
                 stringResource(R.string.app_name),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(start = 16.dp, top = 28.dp, bottom = 16.dp),
+                modifier = Modifier.padding(start = 28.dp, top = 28.dp, bottom = 16.dp),
             )
             MenuItem(NotesIcon, stringResource(R.string.section_notes), section == Section.All, colors) {
                 onSection(Section.All)
@@ -464,7 +468,7 @@ private fun SideMenu(
                     stringResource(R.string.labels),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 6.dp),
+                    modifier = Modifier.padding(start = 28.dp, top = 16.dp, bottom = 6.dp),
                 )
             }
             labels.forEach { label ->
@@ -475,7 +479,7 @@ private fun SideMenu(
                     selected = section == Section.ByLabel(label.id),
                     onClick = { onSection(Section.ByLabel(label.id)) },
                     colors = colors,
-                    shape = CircleShape,
+                    shape = KeepItemShape,
                 )
             }
             MenuItem(Icons.Filled.Edit, stringResource(R.string.labels_edit), false, colors, onEditLabels)
@@ -503,9 +507,12 @@ private fun MenuItem(
         selected = selected,
         onClick = onClick,
         colors = colors,
-        shape = CircleShape,
+        shape = KeepItemShape,
     )
 }
+
+private val DrawerWidth = 280.dp
+private val KeepItemShape = RoundedCornerShape(topStartPercent = 0, topEndPercent = 50, bottomEndPercent = 50, bottomStartPercent = 0)
 
 @Composable
 private fun SearchField(value: String, onValueChange: (String) -> Unit, hazeState: HazeState) {
