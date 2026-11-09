@@ -12,8 +12,8 @@ android {
         applicationId = "com.cenotes.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 6
-        versionName = "0.6"
+        versionCode = 7
+        versionName = "0.7"
     }
 
     buildTypes {
@@ -49,5 +49,6 @@ dependencies {
     ksp(libs.androidx.room.compiler)
     implementation(libs.haze)
     implementation(libs.coil.compose)
+    implementation(libs.glance.appwidget)
     debugImplementation(libs.androidx.ui.tooling)
 }

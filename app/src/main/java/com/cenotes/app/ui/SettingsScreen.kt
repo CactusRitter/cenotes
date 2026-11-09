@@ -67,12 +67,26 @@ import com.cenotes.app.ui.theme.Accent
 import com.cenotes.app.ui.theme.LocalGlass
 import com.cenotes.app.ui.theme.PaletteIcon
 import kotlin.math.roundToInt
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material3.Button
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Switch
+import androidx.compose.runtime.rememberCoroutineScope
+import com.cenotes.app.data.Backup
+import com.cenotes.app.ui.theme.BackupIcon
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun SettingsScreen(
     settings: AppSettings,
+    backup: Backup,
     onAccentChange: (Accent) -> Unit,
     onTransparencyChange: (Int) -> Unit,
+    onNotesImported: () -> Unit,
     onBack: () -> Unit,
 ) {
     BackHandler(onBack = onBack)
@@ -149,6 +163,9 @@ fun SettingsScreen(
                 )
             }
 
+            Spacer(Modifier.height(12.dp))
+            BackupCard(backup, onNotesImported)
+
             Spacer(Modifier.height(40.dp))
             Text(
                 stringResource(R.string.version, version),
@@ -157,6 +174,90 @@ fun SettingsScreen(
                 modifier = Modifier.align(Alignment.CenterHorizontally),
             )
             Spacer(Modifier.height(24.dp))
+        }
+    }
+}
+
+/**
+ * Export to / import from a .zip the user picks with the system file picker (Drive, Downloads,
+ * a USB stick…). Images are optional so a backup can stay small.
+ */
+@Composable
+private fun BackupCard(backup: Backup, onNotesImported: () -> Unit) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var includeImages by rememberSaveable { mutableStateOf(true) }
+    var working by remember { mutableStateOf(false) }
+    var message by rememberSaveable { mutableStateOf<String?>(null) }
+
+    fun run(block: suspend () -> String) {
+        working = true
+        message = null
+        scope.launch {
+            message = try {
+                block()
+            } catch (e: Backup.NotABackupException) {
+                context.getString(R.string.backup_not_cenotes)
+            } catch (e: Exception) {
+                context.getString(R.string.backup_failed, e.localizedMessage ?: e.javaClass.simpleName)
+            }
+            working = false
+        }
+    }
+
+    val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
+        if (uri != null) run {
+            val r = backup.export(uri, includeImages)
+            context.getString(R.string.backup_exported, r.notes, r.images)
+        }
+    }
+    val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) run {
+            val r = backup.import(uri)
+            onNotesImported()
+            context.getString(R.string.backup_imported, r.added, r.skipped, r.images)
+        }
+    }
+
+    ExpandableCard(
+        icon = BackupIcon,
+        title = stringResource(R.string.backup),
+        subtitle = stringResource(R.string.backup_summary),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(stringResource(R.string.backup_include_images), style = MaterialTheme.typography.labelLarge)
+                Text(
+                    stringResource(if (includeImages) R.string.backup_include_images_on else R.string.backup_include_images_off),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Spacer(Modifier.width(12.dp))
+            Switch(checked = includeImages, onCheckedChange = { includeImages = it })
+        }
+        Spacer(Modifier.height(16.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Button(
+                onClick = {
+                    val date = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT).format(Date())
+                    exportLauncher.launch(context.getString(R.string.backup_file_name, date))
+                },
+                enabled = !working,
+                shape = CircleShape,
+                modifier = Modifier.weight(1f).height(48.dp),
+            ) { Text(stringResource(R.string.backup_export), fontWeight = FontWeight.Bold) }
+            FilledTonalButton(
+                onClick = { importLauncher.launch(arrayOf("application/zip", "application/octet-stream", "application/x-zip-compressed")) },
+                enabled = !working,
+                shape = CircleShape,
+                modifier = Modifier.weight(1f).height(48.dp),
+            ) { Text(stringResource(R.string.backup_import), fontWeight = FontWeight.Bold) }
+        }
+        val status = if (working) stringResource(R.string.backup_working) else message
+        if (status != null) {
+            Spacer(Modifier.height(12.dp))
+            Text(status, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
         }
     }
 }

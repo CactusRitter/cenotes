@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.cenotes.app.CenotesApp
+import com.cenotes.app.ExternalViews
 import com.cenotes.app.data.ImageStore
 import com.cenotes.app.data.Note
 import com.cenotes.app.data.NoteDao
@@ -19,13 +20,28 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-class NotesViewModel(private val dao: NoteDao, val images: ImageStore) : ViewModel() {
+class NotesViewModel(private val app: CenotesApp) : ViewModel() {
+    private val dao: NoteDao = app.database.noteDao()
+    val images: ImageStore = app.images
 
     init {
-        // Once per app start: drop image files that no note uses any more.
+        // Once per app start: drop image files that no note uses any more, and make sure the
+        // widgets and launcher shortcuts show the current notes.
         viewModelScope.launch {
             val referenced = dao.allContents().flatMap { imageNames(it) }.toSet()
             images.cleanUp(referenced)
+            ExternalViews.refresh(app)
+        }
+    }
+
+    /**
+     * Writes run in the app-wide scope (not the screen's), so a save started while leaving a
+     * note always completes; afterwards widgets and shortcuts are refreshed.
+     */
+    private fun write(block: suspend () -> Unit) {
+        app.appScope.launch {
+            block()
+            ExternalViews.refresh(app)
         }
     }
 
@@ -66,56 +82,50 @@ class NotesViewModel(private val dao: NoteDao, val images: ImageStore) : ViewMod
      * Persists the editor's content. An empty note is not stored (and an existing one that was
      * emptied is deleted). The edit time only moves when the text actually changed.
      */
-    fun save(original: Note?, title: String, content: String, pinned: Boolean) {
-        viewModelScope.launch {
-            if (title.isBlank() && content.isBlank()) {
-                original?.let { dao.delete(it) }
-                return@launch
-            }
-            if (original == null) {
-                dao.insert(Note(title = title, content = content, pinned = pinned))
-                return@launch
-            }
-            val textChanged = original.title != title || original.content != content
-            if (!textChanged && original.pinned == pinned) return@launch
-            dao.update(
-                original.copy(
-                    title = title,
-                    content = content,
-                    pinned = pinned,
-                    updatedAt = if (textChanged) System.currentTimeMillis() else original.updatedAt,
-                )
+    fun save(original: Note?, title: String, content: String, pinned: Boolean) = write {
+        if (title.isBlank() && content.isBlank()) {
+            original?.let { dao.delete(it) }
+            return@write
+        }
+        if (original == null) {
+            dao.insert(Note(title = title, content = content, pinned = pinned))
+            return@write
+        }
+        val textChanged = original.title != title || original.content != content
+        if (!textChanged && original.pinned == pinned) return@write
+        dao.update(
+            original.copy(
+                title = title,
+                content = content,
+                pinned = pinned,
+                updatedAt = if (textChanged) System.currentTimeMillis() else original.updatedAt,
             )
-        }
+        )
     }
 
-    fun togglePin(note: Note) {
-        viewModelScope.launch { dao.update(note.copy(pinned = !note.pinned)) }
-    }
+    fun togglePin(note: Note) = write { dao.update(note.copy(pinned = !note.pinned)) }
 
-    fun delete(note: Note) {
-        viewModelScope.launch {
-            dao.delete(note)
-            _lastDeleted.value = note
-        }
+    fun delete(note: Note) = write {
+        dao.delete(note)
+        _lastDeleted.value = note
     }
 
     fun undoDelete() {
         val note = _lastDeleted.value ?: return
         _lastDeleted.value = null
-        viewModelScope.launch { dao.insert(note) }
+        write { dao.insert(note) }
     }
 
     fun clearLastDeleted() {
         _lastDeleted.value = null
     }
 
+    /** After an import: widgets and shortcuts need to show the new notes. */
+    fun refreshExternalViews() = write { }
+
     companion object {
         val Factory = viewModelFactory {
-            initializer {
-                val app = this[APPLICATION_KEY] as CenotesApp
-                NotesViewModel(app.database.noteDao(), app.images)
-            }
+            initializer { NotesViewModel(this[APPLICATION_KEY] as CenotesApp) }
         }
     }
 }

@@ -38,6 +38,28 @@ internal val ImageRegex = Regex("""^!\[(small)?]\(([^)\s]+)\)\s*$""")
 fun firstImage(source: String): String? =
     source.lineSequence().firstNotNullOfOrNull { ImageRegex.matchEntire(it)?.groupValues?.get(2) }
 
+/** The note without its image lines (for backups that leave pictures out). */
+fun withoutImages(source: String): String =
+    source.lines().filterNot { ImageRegex.matches(it) }.joinToString("\n")
+
+/** Plain text for widgets: no Markdown markers, checkboxes as ☐ / ☑, no images. */
+fun markdownToPlainText(source: String): String =
+    parseMarkdown(source).mapNotNull { block ->
+        when (block) {
+            is MdBlock.Task -> "  ".repeat(block.indent) + (if (block.checked) "☑ " else "☐ ") + stripInline(block.text)
+            is MdBlock.Bullet -> "  ".repeat(block.indent) + "• " + stripInline(block.text)
+            is MdBlock.Numbered -> "  ".repeat(block.indent) + block.number + " " + stripInline(block.text)
+            is MdBlock.Heading -> stripInline(block.text)
+            is MdBlock.Quote -> stripInline(block.text)
+            is MdBlock.Paragraph -> stripInline(block.text)
+            is MdBlock.Code -> block.text
+            MdBlock.Rule, MdBlock.Blank, is MdBlock.Image -> null
+        }
+    }.joinToString("\n")
+
+private fun stripInline(text: String): String =
+    inlineMarkdown(text, InlineColors(androidx.compose.ui.graphics.Color.Unspecified, androidx.compose.ui.graphics.Color.Unspecified), links = false).text
+
 fun imageNames(source: String): List<String> =
     source.lineSequence().mapNotNull { ImageRegex.matchEntire(it)?.groupValues?.get(2) }.toList()
 

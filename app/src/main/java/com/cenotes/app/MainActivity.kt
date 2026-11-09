@@ -1,25 +1,28 @@
 package com.cenotes.app
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.EnterExitState
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.PointerEventPass
-import androidx.compose.ui.input.pointer.PointerInputScope
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerInputScope
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cenotes.app.ui.NoteEditorScreen
@@ -39,10 +42,16 @@ private suspend fun PointerInputScope.blockAllTouches() {
 }
 
 class MainActivity : ComponentActivity() {
+    /** Request from a launcher shortcut or widget, consumed by the UI. */
+    private var pendingAction by mutableStateOf<LaunchAction?>(null)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        val repo = (application as CenotesApp).settings
+        // After a rotation the intent was already handled; only a fresh start acts on it.
+        if (savedInstanceState == null) pendingAction = LaunchAction.from(intent)
+        val app = application as CenotesApp
+        val repo = app.settings
         setContent {
             val settings by repo.state.collectAsStateWithLifecycle()
             CenotesTheme(settings) {
@@ -50,7 +59,37 @@ class MainActivity : ComponentActivity() {
                 // null = list; 0 = new note; otherwise the id of the note being edited.
                 var editingId by rememberSaveable { mutableStateOf<Long?>(null) }
                 var showSettings by rememberSaveable { mutableStateOf(false) }
+                // Each new note gets its own session, so "new note" always opens a blank editor.
+                var newNoteSession by rememberSaveable { mutableIntStateOf(0) }
+                var newNoteTemplate by rememberSaveable { mutableStateOf("") }
+                var searchRequest by rememberSaveable { mutableIntStateOf(0) }
+
+                fun startNewNote(template: String) {
+                    newNoteTemplate = template
+                    newNoteSession++
+                    showSettings = false
+                    editingId = 0L
+                }
+
+                LaunchedEffect(pendingAction) {
+                    when (val action = pendingAction) {
+                        is LaunchAction.NewNote -> startNewNote(action.template)
+                        is LaunchAction.OpenNote -> {
+                            showSettings = false
+                            editingId = action.id
+                        }
+                        LaunchAction.Search -> {
+                            showSettings = false
+                            editingId = null
+                            searchRequest++
+                        }
+                        null -> Unit
+                    }
+                    pendingAction = null
+                }
+
                 val screen = when {
+                    editingId == 0L -> "note:0:$newNoteSession"
                     editingId != null -> "note:$editingId"
                     showSettings -> "settings"
                     else -> "list"
@@ -72,30 +111,43 @@ class MainActivity : ComponentActivity() {
                             .fillMaxSize()
                             .then(if (leaving) Modifier.pointerInput(Unit) { blockAllTouches() } else Modifier),
                     ) {
-                    when {
-                        target.startsWith("note:") -> NoteEditorScreen(
-                            noteId = target.removePrefix("note:").toLong(),
-                            viewModel = vm,
-                            onClose = { editingId = null },
-                        )
-                        target == "settings" -> SettingsScreen(
-                            settings = settings,
-                            onAccentChange = repo::setAccent,
-                            onTransparencyChange = repo::setTransparency,
-                            onBack = { showSettings = false },
-                        )
-                        else -> NotesListScreen(
-                            viewModel = vm,
-                            layout = settings.layout,
-                            onLayoutChange = repo::setLayout,
-                            onOpenNote = { editingId = it },
-                            onNewNote = { editingId = 0L },
-                            onOpenSettings = { showSettings = true },
-                        )
-                    }
+                        when {
+                            target.startsWith("note:") -> NoteEditorScreen(
+                                noteId = target.split(':')[1].toLong(),
+                                template = newNoteTemplate,
+                                viewModel = vm,
+                                onClose = { editingId = null },
+                            )
+                            target == "settings" -> SettingsScreen(
+                                settings = settings,
+                                backup = app.backup,
+                                onAccentChange = { accent ->
+                                    repo.setAccent(accent)
+                                    vm.refreshExternalViews() // widgets use the accent colour too
+                                },
+                                onTransparencyChange = repo::setTransparency,
+                                onNotesImported = vm::refreshExternalViews,
+                                onBack = { showSettings = false },
+                            )
+                            else -> NotesListScreen(
+                                viewModel = vm,
+                                layout = settings.layout,
+                                searchRequest = searchRequest,
+                                onLayoutChange = repo::setLayout,
+                                onOpenNote = { editingId = it },
+                                onNewNote = { startNewNote("") },
+                                onOpenSettings = { showSettings = true },
+                            )
+                        }
                     }
                 }
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        pendingAction = LaunchAction.from(intent)
     }
 }

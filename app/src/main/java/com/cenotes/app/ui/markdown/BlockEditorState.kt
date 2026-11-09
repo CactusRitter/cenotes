@@ -219,8 +219,8 @@ class BlockEditorState(markdown: String) {
                 recomputeParents()
                 return
             }
-            block.value = TextFieldValue(parts[0], TextRange(parts[0].length))
             val nextType = if (block.type in ContinuingTypes) block.type else BlockType.PARAGRAPH
+            block.value = TextFieldValue(parts[0], TextRange(parts[0].length))
             var insertAt = index + 1
             var last: EditorBlock? = null
             parts.drop(1).forEach { text ->

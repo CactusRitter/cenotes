@@ -4,6 +4,8 @@ import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalActivity
+import androidx.compose.runtime.DisposableEffect
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -142,12 +144,14 @@ fun NoteEditorScreen(
     noteId: Long,
     viewModel: NotesViewModel,
     onClose: () -> Unit,
+    /** Initial Markdown for a new note (e.g. an empty checkbox for "Nueva lista"). */
+    template: String = "",
 ) {
     // All state is keyed by the note id so nothing can leak from one note into another.
     var original by remember(noteId) { mutableStateOf<Note?>(null) }
     var loaded by rememberSaveable(noteId) { mutableStateOf(noteId == 0L) }
     var title by rememberSaveable(noteId) { mutableStateOf("") }
-    var savedContent by rememberSaveable(noteId) { mutableStateOf("") }
+    var savedContent by rememberSaveable(noteId) { mutableStateOf(if (noteId == 0L) template else "") }
     var pinned by rememberSaveable(noteId) { mutableStateOf(false) }
     var closed by remember(noteId) { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf(false) }
@@ -237,6 +241,18 @@ fun NoteEditorScreen(
     }
 
     BackHandler { close() }
+
+    // Leaving the editor any other way (a widget or shortcut opens another note, the app is
+    // closed) still saves. Not on rotation: the editor comes straight back with its state.
+    val activity = LocalActivity.current
+    DisposableEffect(noteId) {
+        onDispose {
+            if (!closed && activity?.isChangingConfigurations != true) {
+                closed = true
+                if (loaded) viewModel.save(original, title, editor.toMarkdown(), pinned)
+            }
+        }
+    }
 
     GlassBackground {
         Column(

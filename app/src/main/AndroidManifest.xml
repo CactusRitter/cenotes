@@ -9,14 +9,43 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/Theme.Cenotes">
+        <!-- singleTask: widgets and shortcuts reuse the open app (onNewIntent) instead of a second copy. -->
         <activity
             android:name=".MainActivity"
-            android:exported="true">
+            android:exported="true"
+            android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
         </activity>
+
+        <receiver
+            android:name=".widget.NotesWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_notes_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_notes_info" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.TitlesWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_titles_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_titles_info" />
+        </receiver>
 
         <!-- Lets the camera app write a photo for us, and lets "Compartir" send note images. -->
         <provider

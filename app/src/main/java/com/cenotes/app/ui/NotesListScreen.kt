@@ -104,6 +104,8 @@ private val SearchHeight = 68.dp
 fun NotesListScreen(
     viewModel: NotesViewModel,
     layout: NoteLayout,
+    /** Bumped by the "Buscar" launcher shortcut to open the search field. */
+    searchRequest: Int,
     onLayoutChange: (NoteLayout) -> Unit,
     onOpenNote: (Long) -> Unit,
     onNewNote: () -> Unit,
@@ -116,6 +118,7 @@ fun NotesListScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val hazeState = rememberHazeState()
     var searchOpen by rememberSaveable { mutableStateOf(query.isNotEmpty()) }
+    LaunchedEffect(searchRequest) { if (searchRequest > 0) searchOpen = true }
 
     val deletedMessage = stringResource(R.string.note_deleted)
     val undoLabel = stringResource(R.string.undo)

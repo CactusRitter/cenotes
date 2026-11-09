@@ -13,6 +13,9 @@ interface NoteDao {
     @Query("SELECT * FROM notes ORDER BY pinned DESC, updatedAt DESC")
     fun observeAll(): Flow<List<Note>>
 
+    @Query("SELECT * FROM notes ORDER BY pinned DESC, updatedAt DESC")
+    suspend fun all(): List<Note>
+
     @Query("SELECT content FROM notes")
     suspend fun allContents(): List<String>
 
