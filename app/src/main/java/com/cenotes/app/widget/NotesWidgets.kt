@@ -75,7 +75,9 @@ class TitlesWidget : GlanceAppWidget() {
 private fun liveWidgetData(context: Context, initial: WidgetData): WidgetData {
     val app = context.applicationContext as CenotesApp
     val notesFlow = remember {
-        app.database.noteDao().observeAll().map { list -> list.take(30).map(::toWidgetNote) }.flowOn(Dispatchers.Default)
+        app.database.noteDao().observeAll()
+            .map { list -> list.filterNot { it.archived }.take(30).map(::toWidgetNote) }
+            .flowOn(Dispatchers.Default)
     }
     val notes by notesFlow.collectAsState(initial.notes)
     val settings by app.settings.state.collectAsState()
@@ -99,7 +101,8 @@ private val NoteIdKey = ActionParameters.Key<Long>(LaunchAction.EXTRA_NOTE_ID)
 
 private suspend fun loadWidgetData(context: Context): WidgetData = withContext(Dispatchers.IO) {
     val app = context.applicationContext as CenotesApp
-    val notes = app.database.noteDao().all().take(30).map(::toWidgetNote)
+    // Archived notes stay out of the home screen, like out of the main list.
+    val notes = app.database.noteDao().all().filterNot { it.archived }.take(30).map(::toWidgetNote)
     val accent = app.settings.state.value.accent
     WidgetData(notes, accent.light, accent.dark)
 }

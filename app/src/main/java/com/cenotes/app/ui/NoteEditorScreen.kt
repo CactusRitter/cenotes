@@ -5,6 +5,13 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.cenotes.app.ui.theme.ArchiveIcon
+import com.cenotes.app.ui.theme.LabelIcon
+import com.cenotes.app.ui.theme.UnarchiveIcon
 import androidx.compose.runtime.DisposableEffect
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -139,6 +146,7 @@ import java.io.File
  * bold, links open from a chip, and images sit between the text. Markdown typed by hand still
  * works as a shortcut, and the note is stored as Markdown. [noteId] 0 means a new note.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun NoteEditorScreen(
     noteId: Long,
@@ -153,9 +161,17 @@ fun NoteEditorScreen(
     var title by rememberSaveable(noteId) { mutableStateOf("") }
     var savedContent by rememberSaveable(noteId) { mutableStateOf(if (noteId == 0L) template else "") }
     var pinned by rememberSaveable(noteId) { mutableStateOf(false) }
+    var archived by rememberSaveable(noteId) { mutableStateOf(false) }
+    // A new note created while looking at a label starts with that label.
+    var labelIds by rememberSaveable(noteId) {
+        mutableStateOf(if (noteId == 0L) listOfNotNull(viewModel.labelForNewNote()) else emptyList())
+    }
     var closed by remember(noteId) { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf(false) }
     var imageMenuOpen by remember { mutableStateOf(false) }
+    var moreMenuOpen by remember { mutableStateOf(false) }
+    var pickingLabels by remember { mutableStateOf(false) }
+    val allLabels by viewModel.labels.collectAsStateWithLifecycle()
     var viewing by remember { mutableStateOf<File?>(null) }
     var linkTarget by remember { mutableStateOf<Pair<Long, TextRange>?>(null) }
     val editor = remember(noteId) { BlockEditorState(savedContent) }
@@ -174,6 +190,8 @@ fun NoteEditorScreen(
             title = note.title
             editor.load(note.content)
             pinned = note.pinned
+            archived = note.archived
+            labelIds = viewModel.labelIdsOf(noteId)
         }
         loaded = true
     }
@@ -213,11 +231,22 @@ fun NoteEditorScreen(
     }
 
     // Guarded so a double back press (or a tap during the exit animation) can't save twice.
+    fun saveNow() {
+        if (loaded) viewModel.save(original, title, editor.toMarkdown(), pinned, labelIds, archived)
+    }
+
     fun close() {
         if (closed) return
         closed = true
-        if (loaded) viewModel.save(original, title, editor.toMarkdown(), pinned)
+        saveNow()
         onClose()
+    }
+
+    /** Archiving (or un-archiving) leaves the note; the list then offers "Deshacer". */
+    fun toggleArchived() {
+        archived = !archived
+        close()
+        viewModel.noteArchived(noteId, archived)
     }
 
     fun share() {
@@ -249,7 +278,7 @@ fun NoteEditorScreen(
         onDispose {
             if (!closed && activity?.isChangingConfigurations != true) {
                 closed = true
-                if (loaded) viewModel.save(original, title, editor.toMarkdown(), pinned)
+                saveNow()
             }
         }
     }
@@ -285,8 +314,32 @@ fun NoteEditorScreen(
                         onClick = { pinned = !pinned },
                         selected = pinned,
                     )
-                    PillIcon(Icons.Filled.Share, stringResource(R.string.share), ::share)
-                    PillIcon(Icons.Filled.Delete, stringResource(R.string.delete), { confirmDelete = true })
+                    PillIcon(LabelIcon, stringResource(R.string.labels), { pickingLabels = true }, selected = labelIds.isNotEmpty())
+                    Box {
+                        PillIcon(Icons.Filled.MoreVert, stringResource(R.string.more_options), { moreMenuOpen = true })
+                        DropdownMenu(
+                            expanded = moreMenuOpen,
+                            onDismissRequest = { moreMenuOpen = false },
+                            shape = RoundedCornerShape(20.dp),
+                            containerColor = LocalGlass.current.menu,
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(if (archived) R.string.unarchive else R.string.archive)) },
+                                leadingIcon = { Icon(if (archived) UnarchiveIcon else ArchiveIcon, null) },
+                                onClick = { moreMenuOpen = false; toggleArchived() },
+                            )
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.share)) },
+                                leadingIcon = { Icon(Icons.Filled.Share, null) },
+                                onClick = { moreMenuOpen = false; share() },
+                            )
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.delete)) },
+                                leadingIcon = { Icon(Icons.Filled.Delete, null) },
+                                onClick = { moreMenuOpen = false; confirmDelete = true },
+                            )
+                        }
+                    }
                 }
             }
             Spacer(Modifier.height(8.dp))
@@ -305,6 +358,20 @@ fun NoteEditorScreen(
                         .padding(horizontal = 24.dp, vertical = 20.dp),
                 ) {
                     TitleField(title, { title = it }, onNext = editor::focusFirst)
+                    val noteLabels = allLabels.filter { it.id in labelIds }
+                    if (noteLabels.isNotEmpty()) {
+                        Spacer(Modifier.height(10.dp))
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp),
+                            modifier = Modifier.clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                            ) { pickingLabels = true },
+                        ) {
+                            noteLabels.forEach { LabelChip(it) }
+                        }
+                    }
                     Spacer(Modifier.height(12.dp))
                     BlockList(editor, images::file, onOpenImage = { viewing = it })
                     // Tapping the empty space under the text continues writing at the end.
@@ -351,6 +418,16 @@ fun NoteEditorScreen(
     }
 
     viewing?.let { ImageViewer(it) { viewing = null } }
+
+    if (pickingLabels) {
+        LabelPickerDialog(
+            labels = allLabels,
+            selected = labelIds.toSet(),
+            onToggle = { id -> labelIds = if (id in labelIds) labelIds - id else labelIds + id },
+            onCreate = { name -> viewModel.createLabel(name)?.let { id -> if (id !in labelIds) labelIds = labelIds + id } },
+            onDismiss = { pickingLabels = false },
+        )
+    }
 
     linkTarget?.let { (id, selection) ->
         val block = editor.blocks.firstOrNull { it.id == id }

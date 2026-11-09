@@ -141,6 +141,36 @@ val BackupIcon: ImageVector by lazy {
     )
 }
 
+val LabelIcon: ImageVector by lazy {
+    pathIcon(
+        "Label",
+        "M17.63,5.84C17.27,5.33 16.67,5 16,5L5,5.01C3.9,5.01 3,5.9 3,7v10c0,1.1 0.9,1.99 2,1.99L16,19" +
+            "c0.67,0 1.27,-0.33 1.63,-0.84L22,12l-4.37,-6.16z",
+    )
+}
+
+val ArchiveIcon: ImageVector by lazy {
+    pathIcon(
+        "Archive",
+        "M20.54,5.23l-1.39,-1.68C18.88,3.21 18.47,3 18,3H6c-0.47,0 -0.88,0.21 -1.16,0.55L3.46,5.23" +
+            "C3.17,5.57 3,6.02 3,6.5V19c0,1.1 0.9,2 2,2h14c1.1,0 2,-0.9 2,-2V6.5c0,-0.48 -0.17,-0.93 -0.46,-1.27z" +
+            "M12,17.5L6.5,12H10v-2h4v2h3.5L12,17.5zM5.12,5l0.81,-1h12l0.94,1H5.12z",
+    )
+}
+
+val UnarchiveIcon: ImageVector by lazy {
+    pathIcon(
+        "Unarchive",
+        "M20.55,5.22l-1.39,-1.68C18.88,3.21 18.47,3 18,3H6c-0.47,0 -0.88,0.21 -1.15,0.55L3.46,5.22" +
+            "C3.17,5.57 3,6.01 3,6.5V19c0,1.1 0.89,2 2,2h14c1.1,0 2,-0.9 2,-2V6.5c0,-0.49 -0.17,-0.93 -0.45,-1.28z" +
+            "M12,9.5l5.5,5.5H14v2h-4v-2H6.5L12,9.5zM5.12,5l0.82,-1h12l0.93,1H5.12z",
+    )
+}
+
+val NotesIcon: ImageVector by lazy {
+    pathIcon("Notes", "M3,18h12v-2H3v2zM3,6v2h18V6H3zM3,13h18v-2H3v2z")
+}
+
 val PaletteIcon: ImageVector by lazy {
     pathIcon(
         "Palette",

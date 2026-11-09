@@ -25,6 +25,9 @@ class Backup(private val context: Context, private val dao: NoteDao, private val
 
     suspend fun export(uri: Uri, includeImages: Boolean): ExportResult = withContext(Dispatchers.IO) {
         val notes = dao.all()
+        val labels = dao.labels()
+        val labelName = labels.associate { it.id to it.name }
+        val labelsOf = dao.links().groupBy({ it.noteId }, { labelName[it.labelId] })
         var imageCount = 0
         val out = context.contentResolver.openOutputStream(uri, "wt") ?: error("No se pudo escribir el archivo")
         ZipOutputStream(out.buffered()).use { zip ->
@@ -35,7 +38,9 @@ class Backup(private val context: Context, private val dao: NoteDao, private val
                         .put("title", n.title)
                         .put("content", if (includeImages) n.content else withoutImages(n.content))
                         .put("pinned", n.pinned)
-                        .put("updatedAt", n.updatedAt),
+                        .put("archived", n.archived)
+                        .put("updatedAt", n.updatedAt)
+                        .put("labels", JSONArray(labelsOf[n.id].orEmpty().filterNotNull())),
                 )
             }
             val root = JSONObject()
@@ -43,6 +48,8 @@ class Backup(private val context: Context, private val dao: NoteDao, private val
                 .put("format", Format)
                 .put("exportedAt", System.currentTimeMillis())
                 .put("includesImages", includeImages)
+                // Labels by name, so they also survive when no note uses them.
+                .put("labels", JSONArray(labels.map { it.name }))
                 .put("notes", array)
             zip.putNextEntry(ZipEntry("notes.json"))
             zip.write(root.toString(2).toByteArray(Charsets.UTF_8))
@@ -91,6 +98,11 @@ class Backup(private val context: Context, private val dao: NoteDao, private val
         val root = json?.let { runCatching { JSONObject(it) }.getOrNull() }
         if (root == null || root.optString("app") != AppId) throw NotABackupException()
 
+        // Labels are matched by name (case-insensitive); missing ones are created.
+        root.optJSONArray("labels")?.let { names ->
+            for (i in 0 until names.length()) names.optString(i).trim().takeIf { it.isNotEmpty() }?.let { dao.labelIdFor(it) }
+        }
+
         val existing = dao.all().map { it.title to it.content }.toHashSet()
         val list = root.getJSONArray("notes")
         var added = 0
@@ -99,19 +111,25 @@ class Backup(private val context: Context, private val dao: NoteDao, private val
             val o = list.getJSONObject(i)
             val title = o.optString("title")
             val content = o.optString("content")
+            // Only notes already on the phone are skipped; the backup itself is restored as it is.
             if ((title to content) in existing || (title.isBlank() && content.isBlank())) {
                 skipped++
                 continue
             }
-            dao.insert(
+            val id = dao.insert(
                 Note(
                     title = title,
                     content = content,
                     pinned = o.optBoolean("pinned"),
+                    archived = o.optBoolean("archived"),
                     updatedAt = o.optLong("updatedAt", System.currentTimeMillis()),
                 ),
             )
-            // Only notes already on the phone are skipped; the backup itself is restored as it is.
+            o.optJSONArray("labels")?.let { names ->
+                val ids = (0 until names.length()).mapNotNull { names.optString(it).trim().takeIf(String::isNotEmpty) }
+                    .map { dao.labelIdFor(it) }
+                dao.setLabels(id, ids)
+            }
             added++
         }
         ImportResult(added, skipped, imageCount)
@@ -119,7 +137,8 @@ class Backup(private val context: Context, private val dao: NoteDao, private val
 
     private companion object {
         const val AppId = "Cenotes"
-        const val Format = 1
+        /** 1 = notes only (0.7); 2 = also labels and archive (0.8). Both can be imported. */
+        const val Format = 2
         val SafeName = Regex("""^[\w.-]+$""")
     }
 }

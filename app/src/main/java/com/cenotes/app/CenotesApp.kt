@@ -12,7 +12,9 @@ import kotlinx.coroutines.SupervisorJob
 
 class CenotesApp : Application() {
     val database: NotesDatabase by lazy {
-        Room.databaseBuilder(this, NotesDatabase::class.java, "notes.db").build()
+        Room.databaseBuilder(this, NotesDatabase::class.java, "notes.db")
+            .addMigrations(NotesDatabase.Migration1To2)
+            .build()
     }
 
     val settings: SettingsRepository by lazy { SettingsRepository(this) }
