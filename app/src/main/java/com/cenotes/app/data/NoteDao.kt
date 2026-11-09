@@ -69,6 +69,10 @@ abstract class NoteDao {
     @Query("UPDATE labels SET color = :color WHERE id = :id")
     abstract suspend fun setLabelColor(id: Long, color: Int)
 
+    /** A saved custom colour was edited: labels that used it follow. */
+    @Query("UPDATE labels SET color = :new WHERE color = :old")
+    abstract suspend fun recolorLabels(old: Int, new: Int)
+
     @Query("DELETE FROM labels WHERE id = :id")
     protected abstract suspend fun deleteLabelOnly(id: Long)
 

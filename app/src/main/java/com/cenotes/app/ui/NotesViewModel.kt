@@ -271,6 +271,18 @@ class NotesViewModel(private val app: CenotesApp) : ViewModel() {
 
     fun setLabelColor(id: Long, color: Int) = write { dao.setLabelColor(id, color) }
 
+    val customColors: StateFlow<List<Int>> =
+        app.settings.state.map { it.customColors }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    fun addCustomColor(color: Int) = app.settings.addCustomColor(color)
+
+    fun editCustomColor(old: Int, new: Int) {
+        app.settings.replaceCustomColor(old, new)
+        write { dao.recolorLabels(old, new) }
+    }
+
+    fun deleteCustomColor(color: Int) = app.settings.removeCustomColor(color)
+
     fun deleteLabel(id: Long) {
         write { dao.deleteLabel(id) }
         if ((filter.value.section as? Section.ByLabel)?.labelId == id) showSection(Section.All)

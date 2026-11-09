@@ -126,6 +126,9 @@ class MainActivity : ComponentActivity() {
                                     vm.refreshExternalViews() // widgets use the accent colour too
                                 },
                                 onTransparencyChange = repo::setTransparency,
+                                onAddColor = vm::addCustomColor,
+                                onEditColor = vm::editCustomColor,
+                                onDeleteColor = vm::deleteCustomColor,
                                 onNotesImported = vm::refreshExternalViews,
                                 onBack = { showSettings = false },
                             )

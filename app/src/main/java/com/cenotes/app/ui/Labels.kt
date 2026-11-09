@@ -1,4 +1,4 @@
-package com.cenotes.app.ui
+﻿package com.cenotes.app.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -235,6 +235,10 @@ fun ManageLabelsDialog(
     onCreate: suspend (String) -> Unit,
     onRename: (Long, String) -> Unit,
     onColor: (Long, Int) -> Unit,
+    customColors: List<Int>,
+    onAddColor: (Int) -> Unit,
+    onEditColor: (Int, Int) -> Unit,
+    onDeleteColor: (Int) -> Unit,
     onDelete: (Long) -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -295,7 +299,11 @@ fun ManageLabelsDialog(
     labels.firstOrNull { it.id == colorFor?.id }?.let { label ->
         LabelColorDialog(
             label = label,
+            customColors = customColors,
             onPick = { onColor(label.id, it) },
+            onAddColor = onAddColor,
+            onEditColor = onEditColor,
+            onDeleteColor = onDeleteColor,
             onDismiss = { colorFor = null },
         )
     }
@@ -312,137 +320,6 @@ fun ManageLabelsDialog(
                 }
             },
             dismissButton = { TextButton(onClick = { confirmDelete = null }) { Text(stringResource(R.string.cancel)) } },
-        )
-    }
-}
-
-/** Ready-made label colours (ARGB). */
-private val PresetColors = listOf(
-    0xFFE5484D, 0xFFF5873B, 0xFFF2B632, 0xFF3FAE5A, 0xFF2BB5A0,
-    0xFF29A8D8, 0xFF4C7DF0, 0xFF8B5CF6, 0xFFE8559E, 0xFF8A94A6,
-).map { it.toInt() }
-
-/** Pick one of ten ready-made colours, or build any colour with hue / saturation / brightness bars. */
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun LabelColorDialog(label: Label, onPick: (Int) -> Unit, onDismiss: () -> Unit) {
-    val current = labelColor(label)
-    val hsv = remember(label.id) {
-        FloatArray(3).also { android.graphics.Color.colorToHSV(current.toArgb(), it) }
-    }
-    var custom by remember { mutableStateOf(label.color != 0 && label.color !in PresetColors) }
-    var hue by remember { mutableStateOf(hsv[0]) }
-    var sat by remember { mutableStateOf(hsv[1]) }
-    var bri by remember { mutableStateOf(hsv[2]) }
-    val picked = Color.hsv(hue, sat, bri)
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(28.dp),
-        containerColor = LocalGlass.current.menu,
-        title = { Text(label.name, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    maxItemsInEachRow = 5,
-                ) {
-                    PresetColors.forEach { argb ->
-                        Box(
-                            Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .background(Color(argb))
-                                .clickable { onPick(argb); onDismiss() },
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            if (label.color == argb) Icon(Icons.Filled.Check, null, tint = Color.White)
-                        }
-                    }
-                }
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(14.dp))
-                        .clickable { custom = !custom }
-                        .padding(vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Box(
-                        Modifier
-                            .size(28.dp)
-                            .clip(CircleShape)
-                            .background(Brush.sweepGradient(List(7) { Color.hsv(it * 60f, 1f, 1f) })),
-                    )
-                    Spacer(Modifier.width(12.dp))
-                    Text(stringResource(R.string.color_custom), Modifier.weight(1f), fontWeight = FontWeight.SemiBold)
-                    if (label.color != 0 && label.color !in PresetColors) {
-                        Box(Modifier.size(20.dp).clip(CircleShape).background(Color(label.color)))
-                    }
-                }
-                if (custom) {
-                    GradientBar(hue / 360f, List(7) { Color.hsv(it * 60f, 1f, 1f) }, picked) { hue = it * 360f }
-                    GradientBar(sat, listOf(Color.hsv(hue, 0f, bri), Color.hsv(hue, 1f, bri)), picked) { sat = it }
-                    GradientBar(bri, listOf(Color.hsv(hue, sat, 0f), Color.hsv(hue, sat, 1f)), picked) { bri = it }
-                    Box(Modifier.fillMaxWidth().height(36.dp).clip(RoundedCornerShape(12.dp)).background(picked))
-                }
-            }
-        },
-        confirmButton = {
-            if (custom) {
-                TextButton(onClick = { onPick(picked.toArgb()); onDismiss() }) {
-                    Text(stringResource(R.string.color_use), fontWeight = FontWeight.Bold)
-                }
-            } else {
-                TextButton(onClick = onDismiss) { Text(stringResource(R.string.done), fontWeight = FontWeight.Bold) }
-            }
-        },
-        dismissButton = if (custom) {
-            { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } }
-        } else null,
-    )
-}
-
-/** Horizontal gradient slider: drag or tap anywhere on the bar. [fraction] is 0..1. */
-@Composable
-private fun GradientBar(fraction: Float, colors: List<Color>, thumbColor: Color, onChange: (Float) -> Unit) {
-    val thumb = 26.dp
-    val thumbPx = with(LocalDensity.current) { thumb.toPx() }
-    var width by remember { mutableStateOf(1) }
-    val latest by androidx.compose.runtime.rememberUpdatedState(onChange)
-    Box(
-        Modifier
-            .fillMaxWidth()
-            .height(thumb)
-            .onSizeChanged { width = it.width.coerceAtLeast(1) }
-            .pointerInput(Unit) {
-                awaitEachGesture {
-                    val down = awaitFirstDown()
-                    fun at(x: Float) = ((x - thumbPx / 2) / (size.width - thumbPx)).coerceIn(0f, 1f)
-                    latest(at(down.position.x))
-                    drag(down.id) {
-                        latest(at(it.position.x))
-                        it.consume()
-                    }
-                }
-            },
-    ) {
-        Box(
-            Modifier
-                .align(Alignment.Center)
-                .fillMaxWidth()
-                .height(14.dp)
-                .clip(CircleShape)
-                .background(Brush.horizontalGradient(colors)),
-        )
-        Box(
-            Modifier
-                .offset { IntOffset(((width - thumbPx) * fraction.coerceIn(0f, 1f)).toInt(), 0) }
-                .size(thumb)
-                .clip(CircleShape)
-                .background(thumbColor)
-                .border(3.dp, Color.White, CircleShape),
         )
     }
 }

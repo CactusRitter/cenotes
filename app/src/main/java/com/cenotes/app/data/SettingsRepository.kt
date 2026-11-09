@@ -13,7 +13,11 @@ data class AppSettings(
     /** 0 = solid glass, 100 = fully see-through. */
     val transparency: Int = 65,
     val layout: NoteLayout = NoteLayout.GRID,
+    /** Colours the user added for labels (ARGB), at most [MaxCustomColors]. */
+    val customColors: List<Int> = emptyList(),
 )
+
+const val MaxCustomColors = 10
 
 /** Small app preferences, kept in SharedPreferences and exposed as a StateFlow. */
 class SettingsRepository(context: Context) {
@@ -28,7 +32,22 @@ class SettingsRepository(context: Context) {
         transparency = prefs.getInt(KEY_TRANSPARENCY, 65),
         layout = prefs.getString(KEY_LAYOUT, null)
             ?.let { name -> NoteLayout.entries.firstOrNull { it.name == name } } ?: NoteLayout.GRID,
+        customColors = prefs.getString(KEY_COLORS, null).orEmpty()
+            .split(',').mapNotNull { it.toIntOrNull() }.take(MaxCustomColors),
     )
+
+    private fun saveColors(colors: List<Int>) {
+        val list = colors.distinct().take(MaxCustomColors)
+        prefs.edit().putString(KEY_COLORS, list.joinToString(",")).apply()
+        _state.value = _state.value.copy(customColors = list)
+    }
+
+    fun addCustomColor(color: Int) = saveColors(_state.value.customColors + color)
+
+    fun replaceCustomColor(old: Int, new: Int) =
+        saveColors(_state.value.customColors.map { if (it == old) new else it })
+
+    fun removeCustomColor(color: Int) = saveColors(_state.value.customColors - color)
 
     fun setAccent(accent: Accent) {
         prefs.edit().putString(KEY_ACCENT, accent.name).apply()
@@ -49,5 +68,6 @@ class SettingsRepository(context: Context) {
         const val KEY_ACCENT = "accent"
         const val KEY_TRANSPARENCY = "transparency"
         const val KEY_LAYOUT = "layout"
+        const val KEY_COLORS = "customColors"
     }
 }

@@ -57,6 +57,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.cenotes.app.R
 import com.cenotes.app.data.AppSettings
+import com.cenotes.app.data.MaxCustomColors
 import com.cenotes.app.ui.glass.GlassBackground
 import com.cenotes.app.ui.glass.GlassIconButton
 import com.cenotes.app.ui.glass.GlassKind
@@ -86,6 +87,9 @@ fun SettingsScreen(
     backup: Backup,
     onAccentChange: (Accent) -> Unit,
     onTransparencyChange: (Int) -> Unit,
+    onAddColor: (Int) -> Unit,
+    onEditColor: (Int, Int) -> Unit,
+    onDeleteColor: (Int) -> Unit,
     onNotesImported: () -> Unit,
     onBack: () -> Unit,
 ) {
@@ -158,6 +162,28 @@ fun SettingsScreen(
                 )
                 Text(
                     stringResource(R.string.transparency_help),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+
+            Spacer(Modifier.height(12.dp))
+            ExpandableCard(
+                icon = PaletteIcon,
+                title = stringResource(R.string.label_colors),
+                subtitle = stringResource(R.string.label_colors_summary, settings.customColors.size, MaxCustomColors),
+            ) {
+                CustomColorsRow(
+                    colors = settings.customColors,
+                    selected = 0,
+                    onPick = null,
+                    onAdd = onAddColor,
+                    onEdit = onEditColor,
+                    onDelete = onDeleteColor,
+                )
+                Spacer(Modifier.height(12.dp))
+                Text(
+                    stringResource(R.string.label_colors_help),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

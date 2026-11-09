@@ -136,6 +136,7 @@ fun NotesListScreen(
 ) {
     val notes by viewModel.notes.collectAsStateWithLifecycle()
     val labels by viewModel.labels.collectAsStateWithLifecycle()
+    val customColors by viewModel.customColors.collectAsStateWithLifecycle()
     val labelCounts by viewModel.labelCounts.collectAsStateWithLifecycle()
     val section by viewModel.section.collectAsStateWithLifecycle()
     val query by viewModel.query.collectAsStateWithLifecycle()
@@ -379,6 +380,10 @@ fun NotesListScreen(
             onCreate = { viewModel.createLabel(it) },
             onRename = viewModel::renameLabel,
             onColor = viewModel::setLabelColor,
+            customColors = customColors,
+            onAddColor = viewModel::addCustomColor,
+            onEditColor = viewModel::editCustomColor,
+            onDeleteColor = viewModel::deleteCustomColor,
             onDelete = viewModel::deleteLabel,
             onDismiss = { manageLabels = false },
         )
