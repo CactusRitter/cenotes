@@ -70,6 +70,16 @@ class MainActivity : ComponentActivity() {
                 var newNoteTemplate by rememberSaveable { mutableStateOf("") }
                 var searchRequest by rememberSaveable { mutableIntStateOf(0) }
 
+                // Every opening gets its own key: reopening a note while its previous editor is
+                // still animating out must not reuse that (already "closed") editor, whose back
+                // handler would then ignore every back press.
+                var openCount by rememberSaveable { mutableIntStateOf(0) }
+                fun openNote(id: Long) {
+                    openCount++
+                    showSettings = false
+                    editingId = id
+                }
+
                 fun startNewNote(template: String) {
                     newNoteTemplate = template
                     newNoteSession++
@@ -80,10 +90,7 @@ class MainActivity : ComponentActivity() {
                 LaunchedEffect(pendingAction) {
                     when (val action = pendingAction) {
                         is LaunchAction.NewNote -> startNewNote(action.template)
-                        is LaunchAction.OpenNote -> {
-                            showSettings = false
-                            editingId = action.id
-                        }
+                        is LaunchAction.OpenNote -> openNote(action.id)
                         LaunchAction.Search -> {
                             showSettings = false
                             editingId = null
@@ -96,7 +103,7 @@ class MainActivity : ComponentActivity() {
 
                 val screen = when {
                     editingId == 0L -> "note:0:$newNoteSession"
-                    editingId != null -> "note:$editingId"
+                    editingId != null -> "note:$editingId:$openCount"
                     showSettings -> "settings"
                     else -> "list"
                 }
@@ -153,7 +160,7 @@ class MainActivity : ComponentActivity() {
                                 layout = settings.layout,
                                 searchRequest = searchRequest,
                                 onLayoutChange = repo::setLayout,
-                                onOpenNote = { editingId = it },
+                                onOpenNote = ::openNote,
                                 onNewNote = { startNewNote("") },
                                 onOpenSettings = { showSettings = true },
                             )
