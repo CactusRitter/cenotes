@@ -89,6 +89,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -242,9 +248,11 @@ fun NotesListScreen(
                                 // While selecting, a tap adds/removes; otherwise it opens the note.
                                 onClick = { if (selecting) viewModel.toggleSelected(id) else onOpenNote(id) },
                                 onLongClick = { viewModel.toggleSelected(id) },
-                                modifier = Modifier.animateItem(
-                                    fadeInSpec = glassSpring(), placementSpec = glassSpring(), fadeOutSpec = glassSpring(),
-                                ),
+                                modifier = Modifier
+                                    .animateItem(
+                                        fadeInSpec = glassSpring(), placementSpec = glassSpring(), fadeOutSpec = glassSpring(),
+                                    )
+                                    .noteSharedBounds(id),
                             )
                         }
                     }
@@ -309,12 +317,35 @@ fun NotesListScreen(
                 }
             }
 
-            // Bottom glass pill: layout and the "Fijadas" filter.
+            // Bottom glass pill: layout and the "Fijadas" filter. Sliding a finger across it
+            // switches between the grid and list views (like Celandar's view pill).
+            val haptics = LocalHapticFeedback.current
+            val density = LocalDensity.current
+            val currentLayout by rememberUpdatedState(layout)
+            val changeLayout by rememberUpdatedState(onLayoutChange)
             GlassPill(
                 Modifier
                     .align(Alignment.BottomCenter)
                     .navigationBarsPadding()
-                    .padding(bottom = 16.dp),
+                    .padding(bottom = 16.dp)
+                    .pointerInput(Unit) {
+                        // Pill geometry in dp from its left edge: 4 padding + 4 spacer, then the grid
+                        // icon (64), the list icon (64), the divider and the star.
+                        val gridEnd = with(density) { 72.dp.toPx() }
+                        val listEnd = with(density) { 140.dp.toPx() }
+                        detectHorizontalDragGestures { change, _ ->
+                            val x = change.position.x
+                            val target = when {
+                                x < gridEnd -> NoteLayout.GRID
+                                x < listEnd -> NoteLayout.LIST
+                                else -> null
+                            }
+                            if (target != null && target != currentLayout) {
+                                changeLayout(target)
+                                haptics.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)
+                            }
+                        }
+                    },
                 height = 64.dp,
                 hazeState = hazeState,
             ) {

@@ -284,7 +284,7 @@ fun NoteEditorScreen(
         }
     }
 
-    GlassBackground {
+    GlassBackground(Modifier.noteSharedBounds(noteId, zIndex = 1f)) {
         Column(
             Modifier
                 .fillMaxSize()

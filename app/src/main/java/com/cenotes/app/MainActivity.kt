@@ -7,6 +7,11 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.EnterExitState
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.runtime.CompositionLocalProvider
+import com.cenotes.app.ui.LocalNoteTransition
+import com.cenotes.app.ui.NoteTransition
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -45,6 +50,7 @@ class MainActivity : ComponentActivity() {
     /** Request from a launcher shortcut or widget, consumed by the UI. */
     private var pendingAction by mutableStateOf<LaunchAction?>(null)
 
+    @OptIn(ExperimentalSharedTransitionApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -95,14 +101,24 @@ class MainActivity : ComponentActivity() {
                     else -> "list"
                 }
 
+                SharedTransitionLayout {
                 AnimatedContent(
                     targetState = screen,
                     transitionSpec = {
-                        (fadeIn(glassSpring()) + scaleIn(glassSpring(), initialScale = 0.96f)) togetherWith
-                            fadeOut(glassSpring())
+                        if (initialState.startsWith("note:") || targetState.startsWith("note:")) {
+                            // The note card itself grows into / shrinks out of the editor
+                            // (see noteSharedBounds); the rest just cross-fades.
+                            fadeIn(glassSpring()) togetherWith fadeOut(glassSpring())
+                        } else {
+                            (fadeIn(glassSpring()) + scaleIn(glassSpring(), initialScale = 0.96f)) togetherWith
+                                fadeOut(glassSpring())
+                        }
                     },
                     label = "screen",
                 ) { target ->
+                  CompositionLocalProvider(
+                    LocalNoteTransition provides NoteTransition(this@SharedTransitionLayout, this),
+                  ) {
                     // The screen that is fading out must not react to taps meant for the new one
                     // (e.g. the editor's star sits exactly where the list's search button is).
                     val leaving = transition.targetState == EnterExitState.PostExit
@@ -143,6 +159,8 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                     }
+                  }
+                }
                 }
             }
         }
