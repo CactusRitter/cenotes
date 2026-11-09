@@ -66,6 +66,9 @@ abstract class NoteDao {
     @Query("UPDATE labels SET name = :name WHERE id = :id")
     abstract suspend fun renameLabel(id: Long, name: String)
 
+    @Query("UPDATE labels SET color = :color WHERE id = :id")
+    abstract suspend fun setLabelColor(id: Long, color: Int)
+
     @Query("DELETE FROM labels WHERE id = :id")
     protected abstract suspend fun deleteLabelOnly(id: Long)
 

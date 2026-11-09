@@ -50,6 +50,8 @@ class Backup(private val context: Context, private val dao: NoteDao, private val
                 .put("includesImages", includeImages)
                 // Labels by name, so they also survive when no note uses them.
                 .put("labels", JSONArray(labels.map { it.name }))
+                // Chosen colours by label name (0 = automatic, left out).
+                .put("labelColors", JSONObject().also { o -> labels.filter { it.color != 0 }.forEach { o.put(it.name, it.color) } })
                 .put("notes", array)
             zip.putNextEntry(ZipEntry("notes.json"))
             zip.write(root.toString(2).toByteArray(Charsets.UTF_8))
@@ -102,6 +104,13 @@ class Backup(private val context: Context, private val dao: NoteDao, private val
         root.optJSONArray("labels")?.let { names ->
             for (i in 0 until names.length()) names.optString(i).trim().takeIf { it.isNotEmpty() }?.let { dao.labelIdFor(it) }
         }
+        // Colours only fill in labels that are still automatic; the phone's own choices win.
+        root.optJSONObject("labelColors")?.let { colors ->
+            dao.labels().filter { it.color == 0 }.forEach { l ->
+                val c = colors.optInt(l.name, 0)
+                if (c != 0) dao.setLabelColor(l.id, c)
+            }
+        }
 
         val existing = dao.all().map { it.title to it.content }.toHashSet()
         val list = root.getJSONArray("notes")
@@ -137,8 +146,8 @@ class Backup(private val context: Context, private val dao: NoteDao, private val
 
     private companion object {
         const val AppId = "Cenotes"
-        /** 1 = notes only (0.7); 2 = also labels and archive (0.8). Both can be imported. */
-        const val Format = 2
+        /** 1 = notes only (0.7); 2 = + labels and archive (0.8); 3 = + label colours (0.9). All can be imported. */
+        const val Format = 3
         val SafeName = Regex("""^[\w.-]+$""")
     }
 }

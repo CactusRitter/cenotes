@@ -269,6 +269,8 @@ class NotesViewModel(private val app: CenotesApp) : ViewModel() {
         if (clean.isNotEmpty()) write { runCatching { dao.renameLabel(id, clean) } }
     }
 
+    fun setLabelColor(id: Long, color: Int) = write { dao.setLabelColor(id, color) }
+
     fun deleteLabel(id: Long) {
         write { dao.deleteLabel(id) }
         if ((filter.value.section as? Section.ByLabel)?.labelId == id) showSection(Section.All)

@@ -5,7 +5,24 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.drag
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.offset
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.Dp
+import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -54,9 +71,10 @@ import com.cenotes.app.ui.theme.Accent
 import com.cenotes.app.ui.theme.LocalGlass
 import kotlinx.coroutines.launch
 
-/** Each label gets a colour from the accent palette (by id), tuned for light and dark. */
+/** The colour the user picked, or (automatic) one from the accent palette by id, tuned for light and dark. */
 @Composable
 fun labelColor(label: Label): Color {
+    if (label.color != 0) return Color(label.color)
     val accent = Accent.entries[(label.id % Accent.entries.size).toInt()]
     return if (LocalGlass.current.dark) accent.dark else accent.light
 }
@@ -216,10 +234,12 @@ fun ManageLabelsDialog(
     labels: List<Label>,
     onCreate: suspend (String) -> Unit,
     onRename: (Long, String) -> Unit,
+    onColor: (Long, Int) -> Unit,
     onDelete: (Long) -> Unit,
     onDismiss: () -> Unit,
 ) {
     var confirmDelete by remember { mutableStateOf<Label?>(null) }
+    var colorFor by remember { mutableStateOf<Label?>(null) }
     AlertDialog(
         onDismissRequest = onDismiss,
         shape = RoundedCornerShape(28.dp),
@@ -241,7 +261,15 @@ fun ManageLabelsDialog(
                             onValueChange = { name = it },
                             singleLine = true,
                             shape = RoundedCornerShape(16.dp),
-                            leadingIcon = { Box(Modifier.size(12.dp).clip(CircleShape).background(labelColor(label))) },
+                            leadingIcon = {
+                                Box(
+                                    Modifier
+                                        .size(24.dp)
+                                        .clip(CircleShape)
+                                        .background(labelColor(label))
+                                        .clickable { colorFor = label },
+                                )
+                            },
                             trailingIcon = {
                                 if (changed) {
                                     IconButton(onClick = { onRename(label.id, name) }) {
@@ -263,6 +291,14 @@ fun ManageLabelsDialog(
         },
         confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.done), fontWeight = FontWeight.Bold) } },
     )
+    // Look the label up again so the dialog shows the colour as soon as it changes.
+    labels.firstOrNull { it.id == colorFor?.id }?.let { label ->
+        LabelColorDialog(
+            label = label,
+            onPick = { onColor(label.id, it) },
+            onDismiss = { colorFor = null },
+        )
+    }
     confirmDelete?.let { label ->
         AlertDialog(
             onDismissRequest = { confirmDelete = null },
@@ -276,6 +312,137 @@ fun ManageLabelsDialog(
                 }
             },
             dismissButton = { TextButton(onClick = { confirmDelete = null }) { Text(stringResource(R.string.cancel)) } },
+        )
+    }
+}
+
+/** Ready-made label colours (ARGB). */
+private val PresetColors = listOf(
+    0xFFE5484D, 0xFFF5873B, 0xFFF2B632, 0xFF3FAE5A, 0xFF2BB5A0,
+    0xFF29A8D8, 0xFF4C7DF0, 0xFF8B5CF6, 0xFFE8559E, 0xFF8A94A6,
+).map { it.toInt() }
+
+/** Pick one of ten ready-made colours, or build any colour with hue / saturation / brightness bars. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun LabelColorDialog(label: Label, onPick: (Int) -> Unit, onDismiss: () -> Unit) {
+    val current = labelColor(label)
+    val hsv = remember(label.id) {
+        FloatArray(3).also { android.graphics.Color.colorToHSV(current.toArgb(), it) }
+    }
+    var custom by remember { mutableStateOf(label.color != 0 && label.color !in PresetColors) }
+    var hue by remember { mutableStateOf(hsv[0]) }
+    var sat by remember { mutableStateOf(hsv[1]) }
+    var bri by remember { mutableStateOf(hsv[2]) }
+    val picked = Color.hsv(hue, sat, bri)
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        shape = RoundedCornerShape(28.dp),
+        containerColor = LocalGlass.current.menu,
+        title = { Text(label.name, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    maxItemsInEachRow = 5,
+                ) {
+                    PresetColors.forEach { argb ->
+                        Box(
+                            Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(Color(argb))
+                                .clickable { onPick(argb); onDismiss() },
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            if (label.color == argb) Icon(Icons.Filled.Check, null, tint = Color.White)
+                        }
+                    }
+                }
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(14.dp))
+                        .clickable { custom = !custom }
+                        .padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box(
+                        Modifier
+                            .size(28.dp)
+                            .clip(CircleShape)
+                            .background(Brush.sweepGradient(List(7) { Color.hsv(it * 60f, 1f, 1f) })),
+                    )
+                    Spacer(Modifier.width(12.dp))
+                    Text(stringResource(R.string.color_custom), Modifier.weight(1f), fontWeight = FontWeight.SemiBold)
+                    if (label.color != 0 && label.color !in PresetColors) {
+                        Box(Modifier.size(20.dp).clip(CircleShape).background(Color(label.color)))
+                    }
+                }
+                if (custom) {
+                    GradientBar(hue / 360f, List(7) { Color.hsv(it * 60f, 1f, 1f) }, picked) { hue = it * 360f }
+                    GradientBar(sat, listOf(Color.hsv(hue, 0f, bri), Color.hsv(hue, 1f, bri)), picked) { sat = it }
+                    GradientBar(bri, listOf(Color.hsv(hue, sat, 0f), Color.hsv(hue, sat, 1f)), picked) { bri = it }
+                    Box(Modifier.fillMaxWidth().height(36.dp).clip(RoundedCornerShape(12.dp)).background(picked))
+                }
+            }
+        },
+        confirmButton = {
+            if (custom) {
+                TextButton(onClick = { onPick(picked.toArgb()); onDismiss() }) {
+                    Text(stringResource(R.string.color_use), fontWeight = FontWeight.Bold)
+                }
+            } else {
+                TextButton(onClick = onDismiss) { Text(stringResource(R.string.done), fontWeight = FontWeight.Bold) }
+            }
+        },
+        dismissButton = if (custom) {
+            { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } }
+        } else null,
+    )
+}
+
+/** Horizontal gradient slider: drag or tap anywhere on the bar. [fraction] is 0..1. */
+@Composable
+private fun GradientBar(fraction: Float, colors: List<Color>, thumbColor: Color, onChange: (Float) -> Unit) {
+    val thumb = 26.dp
+    val thumbPx = with(LocalDensity.current) { thumb.toPx() }
+    var width by remember { mutableStateOf(1) }
+    val latest by androidx.compose.runtime.rememberUpdatedState(onChange)
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .height(thumb)
+            .onSizeChanged { width = it.width.coerceAtLeast(1) }
+            .pointerInput(Unit) {
+                awaitEachGesture {
+                    val down = awaitFirstDown()
+                    fun at(x: Float) = ((x - thumbPx / 2) / (size.width - thumbPx)).coerceIn(0f, 1f)
+                    latest(at(down.position.x))
+                    drag(down.id) {
+                        latest(at(it.position.x))
+                        it.consume()
+                    }
+                }
+            },
+    ) {
+        Box(
+            Modifier
+                .align(Alignment.Center)
+                .fillMaxWidth()
+                .height(14.dp)
+                .clip(CircleShape)
+                .background(Brush.horizontalGradient(colors)),
+        )
+        Box(
+            Modifier
+                .offset { IntOffset(((width - thumbPx) * fraction.coerceIn(0f, 1f)).toInt(), 0) }
+                .size(thumb)
+                .clip(CircleShape)
+                .background(thumbColor)
+                .border(3.dp, Color.White, CircleShape),
         )
     }
 }

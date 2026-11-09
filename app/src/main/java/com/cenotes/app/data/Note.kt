@@ -20,6 +20,8 @@ data class Note(
 data class Label(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val name: String,
+    /** ARGB colour chosen by the user; 0 = automatic (taken from the accent palette). */
+    @ColumnInfo(defaultValue = "0") val color: Int = 0,
 )
 
 /** A note can have any number of labels. */

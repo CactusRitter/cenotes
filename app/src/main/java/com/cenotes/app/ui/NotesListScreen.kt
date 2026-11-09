@@ -378,6 +378,7 @@ fun NotesListScreen(
             labels = labels,
             onCreate = { viewModel.createLabel(it) },
             onRename = viewModel::renameLabel,
+            onColor = viewModel::setLabelColor,
             onDelete = viewModel::deleteLabel,
             onDismiss = { manageLabels = false },
         )
