@@ -36,10 +36,7 @@
     <string name="transparency_help">Cuanto más alta, más se ve el fondo a través de las tarjetas y botones.</string>
     <string name="version">Notas · Versión %1$s</string>
     <string name="expand">Desplegar</string>
-    <string name="view_mode">Ver nota</string>
-    <string name="edit_mode">Editar nota</string>
     <string name="share">Compartir</string>
-    <string name="tap_to_write">Toca para escribir…</string>
     <string name="fmt_checklist">Casilla de verificación</string>
     <string name="fmt_bullets">Lista con viñetas</string>
     <string name="fmt_numbered">Lista numerada</string>

@@ -35,10 +35,10 @@ internal val BulletRegex = Regex("""^(\s*)([-*+])\s+(.*)$""")
 internal val NumberedRegex = Regex("""^(\s*)(\d+)([.)])\s+(.*)$""")
 internal val HeadingRegex = Regex("""^(#{1,6})\s+(.*)$""")
 internal val QuoteRegex = Regex("""^>\s?(.*)$""")
-private val RuleRegex = Regex("""^\s*([-*_])(\s*\1){2,}\s*$""")
-private val FenceRegex = Regex("""^\s*```.*$""")
+internal val RuleRegex = Regex("""^\s*([-*_])(\s*\1){2,}\s*$""")
+internal val FenceRegex = Regex("""^\s*```.*$""")
 
-private fun indentLevel(spaces: String) = spaces.replace("\t", "    ").length / 2
+internal fun indentLevel(spaces: String) = spaces.replace("\t", "    ").length / 2
 
 fun parseMarkdown(source: String): List<MdBlock> {
     val lines = source.split('\n')
@@ -78,17 +78,6 @@ fun parseMarkdown(source: String): List<MdBlock> {
     // Trailing blank lines add nothing when rendering.
     while (blocks.lastOrNull() == MdBlock.Blank) blocks.removeAt(blocks.lastIndex)
     return blocks
-}
-
-/** Flips the checkbox on [line] (0-based) between `[ ]` and `[x]`. */
-fun toggleTask(source: String, line: Int): String {
-    val lines = source.split('\n').toMutableList()
-    val match = lines.getOrNull(line)?.let { TaskRegex.matchEntire(it) } ?: return source
-    val box = match.groups[2]!!.range
-    val current = lines[line]
-    val flipped = if (match.groupValues[2] == " ") "x" else " "
-    lines[line] = current.replaceRange(box, flipped)
-    return lines.joinToString("\n")
 }
 
 data class TaskStats(val done: Int, val total: Int)

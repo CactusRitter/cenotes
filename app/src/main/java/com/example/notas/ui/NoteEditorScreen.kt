@@ -7,13 +7,16 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -23,49 +26,61 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -78,13 +93,12 @@ import com.example.notas.ui.glass.GlassPill
 import com.example.notas.ui.glass.PillIcon
 import com.example.notas.ui.glass.glass
 import com.example.notas.ui.glass.glassSpring
-import com.example.notas.ui.markdown.LineFormat
-import com.example.notas.ui.markdown.MarkdownHighlighter
-import com.example.notas.ui.markdown.MarkdownView
-import com.example.notas.ui.markdown.continueList
+import com.example.notas.ui.markdown.BlockEditorState
+import com.example.notas.ui.markdown.BlockType
+import com.example.notas.ui.markdown.EditorBlock
+import com.example.notas.ui.markdown.LiveInlineMarkdown
 import com.example.notas.ui.markdown.markdownToShareText
-import com.example.notas.ui.markdown.toggleLineFormat
-import com.example.notas.ui.markdown.toggleTask
+import com.example.notas.ui.markdown.toggleEmphasis
 import com.example.notas.ui.markdown.toggleWrap
 import com.example.notas.ui.theme.BulletListIcon
 import com.example.notas.ui.theme.CheckBoxIcon
@@ -92,12 +106,11 @@ import com.example.notas.ui.theme.LocalGlass
 import com.example.notas.ui.theme.NumberedListIcon
 import com.example.notas.ui.theme.QuoteIcon
 import com.example.notas.ui.theme.StarBorderIcon
-import com.example.notas.ui.theme.VisibilityIcon
 
 /**
- * Edits one note. [noteId] 0 means a new note. Existing notes open in "view" mode (rendered
- * Markdown with tappable checkboxes); the pencil switches to "edit" mode with a formatting bar.
- * Changes are saved once, when leaving the screen; an empty note is simply discarded.
+ * Edits one note in a visual editor: checkboxes are real checkboxes, bold is bold, and so on.
+ * Markdown typed by hand ("- [ ] ", "# ", "**x**") turns into formatting as you type, and the
+ * note is still stored as Markdown. [noteId] 0 means a new note. It is saved once, on leaving.
  */
 @Composable
 fun NoteEditorScreen(
@@ -109,42 +122,43 @@ fun NoteEditorScreen(
     var original by remember(noteId) { mutableStateOf<Note?>(null) }
     var loaded by rememberSaveable(noteId) { mutableStateOf(noteId == 0L) }
     var title by rememberSaveable(noteId) { mutableStateOf("") }
-    var content by rememberSaveable(noteId, stateSaver = TextFieldValue.Saver) { mutableStateOf(TextFieldValue("")) }
+    var savedContent by rememberSaveable(noteId) { mutableStateOf("") }
     var pinned by rememberSaveable(noteId) { mutableStateOf(false) }
-    var editing by rememberSaveable(noteId) { mutableStateOf(noteId == 0L) }
     var closed by remember(noteId) { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf(false) }
-    val contentFocus = remember { FocusRequester() }
+    val editor = remember(noteId) { BlockEditorState(savedContent) }
     val context = LocalContext.current
 
     LaunchedEffect(noteId) {
-        if (noteId == 0L) return@LaunchedEffect
+        if (noteId == 0L) {
+            editor.focusFirst()
+            return@LaunchedEffect
+        }
         val note = viewModel.load(noteId)
         original = note
         if (!loaded && note != null) {
             title = note.title
-            content = TextFieldValue(note.content, TextRange(note.content.length))
+            editor.load(note.content)
             pinned = note.pinned
-            editing = note.content.isBlank()
         }
         loaded = true
     }
 
-    val focusManager = LocalFocusManager.current
-    LaunchedEffect(editing) {
-        if (editing) runCatching { contentFocus.requestFocus() } else focusManager.clearFocus()
+    // Keep a Markdown copy in saved state so text survives rotation / process death.
+    LaunchedEffect(editor) {
+        snapshotFlow { editor.toMarkdown() }.collect { savedContent = it }
     }
 
     // Guarded so a double back press (or a tap during the exit animation) can't save twice.
     fun close() {
         if (closed) return
         closed = true
-        if (loaded) viewModel.save(original, title, content.text, pinned)
+        if (loaded) viewModel.save(original, title, editor.toMarkdown(), pinned)
         onClose()
     }
 
     fun share() {
-        val text = listOf(title.trim(), markdownToShareText(content.text).trim())
+        val text = listOf(title.trim(), markdownToShareText(editor.toMarkdown()).trim())
             .filter { it.isNotEmpty() }
             .joinToString("\n\n")
         val send = Intent(Intent.ACTION_SEND).apply {
@@ -174,11 +188,6 @@ fun NoteEditorScreen(
                 Spacer(Modifier.weight(1f))
                 GlassPill {
                     PillIcon(
-                        if (editing) VisibilityIcon else Icons.Filled.Edit,
-                        stringResource(if (editing) R.string.view_mode else R.string.edit_mode),
-                        onClick = { editing = !editing },
-                    )
-                    PillIcon(
                         if (pinned) Icons.Filled.Star else StarBorderIcon,
                         stringResource(if (pinned) R.string.unpin else R.string.pin),
                         onClick = { pinned = !pinned },
@@ -190,21 +199,6 @@ fun NoteEditorScreen(
             }
             Spacer(Modifier.height(8.dp))
 
-            val colors = MaterialTheme.colorScheme
-            val fieldColors = TextFieldDefaults.colors(
-                focusedContainerColor = Color.Transparent,
-                unfocusedContainerColor = Color.Transparent,
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent,
-            )
-            val highlighter = remember(colors) {
-                MarkdownHighlighter(
-                    marker = colors.onSurfaceVariant.copy(alpha = 0.6f),
-                    accent = colors.primary,
-                    muted = colors.onSurfaceVariant,
-                    codeBackground = colors.onSurface.copy(alpha = 0.08f),
-                )
-            }
             Box(
                 Modifier
                     .weight(1f)
@@ -212,67 +206,35 @@ fun NoteEditorScreen(
                     .padding(bottom = 12.dp)
                     .glass(RoundedCornerShape(28.dp), if (pinned) GlassKind.Pinned else GlassKind.Card),
             ) {
-                Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(8.dp)) {
-                    TextField(
-                        value = title,
-                        onValueChange = { title = it },
-                        placeholder = {
-                            Text(stringResource(R.string.title_hint), style = MaterialTheme.typography.headlineSmall)
-                        },
-                        textStyle = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
-                        colors = fieldColors,
-                        modifier = Modifier.fillMaxWidth(),
+                Column(
+                    Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 24.dp, vertical = 20.dp),
+                ) {
+                    TitleField(title, { title = it }, onNext = editor::focusFirst)
+                    Spacer(Modifier.height(12.dp))
+                    BlockList(editor)
+                    // Tapping the empty space under the text continues writing at the end.
+                    Box(
+                        Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 240.dp)
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                                onClick = editor::focusEnd,
+                            ),
                     )
-                    if (editing) {
-                        TextField(
-                            value = content,
-                            onValueChange = { content = continueList(content, it) },
-                            placeholder = { Text(stringResource(R.string.content_hint)) },
-                            textStyle = MaterialTheme.typography.bodyLarge,
-                            visualTransformation = highlighter,
-                            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
-                            colors = fieldColors,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .heightIn(min = 320.dp)
-                                .focusRequester(contentFocus),
-                        )
-                    } else {
-                        // Tapping anywhere that isn't a checkbox or link switches to editing.
-                        Box(
-                            Modifier
-                                .fillMaxWidth()
-                                .heightIn(min = 320.dp)
-                                .clickable(
-                                    interactionSource = remember { MutableInteractionSource() },
-                                    indication = null,
-                                ) { editing = true }
-                                .padding(horizontal = 16.dp, vertical = 8.dp),
-                        ) {
-                            if (content.text.isBlank()) {
-                                Text(
-                                    stringResource(R.string.tap_to_write),
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = colors.onSurfaceVariant,
-                                )
-                            } else {
-                                MarkdownView(
-                                    source = content.text,
-                                    onToggleTask = { line -> content = content.copy(text = toggleTask(content.text, line)) },
-                                )
-                            }
-                        }
-                    }
                 }
             }
 
             AnimatedVisibility(
-                visible = editing,
+                visible = editor.focusedId != null,
                 enter = fadeIn(glassSpring()) + slideInVertically(glassSpring()) { it / 2 },
                 exit = fadeOut(glassSpring()) + slideOutVertically(glassSpring()) { it / 2 },
             ) {
-                FormatToolbar(onEdit = { transform -> content = transform(content) })
+                FormatToolbar(editor)
             }
         }
     }
@@ -301,9 +263,187 @@ fun NoteEditorScreen(
     }
 }
 
-/** Glass formatting bar that sits above the keyboard while editing. */
 @Composable
-private fun FormatToolbar(onEdit: ((TextFieldValue) -> TextFieldValue) -> Unit) {
+private fun TitleField(value: String, onChange: (String) -> Unit, onNext: () -> Unit) {
+    val style = MaterialTheme.typography.headlineSmall.copy(
+        fontWeight = FontWeight.Bold,
+        color = MaterialTheme.colorScheme.onSurface,
+    )
+    BasicTextField(
+        value = value,
+        onValueChange = { onChange(it.replace("\n", "")) },
+        textStyle = style,
+        cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Next),
+        keyboardActions = KeyboardActions(onNext = { onNext() }),
+        modifier = Modifier.fillMaxWidth(),
+        decorationBox = { inner ->
+            Box {
+                if (value.isEmpty()) {
+                    Text(stringResource(R.string.title_hint), style = style.copy(color = MaterialTheme.colorScheme.onSurfaceVariant))
+                }
+                inner()
+            }
+        },
+    )
+}
+
+@Composable
+private fun BlockList(editor: BlockEditorState) {
+    val colors = MaterialTheme.colorScheme
+    val typography = MaterialTheme.typography
+    val transformation = remember(colors) {
+        LiveInlineMarkdown(linkColor = colors.primary, codeBackground = colors.onSurface.copy(alpha = 0.08f))
+    }
+    val requesters = remember { mutableMapOf<Long, FocusRequester>() }
+
+    LaunchedEffect(editor.pendingFocus) {
+        val id = editor.pendingFocus ?: return@LaunchedEffect
+        runCatching { requesters[id]?.requestFocus() }
+        editor.pendingFocus = null
+    }
+
+    var number = 0
+    Column {
+        editor.blocks.forEach { block ->
+            number = if (block.type == BlockType.NUMBERED) number + 1 else 0
+            val label = number
+            // key(): each block keeps its own text field (and keyboard focus) when blocks are
+            // inserted or removed around it.
+            key(block.id) {
+                if (block.type == BlockType.DIVIDER) {
+                    HorizontalDivider(Modifier.padding(vertical = 14.dp))
+                } else {
+                    BlockRow(block, label, editor, requesters.getOrPut(block.id) { FocusRequester() }, transformation)
+                }
+            }
+        }
+    }
+}
+
+/**
+ * One block. The layout is the same for every type (leading marker + text field) so that turning
+ * a line into a checkbox or a heading keeps the very same text field and the keyboard stays open.
+ */
+@Composable
+private fun BlockRow(
+    block: EditorBlock,
+    number: Int,
+    editor: BlockEditorState,
+    requester: FocusRequester,
+    transformation: LiveInlineMarkdown,
+) {
+    val colors = MaterialTheme.colorScheme
+    val typography = MaterialTheme.typography
+    val body = typography.bodyLarge.copy(color = colors.onSurface)
+    val type = block.type
+
+    val style = when (type) {
+        BlockType.H1 -> typography.headlineSmall.copy(fontWeight = FontWeight.Bold, color = colors.onSurface)
+        BlockType.H2 -> typography.titleLarge.copy(fontWeight = FontWeight.Bold, color = colors.onSurface)
+        BlockType.H3 -> typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = colors.onSurface)
+        BlockType.TASK -> if (block.checked) {
+            body.copy(color = colors.onSurfaceVariant, textDecoration = TextDecoration.LineThrough)
+        } else body
+        BlockType.QUOTE -> body.copy(fontStyle = FontStyle.Italic, color = colors.onSurfaceVariant)
+        BlockType.CODE -> body.copy(fontFamily = FontFamily.Monospace, fontSize = 15.sp)
+        else -> body
+    }
+    val rowModifier = when (type) {
+        BlockType.H1, BlockType.H2, BlockType.H3 -> Modifier.padding(top = 10.dp, bottom = 4.dp)
+        BlockType.CODE -> Modifier
+            .padding(vertical = 4.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(colors.onSurface.copy(alpha = 0.07f))
+            .padding(12.dp)
+        BlockType.TASK -> Modifier
+        else -> Modifier.padding(vertical = 3.dp)
+    }
+
+    Row(
+        rowModifier.fillMaxWidth().height(IntrinsicSize.Min),
+        verticalAlignment = if (type == BlockType.TASK) Alignment.CenterVertically else Alignment.Top,
+    ) {
+        if (type == BlockType.TASK || type == BlockType.BULLET || type == BlockType.NUMBERED) {
+            Spacer(Modifier.width((block.indent * 24).dp))
+        }
+        when (type) {
+            BlockType.TASK -> CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
+                Checkbox(
+                    checked = block.checked,
+                    onCheckedChange = { editor.toggleChecked(block) },
+                    colors = CheckboxDefaults.colors(checkedColor = colors.primary),
+                    modifier = Modifier.padding(end = 12.dp, top = 6.dp, bottom = 6.dp),
+                )
+            }
+            BlockType.BULLET, BlockType.NUMBERED -> Text(
+                if (type == BlockType.BULLET) "•" else "$number.",
+                style = body.copy(color = colors.primary, fontWeight = FontWeight.Bold),
+                modifier = Modifier.width(28.dp),
+            )
+            BlockType.QUOTE -> {
+                Box(
+                    Modifier
+                        .width(3.dp)
+                        .fillMaxHeight()
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(colors.primary.copy(alpha = 0.6f)),
+                )
+                Spacer(Modifier.width(12.dp))
+            }
+            else -> Unit
+        }
+        BlockField(
+            block, editor, requester, transformation, style, Modifier.weight(1f),
+            placeholder = if (editor.blocks.size == 1 && type == BlockType.PARAGRAPH) {
+                stringResource(R.string.content_hint)
+            } else null,
+        )
+    }
+}
+
+@Composable
+private fun BlockField(
+    block: EditorBlock,
+    editor: BlockEditorState,
+    requester: FocusRequester,
+    transformation: LiveInlineMarkdown,
+    style: TextStyle,
+    modifier: Modifier = Modifier,
+    placeholder: String? = null,
+) {
+    BasicTextField(
+        value = block.value,
+        onValueChange = { editor.onValueChange(block, it) },
+        textStyle = style,
+        cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+        visualTransformation = transformation,
+        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
+        modifier = modifier
+            .focusRequester(requester)
+            .onFocusChanged { state ->
+                if (state.isFocused) editor.focusedId = block.id
+                else if (editor.focusedId == block.id) editor.focusedId = null
+            }
+            .onPreviewKeyEvent { event ->
+                event.type == KeyEventType.KeyDown && event.key == Key.Backspace && editor.onBackspaceAtStart(block)
+            },
+        decorationBox = { inner ->
+            Box {
+                if (placeholder != null && block.value.text.isEmpty()) {
+                    Text(placeholder, style = style.copy(color = MaterialTheme.colorScheme.onSurfaceVariant))
+                }
+                inner()
+            }
+        },
+    )
+}
+
+/** Glass formatting bar that sits above the keyboard while a line is being edited. */
+@Composable
+private fun FormatToolbar(editor: BlockEditorState) {
+    val type = editor.focused?.type
     Row(
         Modifier
             .padding(bottom = 12.dp)
@@ -314,41 +454,61 @@ private fun FormatToolbar(onEdit: ((TextFieldValue) -> TextFieldValue) -> Unit) 
             .padding(horizontal = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        ToolIcon(CheckBoxIcon, stringResource(R.string.fmt_checklist)) { onEdit { toggleLineFormat(it, LineFormat.TASK) } }
-        ToolIcon(BulletListIcon, stringResource(R.string.fmt_bullets)) { onEdit { toggleLineFormat(it, LineFormat.BULLET) } }
-        ToolIcon(NumberedListIcon, stringResource(R.string.fmt_numbered)) { onEdit { toggleLineFormat(it, LineFormat.NUMBERED) } }
-        ToolText("H", stringResource(R.string.fmt_heading), fontWeight = FontWeight.Black) {
-            onEdit { toggleLineFormat(it, LineFormat.HEADING) }
+        ToolIcon(CheckBoxIcon, stringResource(R.string.fmt_checklist), type == BlockType.TASK) {
+            editor.toggleType(BlockType.TASK)
         }
-        ToolText("B", stringResource(R.string.fmt_bold), fontWeight = FontWeight.Black) { onEdit { toggleWrap(it, "**") } }
-        ToolText("I", stringResource(R.string.fmt_italic), fontStyle = FontStyle.Italic) { onEdit { toggleWrap(it, "*") } }
+        ToolIcon(BulletListIcon, stringResource(R.string.fmt_bullets), type == BlockType.BULLET) {
+            editor.toggleType(BlockType.BULLET)
+        }
+        ToolIcon(NumberedListIcon, stringResource(R.string.fmt_numbered), type == BlockType.NUMBERED) {
+            editor.toggleType(BlockType.NUMBERED)
+        }
+        ToolText(
+            when (type) { BlockType.H1 -> "H1"; BlockType.H2 -> "H2"; BlockType.H3 -> "H3"; else -> "H" },
+            stringResource(R.string.fmt_heading),
+            selected = type == BlockType.H1 || type == BlockType.H2 || type == BlockType.H3,
+            fontWeight = FontWeight.Black,
+        ) { editor.cycleHeading() }
+        ToolText("B", stringResource(R.string.fmt_bold), fontWeight = FontWeight.Black) {
+            editor.editFocused { toggleEmphasis(it, bold = true) }
+        }
+        ToolText("I", stringResource(R.string.fmt_italic), fontStyle = FontStyle.Italic) {
+            editor.editFocused { toggleEmphasis(it, bold = false) }
+        }
         ToolText("S", stringResource(R.string.fmt_strike), decoration = TextDecoration.LineThrough) {
-            onEdit { toggleWrap(it, "~~") }
+            editor.editFocused { toggleWrap(it, "~~") }
         }
-        ToolText("</>", stringResource(R.string.fmt_code), monospace = true) { onEdit { toggleWrap(it, "`") } }
-        ToolIcon(QuoteIcon, stringResource(R.string.fmt_quote)) { onEdit { toggleLineFormat(it, LineFormat.QUOTE) } }
+        ToolText("</>", stringResource(R.string.fmt_code), monospace = true) {
+            editor.editFocused { toggleWrap(it, "`") }
+        }
+        ToolIcon(QuoteIcon, stringResource(R.string.fmt_quote), type == BlockType.QUOTE) {
+            editor.toggleType(BlockType.QUOTE)
+        }
     }
 }
 
 @Composable
-private fun ToolIcon(icon: ImageVector, label: String, onClick: () -> Unit) {
-    PillIcon(icon, label, onClick, width = 48.dp)
+private fun ToolIcon(icon: ImageVector, label: String, selected: Boolean, onClick: () -> Unit) {
+    PillIcon(icon, label, onClick, selected = selected, width = 48.dp)
 }
 
 @Composable
 private fun ToolText(
     text: String,
     label: String,
+    selected: Boolean = false,
     fontWeight: FontWeight = FontWeight.Medium,
     fontStyle: FontStyle = FontStyle.Normal,
     decoration: TextDecoration = TextDecoration.None,
     monospace: Boolean = false,
     onClick: () -> Unit,
 ) {
+    val colors = MaterialTheme.colorScheme
     Box(
         Modifier
             .size(width = 48.dp, height = 48.dp)
             .clip(CircleShape)
+            .background(if (selected) colors.primaryContainer else colors.primaryContainer.copy(alpha = 0f))
             .clickable(role = Role.Button, onClick = onClick)
             .semantics { contentDescription = label },
         contentAlignment = Alignment.Center,
@@ -360,6 +520,7 @@ private fun ToolText(
             textDecoration = decoration,
             fontFamily = if (monospace) FontFamily.Monospace else FontFamily.Default,
             fontSize = if (monospace) 15.sp else 19.sp,
+            color = if (selected) colors.primary else colors.onSurface,
         )
     }
 }

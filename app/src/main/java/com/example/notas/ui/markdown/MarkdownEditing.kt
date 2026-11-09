@@ -12,177 +12,156 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.unit.sp
+
+private val CodeSpan = Regex("""`([^`\n]+)`""")
+private val LinkSpan = Regex("""\[([^\]\n]+)]\(([^)\s]*)\)""")
+private val BoldSpan = Regex("""(\*\*|__)(?=\S)(.+?)(?<=\S)\1""")
+private val StrikeSpan = Regex("""~~(?=\S)(.+?)(?<=\S)~~""")
+private val ItalicStarSpan = Regex("""(?<![\w*])\*(?![\s*])(.+?)(?<![\s*])\*(?![\w*])""")
+private val ItalicUnderscoreSpan = Regex("""(?<![\w_])_(?![\s_])(.+?)(?<![\s_])_(?![\w_])""")
+/** Marker pairs inserted by the toolbar before anything is typed between them. */
+private val EmptyPairs = Regex("""\*\*\*\*|~~~~|(?<![\w_])__(?![\w_])|(?<!`)``(?!`)""")
+private val BareUrl = Regex("""https?://[^\s)]+""")
 
 /**
- * Live highlighting while editing: the text stays exactly as typed (identity offsets), but headings
- * grow, markers are tinted, and bold/italic/strike/code show their style.
+ * WYSIWYG for inline Markdown: `**bold**` is shown as **bold** with the asterisks hidden.
+ * The underlying text keeps the markers (that is what gets saved); the offset mapping skips them.
  */
-class MarkdownHighlighter(
-    private val marker: Color,
-    private val accent: Color,
-    private val muted: Color,
-    private val codeBackground: Color,
-) : VisualTransformation {
+data class LiveInlineMarkdown(val linkColor: Color, val codeBackground: Color) : VisualTransformation {
 
     override fun filter(text: AnnotatedString): TransformedText {
         val s = text.text
-        val b = AnnotatedString.Builder(s)
-        val markerStyle = SpanStyle(color = marker)
-        val accentMarker = SpanStyle(color = accent, fontWeight = FontWeight.Bold)
+        val n = s.length
+        val hidden = BooleanArray(n)
+        val inCode = BooleanArray(n)
+        val styles = ArrayList<Triple<SpanStyle, Int, Int>>()
 
-        var start = 0
-        for (line in s.split('\n')) {
-            val end = start + line.length
-            TaskRegex.matchEntire(line)?.let { m ->
-                val boxEnd = start + m.groups[2]!!.range.last + 2
-                b.addStyle(accentMarker, start, boxEnd.coerceAtMost(end))
-                if (m.groupValues[2] != " ") {
-                    b.addStyle(SpanStyle(color = muted, textDecoration = TextDecoration.LineThrough), boxEnd.coerceAtMost(end), end)
-                }
-            } ?: HeadingRegex.matchEntire(line)?.let { m ->
-                val size = when (m.groupValues[1].length) { 1 -> 24.sp; 2 -> 21.sp; else -> 18.sp }
-                b.addStyle(SpanStyle(fontWeight = FontWeight.Bold, fontSize = size), start, end)
-                b.addStyle(markerStyle, start, start + m.groupValues[1].length)
-            } ?: BulletRegex.matchEntire(line)?.let { m ->
-                val r = m.groups[2]!!.range
-                b.addStyle(accentMarker, start + r.first, start + r.last + 1)
-            } ?: NumberedRegex.matchEntire(line)?.let { m ->
-                b.addStyle(accentMarker, start + m.groups[2]!!.range.first, start + m.groups[3]!!.range.last + 1)
-            } ?: QuoteRegex.matchEntire(line)?.let {
-                b.addStyle(accentMarker, start, start + 1)
-                b.addStyle(SpanStyle(fontStyle = FontStyle.Italic, color = muted), start + 1, end)
-            }
-            start = end + 1
+        fun free(range: IntRange) = range.none { inCode[it] }
+        fun hide(from: Int, toExclusive: Int) {
+            for (i in from until toExclusive) hidden[i] = true
         }
 
-        fun inline(regex: Regex, markerLen: Int, style: SpanStyle) {
-            regex.findAll(s).forEach { m ->
-                val r = m.range
-                b.addStyle(style, r.first, r.last + 1)
-                b.addStyle(markerStyle, r.first, r.first + markerLen)
-                b.addStyle(markerStyle, r.last + 1 - markerLen, r.last + 1)
+        CodeSpan.findAll(s).forEach { m ->
+            val a = m.range.first
+            val b = m.range.last
+            hide(a, a + 1)
+            hide(b, b + 1)
+            for (i in a + 1 until b) inCode[i] = true
+            styles += Triple(SpanStyle(fontFamily = FontFamily.Monospace, background = codeBackground), a + 1, b)
+        }
+        LinkSpan.findAll(s).filter { free(it.range) }.forEach { m ->
+            val label = m.groups[1]!!.range
+            hide(m.range.first, label.first)
+            hide(label.last + 1, m.range.last + 1)
+            styles += Triple(SpanStyle(color = linkColor, textDecoration = TextDecoration.Underline), label.first, label.last + 1)
+        }
+        fun pair(regex: Regex, markerLen: Int, style: SpanStyle, inner: Int) {
+            regex.findAll(s).filter { free(it.range) }.forEach { m ->
+                hide(m.range.first, m.range.first + markerLen)
+                hide(m.range.last + 1 - markerLen, m.range.last + 1)
+                val r = m.groups[inner]!!.range
+                styles += Triple(style, r.first, r.last + 1)
             }
         }
-        inline(Regex("""(\*\*|__)[^\n]+?\1"""), 2, SpanStyle(fontWeight = FontWeight.Bold))
-        inline(Regex("""~~[^\n]+?~~"""), 2, SpanStyle(textDecoration = TextDecoration.LineThrough))
-        inline(Regex("""(?<![\w*])\*(?![\s*])[^\n*]+?(?<![\s*])\*(?![\w*])"""), 1, SpanStyle(fontStyle = FontStyle.Italic))
-        inline(Regex("""(?<![\w_])_(?![\s_])[^\n_]+?(?<![\s_])_(?![\w_])"""), 1, SpanStyle(fontStyle = FontStyle.Italic))
-        inline(Regex("""`[^`\n]+`"""), 1, SpanStyle(fontFamily = FontFamily.Monospace, background = codeBackground))
+        pair(BoldSpan, 2, SpanStyle(fontWeight = FontWeight.Bold), 2)
+        pair(StrikeSpan, 2, SpanStyle(textDecoration = TextDecoration.LineThrough), 1)
+        pair(ItalicStarSpan, 1, SpanStyle(fontStyle = FontStyle.Italic), 1)
+        pair(ItalicUnderscoreSpan, 1, SpanStyle(fontStyle = FontStyle.Italic), 1)
+        EmptyPairs.findAll(s).filter { free(it.range) }.forEach { hide(it.range.first, it.range.last + 1) }
+        BareUrl.findAll(s).filter { free(it.range) }.forEach { m ->
+            styles += Triple(SpanStyle(color = linkColor, textDecoration = TextDecoration.Underline), m.range.first, m.range.last + 1)
+        }
 
-        return TransformedText(b.toAnnotatedString(), OffsetMapping.Identity)
+        // keptBefore[i] = how many visible characters come before original index i.
+        val keptBefore = IntArray(n + 1)
+        val visible = IntArray(n)
+        var count = 0
+        val out = StringBuilder(n)
+        for (i in 0 until n) {
+            keptBefore[i] = count
+            if (!hidden[i]) {
+                visible[count++] = i
+                out.append(s[i])
+            }
+        }
+        keptBefore[n] = count
+
+        val builder = AnnotatedString.Builder(out.toString())
+        styles.forEach { (style, a, b) ->
+            val ta = keptBefore[a]
+            val tb = keptBefore[b]
+            if (tb > ta) builder.addStyle(style, ta, tb)
+        }
+
+        val mapping = object : OffsetMapping {
+            override fun originalToTransformed(offset: Int) = keptBefore[offset.coerceIn(0, n)]
+            override fun transformedToOriginal(offset: Int) =
+                if (offset >= count) n else visible[offset.coerceAtLeast(0)]
+        }
+        return TransformedText(builder.toAnnotatedString(), mapping)
     }
-
-    override fun equals(other: Any?) = other is MarkdownHighlighter && other.marker == marker &&
-        other.accent == accent && other.muted == muted && other.codeBackground == codeBackground
-
-    override fun hashCode() = listOf(marker, accent, muted, codeBackground).hashCode()
 }
 
-private fun lineStartAt(text: String, index: Int) = text.lastIndexOf('\n', (index - 1).coerceAtLeast(0)).let {
-    if (index == 0) 0 else it + 1
+/** Expands a collapsed cursor to the word around it (so "B" with no selection bolds that word). */
+private fun selectWord(value: TextFieldValue): TextFieldValue {
+    if (!value.selection.collapsed) return value
+    val t = value.text
+    var a = value.selection.start
+    var b = a
+    while (a > 0 && t[a - 1].isLetterOrDigit()) a--
+    while (b < t.length && t[b].isLetterOrDigit()) b++
+    return value.copy(selection = TextRange(a, b))
 }
 
-private fun lineEndAt(text: String, index: Int) = text.indexOf('\n', index).let { if (it == -1) text.length else it }
+private fun runBefore(t: String, index: Int, c: Char): Int {
+    var k = 0
+    while (index - k - 1 >= 0 && t[index - k - 1] == c) k++
+    return k
+}
+
+private fun runAfter(t: String, index: Int, c: Char): Int {
+    var k = 0
+    while (index + k < t.length && t[index + k] == c) k++
+    return k
+}
 
 /**
- * Called on every edit. When Enter was just pressed at the end of a list item, the next line gets
- * the same marker (a new unchecked box for checklists, the next number for numbered lists).
- * Pressing Enter on an empty item ends the list instead.
+ * Toolbar bold / italic. With a selection (or a word under the cursor) it toggles the style on
+ * it; with the cursor on empty space it inserts an (invisible) empty pair to type into.
  */
-fun continueList(old: TextFieldValue, new: TextFieldValue): TextFieldValue {
-    val text = new.text
-    val cursor = new.selection.start
-    val insertedNewline = new.selection.collapsed && text.length == old.text.length + 1 &&
-        cursor > 0 && text[cursor - 1] == '\n' && old.selection.collapsed
-    if (!insertedNewline) return new
-
-    val prevStart = lineStartAt(text, cursor - 1)
-    val prevLine = text.substring(prevStart, cursor - 1)
-
-    val (prefix, body) = TaskRegex.matchEntire(prevLine)?.let {
-        "${it.groupValues[1]}- [ ] " to it.groupValues[3]
-    } ?: BulletRegex.matchEntire(prevLine)?.let {
-        "${it.groupValues[1]}${it.groupValues[2]} " to it.groupValues[3]
-    } ?: NumberedRegex.matchEntire(prevLine)?.let {
-        "${it.groupValues[1]}${it.groupValues[2].toInt() + 1}${it.groupValues[3]} " to it.groupValues[4]
-    } ?: return new
-
-    if (body.isBlank()) {
-        // Empty item: remove its marker and the new line, leaving an empty line.
-        val newText = text.removeRange(prevStart, cursor)
-        return TextFieldValue(newText, TextRange(prevStart))
+fun toggleEmphasis(value: TextFieldValue, bold: Boolean): TextFieldValue {
+    val v = selectWord(value)
+    val start = minOf(v.selection.start, v.selection.end)
+    val end = maxOf(v.selection.start, v.selection.end)
+    val t = v.text
+    if (start == end) {
+        val pair = if (bold) "**" else "_"
+        return TextFieldValue(t.substring(0, start) + pair + pair + t.substring(start), TextRange(start + pair.length))
     }
-    val newText = text.substring(0, cursor) + prefix + text.substring(cursor)
-    return TextFieldValue(newText, TextRange(cursor + prefix.length))
+    for (c in listOf('*', '_')) {
+        val k = minOf(runBefore(t, start, c), runAfter(t, end, c))
+        val active = if (bold) k >= 2 else (k == 1 || k >= 3)
+        if (active) {
+            val m = if (bold) 2 else 1
+            val newText = t.substring(0, start - m) + t.substring(start, end) + t.substring(end + m)
+            return TextFieldValue(newText, TextRange(start - m, end - m))
+        }
+    }
+    val marker = if (bold) "**" else "*"
+    val newText = t.substring(0, start) + marker + t.substring(start, end) + marker + t.substring(end)
+    return TextFieldValue(newText, TextRange(start + marker.length, end + marker.length))
 }
 
-enum class LineFormat { TASK, BULLET, NUMBERED, QUOTE, HEADING }
-
-/** Toggles a line marker on every line touched by the selection (or cycles heading levels). */
-fun toggleLineFormat(value: TextFieldValue, format: LineFormat): TextFieldValue {
-    val text = value.text
-    val selStart = minOf(value.selection.start, value.selection.end)
-    val selEnd = maxOf(value.selection.start, value.selection.end)
-    val blockStart = lineStartAt(text, selStart)
-    val blockEnd = lineEndAt(text, selEnd)
-    val lines = text.substring(blockStart, blockEnd).split('\n')
-
-    val allHave = lines.all { line ->
-        when (format) {
-            LineFormat.TASK -> TaskRegex.matches(line)
-            LineFormat.BULLET -> BulletRegex.matches(line) && !TaskRegex.matches(line)
-            LineFormat.NUMBERED -> NumberedRegex.matches(line)
-            LineFormat.QUOTE -> QuoteRegex.matches(line)
-            LineFormat.HEADING -> false
-        }
-    }
-
-    fun stripMarkers(line: String): Pair<String, String> {
-        TaskRegex.matchEntire(line)?.let { return it.groupValues[1] to it.groupValues[3] }
-        BulletRegex.matchEntire(line)?.let { return it.groupValues[1] to it.groupValues[3] }
-        NumberedRegex.matchEntire(line)?.let { return it.groupValues[1] to it.groupValues[4] }
-        QuoteRegex.matchEntire(line)?.let { return "" to it.groupValues[1] }
-        HeadingRegex.matchEntire(line)?.let { return "" to it.groupValues[2] }
-        val indent = line.takeWhile { it == ' ' || it == '\t' }
-        return indent to line.substring(indent.length)
-    }
-
-    var number = 1
-    val newLines = lines.map { line ->
-        if (format == LineFormat.HEADING) {
-            val level = HeadingRegex.matchEntire(line)?.groupValues?.get(1)?.length ?: 0
-            val body = stripMarkers(line).second
-            return@map when (level) {
-                0 -> "# $body"
-                1 -> "## $body"
-                2 -> "### $body"
-                else -> body
-            }
-        }
-        val (indent, body) = stripMarkers(line)
-        if (allHave) {
-            indent + body
-        } else when (format) {
-            LineFormat.TASK -> "$indent- [ ] $body"
-            LineFormat.BULLET -> "$indent- $body"
-            LineFormat.NUMBERED -> "$indent${number++}. $body"
-            LineFormat.QUOTE -> "> $body"
-            LineFormat.HEADING -> body
-        }
-    }
-    val replaced = newLines.joinToString("\n")
-    val newText = text.substring(0, blockStart) + replaced + text.substring(blockEnd)
-    // Cursor goes to the end of the edited lines, ready to keep typing.
-    return TextFieldValue(newText, TextRange(blockStart + replaced.length))
-}
-
-/** Wraps the selection in [marker] (e.g. `**`), or removes it if it's already wrapped. */
+/** Toolbar strikethrough / code: wraps the selection (or word) in [marker], or unwraps it. */
 fun toggleWrap(value: TextFieldValue, marker: String): TextFieldValue {
-    val text = value.text
-    val start = minOf(value.selection.start, value.selection.end)
-    val end = maxOf(value.selection.start, value.selection.end)
+    val v = selectWord(value)
+    val text = v.text
+    val start = minOf(v.selection.start, v.selection.end)
+    val end = maxOf(v.selection.start, v.selection.end)
     val m = marker.length
+    if (start == end) {
+        return TextFieldValue(text.substring(0, start) + marker + marker + text.substring(start), TextRange(start + m))
+    }
     val wrapped = start >= m && end + m <= text.length &&
         text.substring(start - m, start) == marker && text.substring(end, end + m) == marker
     return if (wrapped) {
