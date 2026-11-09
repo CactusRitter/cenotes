@@ -20,6 +20,8 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -180,6 +182,7 @@ fun NotesListScreen(
         gesturesEnabled = !selecting,
         drawerContent = {
             SideMenu(
+                hazeState = hazeState,
                 section = section,
                 labels = labels,
                 counts = labelCounts,
@@ -428,6 +431,7 @@ private fun SelectionBar(
 /** Side menu: all notes, each label with its count, the archive, then label editing and settings. */
 @Composable
 private fun SideMenu(
+    hazeState: HazeState,
     section: Section,
     labels: List<Label>,
     counts: Map<Long, Int>,
@@ -445,12 +449,17 @@ private fun SideMenu(
     // selected item as a pill that runs from the left edge.
     ModalDrawerSheet(
         modifier = Modifier.width(DrawerWidth),
-        drawerContainerColor = LocalGlass.current.menu,
+        // The sheet itself is see-through; the glass (blur + tint) is drawn by the column inside.
+        drawerContainerColor = Color.Transparent,
+        drawerTonalElevation = 0.dp,
         drawerShape = RectangleShape,
+        windowInsets = WindowInsets(0),
     ) {
         Column(
             Modifier
                 .fillMaxSize()
+                .glass(RectangleShape, GlassKind.Card, hazeState = hazeState)
+                .windowInsetsPadding(WindowInsets.systemBars)
                 .verticalScroll(rememberScrollState())
                 .padding(end = 12.dp),
         ) {
