@@ -63,6 +63,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
@@ -82,6 +83,9 @@ import com.example.notas.ui.glass.GlassPill
 import com.example.notas.ui.glass.PillIcon
 import com.example.notas.ui.glass.glass
 import com.example.notas.ui.glass.glassSpring
+import com.example.notas.ui.markdown.MarkdownPreview
+import com.example.notas.ui.markdown.taskStats
+import com.example.notas.ui.theme.CheckBoxIcon
 import com.example.notas.ui.theme.GridViewIcon
 import com.example.notas.ui.theme.LocalGlass
 import com.example.notas.ui.theme.ViewAgendaIcon
@@ -333,25 +337,49 @@ private fun NoteCard(
                 }
             }
             if (note.content.isNotBlank()) {
-                Spacer(Modifier.height(6.dp))
+                Spacer(Modifier.height(8.dp))
+                MarkdownPreview(note.content, maxBlocks = maxLines)
+            }
+            Spacer(Modifier.height(10.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                val tasks = remember(note.content) { taskStats(note.content) }
+                if (tasks.total > 0) {
+                    val allDone = tasks.done == tasks.total
+                    Row(
+                        Modifier
+                            .clip(CircleShape)
+                            .background(
+                                if (allDone) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.primaryContainer,
+                            )
+                            .padding(horizontal = 8.dp, vertical = 3.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        val tint = if (allDone) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary
+                        Icon(CheckBoxIcon, contentDescription = null, tint = tint, modifier = Modifier.size(14.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            stringResource(R.string.tasks_progress, tasks.done, tasks.total),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = tint,
+                        )
+                    }
+                    Spacer(Modifier.width(8.dp))
+                }
+                val justNow = System.currentTimeMillis() - note.updatedAt < DateUtils.MINUTE_IN_MILLIS
+                val whenText = if (justNow) stringResource(R.string.just_now)
+                else DateUtils.getRelativeTimeSpanString(note.updatedAt).toString().lowercase()
                 Text(
-                    text = note.content,
-                    style = MaterialTheme.typography.bodyMedium,
-                    maxLines = maxLines,
+                    // Next to the checklist chip there's only room for the time itself.
+                    text = if (tasks.total > 0) whenText.replaceFirstChar { it.uppercase() }
+                    else stringResource(R.string.edited, whenText),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
             }
-            Spacer(Modifier.height(10.dp))
-            val justNow = System.currentTimeMillis() - note.updatedAt < DateUtils.MINUTE_IN_MILLIS
-            Text(
-                text = stringResource(
-                    R.string.edited,
-                    if (justNow) stringResource(R.string.just_now)
-                    else DateUtils.getRelativeTimeSpanString(note.updatedAt).toString().lowercase(),
-                ),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
         }
         DropdownMenu(
             expanded = menuOpen,

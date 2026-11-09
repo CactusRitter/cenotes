@@ -40,6 +40,52 @@ val ViewAgendaIcon: ImageVector by lazy {
     )
 }
 
+val CheckBoxIcon: ImageVector by lazy {
+    pathIcon(
+        "CheckBox",
+        "M19,3H5C3.89,3 3,3.9 3,5v14c0,1.1 0.89,2 2,2h14c1.11,0 2,-0.9 2,-2V5C21,3.9 20.11,3 19,3z" +
+            "M10,17l-5,-5 1.41,-1.41L10,14.17l7.59,-7.59L19,8L10,17z",
+    )
+}
+
+val CheckBoxOutlineIcon: ImageVector by lazy {
+    pathIcon(
+        "CheckBoxOutline",
+        "M19,5v14H5V5H19M19,3H5C3.9,3 3,3.9 3,5v14c0,1.1 0.9,2 2,2h14c1.1,0 2,-0.9 2,-2V5C21,3.9 20.1,3 19,3L19,3z",
+    )
+}
+
+val BulletListIcon: ImageVector by lazy {
+    pathIcon(
+        "BulletList",
+        "M4,10.5c-0.83,0 -1.5,0.67 -1.5,1.5s0.67,1.5 1.5,1.5 1.5,-0.67 1.5,-1.5 -0.67,-1.5 -1.5,-1.5z" +
+            "M4,4.5c-0.83,0 -1.5,0.67 -1.5,1.5S3.17,7.5 4,7.5 5.5,6.83 5.5,6 4.83,4.5 4,4.5z" +
+            "M4,16.5c-0.83,0 -1.5,0.68 -1.5,1.5s0.68,1.5 1.5,1.5 1.5,-0.68 1.5,-1.5 -0.67,-1.5 -1.5,-1.5z" +
+            "M7,19h14v-2H7v2zM7,13h14v-2H7v2zM7,5v2h14V5H7z",
+    )
+}
+
+val NumberedListIcon: ImageVector by lazy {
+    pathIcon(
+        "NumberedList",
+        "M2,17h2v0.5H3v1h1v0.5H2v1h3v-4H2v1zM3,8h1V4H2v1h1v3zM2,11h1.8L2,13.1v0.9h3v-1H3.2L5,10.9V10H2v1z" +
+            "M7,5v2h14V5H7zM7,19h14v-2H7v2zM7,13h14v-2H7v2z",
+    )
+}
+
+val QuoteIcon: ImageVector by lazy {
+    pathIcon("Quote", "M6,17h3l2,-4V7H5v6h3zM14,17h3l2,-4V7h-6v6h3z")
+}
+
+val VisibilityIcon: ImageVector by lazy {
+    pathIcon(
+        "Visibility",
+        "M12,4.5C7,4.5 2.73,7.61 1,12c1.73,4.39 6,7.5 11,7.5s9.27,-3.11 11,-7.5c-1.73,-4.39 -6,-7.5 -11,-7.5z" +
+            "M12,17c-2.76,0 -5,-2.24 -5,-5s2.24,-5 5,-5 5,2.24 5,5 -2.24,5 -5,5z" +
+            "M12,9c-1.66,0 -3,1.34 -3,3s1.34,3 3,3 3,-1.34 3,-3 -1.34,-3 -3,-3z",
+    )
+}
+
 val PaletteIcon: ImageVector by lazy {
     pathIcon(
         "Palette",

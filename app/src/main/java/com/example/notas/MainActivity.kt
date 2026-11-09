@@ -5,6 +5,13 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.EnterExitState
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerInputScope
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -21,6 +28,15 @@ import com.example.notas.ui.NotesViewModel
 import com.example.notas.ui.SettingsScreen
 import com.example.notas.ui.glass.glassSpring
 import com.example.notas.ui.theme.NotesTheme
+
+/** Swallows every pointer event before the children see it. */
+private suspend fun PointerInputScope.blockAllTouches() {
+    awaitPointerEventScope {
+        while (true) {
+            awaitPointerEvent(PointerEventPass.Initial).changes.forEach { it.consume() }
+        }
+    }
+}
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,6 +64,14 @@ class MainActivity : ComponentActivity() {
                     },
                     label = "screen",
                 ) { target ->
+                    // The screen that is fading out must not react to taps meant for the new one
+                    // (e.g. the editor's star sits exactly where the list's search button is).
+                    val leaving = transition.targetState == EnterExitState.PostExit
+                    Box(
+                        Modifier
+                            .fillMaxSize()
+                            .then(if (leaving) Modifier.pointerInput(Unit) { blockAllTouches() } else Modifier),
+                    ) {
                     when {
                         target.startsWith("note:") -> NoteEditorScreen(
                             noteId = target.removePrefix("note:").toLong(),
@@ -68,6 +92,7 @@ class MainActivity : ComponentActivity() {
                             onNewNote = { editingId = 0L },
                             onOpenSettings = { showSettings = true },
                         )
+                    }
                     }
                 }
             }
