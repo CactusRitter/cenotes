@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cenotes.app.ui.theme.ArchiveIcon
 import com.cenotes.app.ui.theme.LabelIcon
+import com.cenotes.app.ui.theme.LabelOutlineIcon
 import com.cenotes.app.ui.theme.UnarchiveIcon
 import androidx.compose.runtime.DisposableEffect
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -314,11 +315,13 @@ fun NoteEditorScreen(
                         onClick = { pinned = !pinned },
                         selected = pinned,
                     )
-                    // No highlighted background (it looked like a stray tap): the icon takes the colour
-                    // of the note's first label instead.
+                    // No highlighted background (it looked like a stray tap). Without labels the icon is
+                    // hollow and plain, like the star; with labels it is filled in the first label's
+                    // colour. The shape alone tells them apart, even if a label's colour matched the
+                    // plain icon colour.
                     val firstLabel = allLabels.firstOrNull { it.id in labelIds }
                     PillIcon(
-                        LabelIcon,
+                        if (firstLabel == null) LabelOutlineIcon else LabelIcon,
                         stringResource(R.string.labels),
                         { pickingLabels = true },
                         tintOverride = firstLabel?.let { labelColor(it) },
