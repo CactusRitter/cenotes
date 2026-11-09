@@ -314,7 +314,15 @@ fun NoteEditorScreen(
                         onClick = { pinned = !pinned },
                         selected = pinned,
                     )
-                    PillIcon(LabelIcon, stringResource(R.string.labels), { pickingLabels = true }, selected = labelIds.isNotEmpty())
+                    // No highlighted background (it looked like a stray tap): the icon takes the colour
+                    // of the note's first label instead.
+                    val firstLabel = allLabels.firstOrNull { it.id in labelIds }
+                    PillIcon(
+                        LabelIcon,
+                        stringResource(R.string.labels),
+                        { pickingLabels = true },
+                        tintOverride = firstLabel?.let { labelColor(it) },
+                    )
                     Box {
                         PillIcon(Icons.Filled.MoreVert, stringResource(R.string.more_options), { moreMenuOpen = true })
                         DropdownMenu(

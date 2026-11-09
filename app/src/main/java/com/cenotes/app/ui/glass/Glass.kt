@@ -160,6 +160,8 @@ fun PillIcon(
     onClick: () -> Unit,
     selected: Boolean = false,
     width: Dp = 52.dp,
+    /** Fixed icon colour (e.g. a label's colour); the background highlight is then not used. */
+    tintOverride: Color? = null,
 ) {
     val colors = MaterialTheme.colorScheme
     val container by animateColorAsState(
@@ -176,6 +178,6 @@ fun PillIcon(
             .clickable(role = Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(icon, contentDescription, tint = tint)
+        Icon(icon, contentDescription, tint = tintOverride ?: tint)
     }
 }

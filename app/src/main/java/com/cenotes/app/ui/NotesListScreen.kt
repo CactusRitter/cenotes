@@ -459,6 +459,8 @@ private fun SideMenu(
             Modifier
                 .fillMaxSize()
                 .glass(RectangleShape, GlassKind.Card, hazeState = hazeState)
+                // Extra veil so a photo behind the panel can't make the text hard to read.
+                .background(LocalGlass.current.base.copy(alpha = 0.62f))
                 .windowInsetsPadding(WindowInsets.systemBars)
                 .verticalScroll(rememberScrollState())
                 .padding(end = 12.dp),
