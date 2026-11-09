@@ -1,4 +1,4 @@
-package com.example.notas.data
+package com.cenotes.app.data
 
 import android.content.Context
 import android.graphics.Bitmap

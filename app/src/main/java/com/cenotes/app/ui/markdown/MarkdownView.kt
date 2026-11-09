@@ -1,4 +1,4 @@
-package com.example.notas.ui.markdown
+package com.cenotes.app.ui.markdown
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -21,8 +21,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.example.notas.ui.theme.CheckBoxIcon
-import com.example.notas.ui.theme.CheckBoxOutlineIcon
+import com.cenotes.app.ui.theme.CheckBoxIcon
+import com.cenotes.app.ui.theme.CheckBoxOutlineIcon
 
 @Composable
 fun inlineColors() = InlineColors(

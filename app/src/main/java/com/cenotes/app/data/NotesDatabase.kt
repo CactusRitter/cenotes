@@ -1,4 +1,4 @@
-package com.example.notas.data
+package com.cenotes.app.data
 
 import androidx.room.Database
 import androidx.room.RoomDatabase

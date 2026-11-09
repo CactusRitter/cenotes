@@ -5,15 +5,15 @@ plugins {
 }
 
 android {
-    namespace = "com.example.notas"
+    namespace = "com.cenotes.app"
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "com.example.notas"
+        applicationId = "com.cenotes.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 5
-        versionName = "0.5"
+        versionCode = 6
+        versionName = "0.6"
     }
 
     buildTypes {

@@ -1,4 +1,4 @@
-package com.example.notas.ui.markdown
+package com.cenotes.app.ui.markdown
 
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue

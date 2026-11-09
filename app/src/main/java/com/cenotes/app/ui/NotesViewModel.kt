@@ -1,4 +1,4 @@
-package com.example.notas.ui
+package com.cenotes.app.ui
 
 import android.net.Uri
 import androidx.lifecycle.ViewModel
@@ -6,11 +6,11 @@ import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.AP
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.example.notas.NotesApp
-import com.example.notas.data.ImageStore
-import com.example.notas.data.Note
-import com.example.notas.data.NoteDao
-import com.example.notas.ui.markdown.imageNames
+import com.cenotes.app.CenotesApp
+import com.cenotes.app.data.ImageStore
+import com.cenotes.app.data.Note
+import com.cenotes.app.data.NoteDao
+import com.cenotes.app.ui.markdown.imageNames
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -113,7 +113,7 @@ class NotesViewModel(private val dao: NoteDao, val images: ImageStore) : ViewMod
     companion object {
         val Factory = viewModelFactory {
             initializer {
-                val app = this[APPLICATION_KEY] as NotesApp
+                val app = this[APPLICATION_KEY] as CenotesApp
                 NotesViewModel(app.database.noteDao(), app.images)
             }
         }

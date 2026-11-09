@@ -1,12 +1,12 @@
-package com.example.notas
+package com.cenotes.app
 
 import android.app.Application
 import androidx.room.Room
-import com.example.notas.data.ImageStore
-import com.example.notas.data.NotesDatabase
-import com.example.notas.data.SettingsRepository
+import com.cenotes.app.data.ImageStore
+import com.cenotes.app.data.NotesDatabase
+import com.cenotes.app.data.SettingsRepository
 
-class NotesApp : Application() {
+class CenotesApp : Application() {
     val database: NotesDatabase by lazy {
         Room.databaseBuilder(this, NotesDatabase::class.java, "notes.db").build()
     }

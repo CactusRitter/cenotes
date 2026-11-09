@@ -1,4 +1,4 @@
-package com.example.notas.ui
+package com.cenotes.app.ui
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
@@ -55,17 +55,17 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.notas.R
-import com.example.notas.data.AppSettings
-import com.example.notas.ui.glass.GlassBackground
-import com.example.notas.ui.glass.GlassIconButton
-import com.example.notas.ui.glass.GlassKind
-import com.example.notas.ui.glass.GlassPill
-import com.example.notas.ui.glass.glass
-import com.example.notas.ui.glass.glassSpring
-import com.example.notas.ui.theme.Accent
-import com.example.notas.ui.theme.LocalGlass
-import com.example.notas.ui.theme.PaletteIcon
+import com.cenotes.app.R
+import com.cenotes.app.data.AppSettings
+import com.cenotes.app.ui.glass.GlassBackground
+import com.cenotes.app.ui.glass.GlassIconButton
+import com.cenotes.app.ui.glass.GlassKind
+import com.cenotes.app.ui.glass.GlassPill
+import com.cenotes.app.ui.glass.glass
+import com.cenotes.app.ui.glass.glassSpring
+import com.cenotes.app.ui.theme.Accent
+import com.cenotes.app.ui.theme.LocalGlass
+import com.cenotes.app.ui.theme.PaletteIcon
 import kotlin.math.roundToInt
 
 @Composable

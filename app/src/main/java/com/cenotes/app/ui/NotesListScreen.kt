@@ -1,4 +1,4 @@
-package com.example.notas.ui
+package com.cenotes.app.ui
 
 import android.text.format.DateUtils
 import androidx.compose.animation.AnimatedVisibility
@@ -73,27 +73,27 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.notas.R
-import com.example.notas.data.Note
-import com.example.notas.data.NoteLayout
-import com.example.notas.ui.glass.GlassBackground
-import com.example.notas.ui.glass.GlassIconButton
-import com.example.notas.ui.glass.GlassKind
-import com.example.notas.ui.glass.GlassPill
-import com.example.notas.ui.glass.PillIcon
-import com.example.notas.ui.glass.glass
-import com.example.notas.ui.glass.glassSpring
+import com.cenotes.app.R
+import com.cenotes.app.data.Note
+import com.cenotes.app.data.NoteLayout
+import com.cenotes.app.ui.glass.GlassBackground
+import com.cenotes.app.ui.glass.GlassIconButton
+import com.cenotes.app.ui.glass.GlassKind
+import com.cenotes.app.ui.glass.GlassPill
+import com.cenotes.app.ui.glass.PillIcon
+import com.cenotes.app.ui.glass.glass
+import com.cenotes.app.ui.glass.glassSpring
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import coil3.compose.AsyncImage
-import com.example.notas.NotesApp
-import com.example.notas.ui.markdown.MarkdownPreview
-import com.example.notas.ui.markdown.firstImage
-import com.example.notas.ui.markdown.taskStats
-import com.example.notas.ui.theme.CheckBoxIcon
-import com.example.notas.ui.theme.GridViewIcon
-import com.example.notas.ui.theme.LocalGlass
-import com.example.notas.ui.theme.ViewAgendaIcon
+import com.cenotes.app.CenotesApp
+import com.cenotes.app.ui.markdown.MarkdownPreview
+import com.cenotes.app.ui.markdown.firstImage
+import com.cenotes.app.ui.markdown.taskStats
+import com.cenotes.app.ui.theme.CheckBoxIcon
+import com.cenotes.app.ui.theme.GridViewIcon
+import com.cenotes.app.ui.theme.LocalGlass
+import com.cenotes.app.ui.theme.ViewAgendaIcon
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
 
@@ -325,7 +325,7 @@ private fun NoteCard(
             // The note's first image works as its cover, like in Keep.
             if (cover != null) {
                 AsyncImage(
-                    model = (context.applicationContext as NotesApp).images.file(cover),
+                    model = (context.applicationContext as CenotesApp).images.file(cover),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxWidth().height(if (maxLines > 4) 130.dp else 150.dp),

@@ -1,4 +1,4 @@
-package com.example.notas.ui.theme
+package com.cenotes.app.ui.theme
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor

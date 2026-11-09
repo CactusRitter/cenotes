@@ -1,4 +1,4 @@
-package com.example.notas
+package com.cenotes.app
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -22,12 +22,12 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.notas.ui.NoteEditorScreen
-import com.example.notas.ui.NotesListScreen
-import com.example.notas.ui.NotesViewModel
-import com.example.notas.ui.SettingsScreen
-import com.example.notas.ui.glass.glassSpring
-import com.example.notas.ui.theme.NotesTheme
+import com.cenotes.app.ui.NoteEditorScreen
+import com.cenotes.app.ui.NotesListScreen
+import com.cenotes.app.ui.NotesViewModel
+import com.cenotes.app.ui.SettingsScreen
+import com.cenotes.app.ui.glass.glassSpring
+import com.cenotes.app.ui.theme.CenotesTheme
 
 /** Swallows every pointer event before the children see it. */
 private suspend fun PointerInputScope.blockAllTouches() {
@@ -42,10 +42,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        val repo = (application as NotesApp).settings
+        val repo = (application as CenotesApp).settings
         setContent {
             val settings by repo.state.collectAsStateWithLifecycle()
-            NotesTheme(settings) {
+            CenotesTheme(settings) {
                 val vm: NotesViewModel = viewModel(factory = NotesViewModel.Factory)
                 // null = list; 0 = new note; otherwise the id of the note being edited.
                 var editingId by rememberSaveable { mutableStateOf<Long?>(null) }

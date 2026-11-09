@@ -1,7 +1,7 @@
-package com.example.notas.data
+package com.cenotes.app.data
 
 import android.content.Context
-import com.example.notas.ui.theme.Accent
+import com.cenotes.app.ui.theme.Accent
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

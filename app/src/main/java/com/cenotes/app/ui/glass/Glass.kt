@@ -1,4 +1,4 @@
-package com.example.notas.ui.glass
+package com.cenotes.app.ui.glass
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
@@ -32,7 +32,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.example.notas.ui.theme.LocalGlass
+import com.cenotes.app.ui.theme.LocalGlass
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.HazeTint
 import dev.chrisbanes.haze.hazeEffect

@@ -1,11 +1,11 @@
 <resources>
-    <string name="app_name">Notas</string>
+    <string name="app_name">Cenotes</string>
     <string name="search">Buscar</string>
     <string name="search_hint">Buscar notas</string>
     <string name="clear_search">Borrar búsqueda</string>
     <string name="new_note">Nueva nota</string>
     <string name="settings">Ajustes</string>
-    <string name="welcome_title">Bienvenido a Notas</string>
+    <string name="welcome_title">Bienvenido a Cenotes</string>
     <string name="welcome_text">Crea tu primera nota. Todo se guarda solo en tu teléfono.</string>
     <string name="create_first_note">Crear primera nota</string>
     <string name="empty_search">Ninguna nota coincide con la búsqueda.</string>
@@ -34,7 +34,7 @@
     <string name="transparency">Transparencia del cristal</string>
     <string name="transparency_value">%1$d %%</string>
     <string name="transparency_help">Cuanto más alta, más se ve el fondo a través de las tarjetas y botones.</string>
-    <string name="version">Notas · Versión %1$s</string>
+    <string name="version">Cenotes · Versión %1$s</string>
     <string name="expand">Desplegar</string>
     <string name="share">Compartir</string>
     <string name="fmt_checklist">Casilla de verificación</string>

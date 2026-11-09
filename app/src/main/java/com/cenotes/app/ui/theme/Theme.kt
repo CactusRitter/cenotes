@@ -1,4 +1,4 @@
-package com.example.notas.ui.theme
+package com.cenotes.app.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.LocalContentColor
@@ -10,7 +10,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
-import com.example.notas.data.AppSettings
+import com.cenotes.app.data.AppSettings
 
 /** Curated accent colours, each tuned for light and dark (same idea as Celander's calendar colours). */
 enum class Accent(
@@ -81,7 +81,7 @@ fun glassColors(dark: Boolean, transparency: Int, accent: Accent): GlassColors {
 val LocalGlass = staticCompositionLocalOf { glassColors(dark = false, transparency = 65, accent = Accent.INDIGO) }
 
 @Composable
-fun NotesTheme(settings: AppSettings, content: @Composable () -> Unit) {
+fun CenotesTheme(settings: AppSettings, content: @Composable () -> Unit) {
     val dark = isSystemInDarkTheme()
     val accent = settings.accent
     val colors = if (dark) {

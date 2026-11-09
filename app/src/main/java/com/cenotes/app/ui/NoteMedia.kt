@@ -1,4 +1,4 @@
-package com.example.notas.ui
+package com.cenotes.app.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -51,11 +51,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import coil3.compose.AsyncImage
-import com.example.notas.R
-import com.example.notas.ui.glass.GlassIconButton
-import com.example.notas.ui.glass.GlassKind
-import com.example.notas.ui.glass.glass
-import com.example.notas.ui.theme.LocalGlass
+import com.cenotes.app.R
+import com.cenotes.app.ui.glass.GlassIconButton
+import com.cenotes.app.ui.glass.GlassKind
+import com.cenotes.app.ui.glass.glass
+import com.cenotes.app.ui.theme.LocalGlass
 import java.io.File
 
 /**
