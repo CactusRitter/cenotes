@@ -12,8 +12,8 @@ android {
         applicationId = "com.example.notas"
         minSdk = 26
         targetSdk = 36
-        versionCode = 4
-        versionName = "0.4"
+        versionCode = 5
+        versionName = "0.5"
     }
 
     buildTypes {
@@ -48,5 +48,6 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
     implementation(libs.haze)
+    implementation(libs.coil.compose)
     debugImplementation(libs.androidx.ui.tooling)
 }

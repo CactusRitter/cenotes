@@ -36,7 +36,8 @@ fun MarkdownPreview(source: String, maxBlocks: Int, modifier: Modifier = Modifie
     val colors = inlineColors()
     val style = MaterialTheme.typography.bodyMedium
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
-    val blocks = parseMarkdown(source).filter { it != MdBlock.Blank }
+    // Images are shown as the card's cover instead.
+    val blocks = parseMarkdown(source).filter { it != MdBlock.Blank && it !is MdBlock.Image }
     Column(modifier, verticalArrangement = Arrangement.spacedBy(3.dp)) {
         blocks.take(maxBlocks).forEach { block ->
             when (block) {
@@ -87,7 +88,7 @@ fun MarkdownPreview(source: String, maxBlocks: Int, modifier: Modifier = Modifie
                     inlineMarkdown(block.text, colors, links = false),
                     style = style, maxLines = 3, overflow = TextOverflow.Ellipsis,
                 )
-                MdBlock.Blank -> Unit
+                MdBlock.Blank, is MdBlock.Image -> Unit
             }
         }
         if (blocks.size > maxBlocks) Text("…", style = style, color = muted)

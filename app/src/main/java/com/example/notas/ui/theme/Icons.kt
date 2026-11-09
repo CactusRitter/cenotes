@@ -86,6 +86,53 @@ val VisibilityIcon: ImageVector by lazy {
     )
 }
 
+val IndentIcon: ImageVector by lazy {
+    pathIcon(
+        "Indent",
+        "M3,21h18v-2H3V21zM3,8v8l4,-4L3,8zM11,17h10v-2H11V17zM3,3v2h18V3H3zM11,9h10V7H11V9zM11,13h10v-2H11V13z",
+    )
+}
+
+val OutdentIcon: ImageVector by lazy {
+    pathIcon(
+        "Outdent",
+        "M11,17h10v-2H11V17zM3,12l4,4V8L3,12zM3,21h18v-2H3V21zM3,3v2h18V3H3zM11,9h10V7H11V9zM11,13h10v-2H11V13z",
+    )
+}
+
+val LinkIcon: ImageVector by lazy {
+    pathIcon(
+        "Link",
+        "M3.9,12c0,-1.71 1.39,-3.1 3.1,-3.1h4V7H7c-2.76,0 -5,2.24 -5,5s2.24,5 5,5h4v-1.9H7c-1.71,0 -3.1,-1.39 -3.1,-3.1z" +
+            "M8,13h8v-2H8v2zM17,7h-4v1.9h4c1.71,0 3.1,1.39 3.1,3.1s-1.39,3.1 -3.1,3.1h-4V17h4c2.76,0 5,-2.24 5,-5s-2.24,-5 -5,-5z",
+    )
+}
+
+val ImageIcon: ImageVector by lazy {
+    pathIcon(
+        "Image",
+        "M21,19V5c0,-1.1 -0.9,-2 -2,-2H5c-1.1,0 -2,0.9 -2,2v14c0,1.1 0.9,2 2,2h14c1.1,0 2,-0.9 2,-2z" +
+            "M8.5,13.5l2.5,3.01L14.5,12l4.5,6H5l3.5,-4.5z",
+    )
+}
+
+val CameraIcon: ImageVector by lazy {
+    pathIcon(
+        "Camera",
+        "M12,12m-3.2,0a3.2,3.2 0,1 1,6.4 0a3.2,3.2 0,1 1,-6.4 0" +
+            "M9,2L7.17,4H4c-1.1,0 -2,0.9 -2,2v12c0,1.1 0.9,2 2,2h16c1.1,0 2,-0.9 2,-2V6c0,-1.1 -0.9,-2 -2,-2h-3.17L15,2H9z" +
+            "M12,17c-2.76,0 -5,-2.24 -5,-5s2.24,-5 5,-5 5,2.24 5,5 -2.24,5 -5,5z",
+    )
+}
+
+val OpenInNewIcon: ImageVector by lazy {
+    pathIcon(
+        "OpenInNew",
+        "M19,19H5V5h7V3H5c-1.11,0 -2,0.9 -2,2v14c0,1.1 0.89,2 2,2h14c1.1,0 2,-0.9 2,-2v-7h-2v7z" +
+            "M14,3v2h3.59l-9.83,9.83 1.41,1.41L19,6.41V10h2V3h-7z",
+    )
+}
+
 val PaletteIcon: ImageVector by lazy {
     pathIcon(
         "Palette",

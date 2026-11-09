@@ -1,16 +1,24 @@
 package com.example.notas.ui
 
 import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -42,7 +50,10 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -54,6 +65,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -71,10 +83,12 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
@@ -82,6 +96,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.notas.R
@@ -97,20 +112,30 @@ import com.example.notas.ui.markdown.BlockEditorState
 import com.example.notas.ui.markdown.BlockType
 import com.example.notas.ui.markdown.EditorBlock
 import com.example.notas.ui.markdown.LiveInlineMarkdown
+import com.example.notas.ui.markdown.NestableTypes
+import com.example.notas.ui.markdown.linkAt
 import com.example.notas.ui.markdown.markdownToShareText
 import com.example.notas.ui.markdown.toggleEmphasis
 import com.example.notas.ui.markdown.toggleWrap
 import com.example.notas.ui.theme.BulletListIcon
+import com.example.notas.ui.theme.CameraIcon
 import com.example.notas.ui.theme.CheckBoxIcon
+import com.example.notas.ui.theme.ImageIcon
+import com.example.notas.ui.theme.IndentIcon
+import com.example.notas.ui.theme.LinkIcon
 import com.example.notas.ui.theme.LocalGlass
 import com.example.notas.ui.theme.NumberedListIcon
+import com.example.notas.ui.theme.OpenInNewIcon
+import com.example.notas.ui.theme.OutdentIcon
 import com.example.notas.ui.theme.QuoteIcon
 import com.example.notas.ui.theme.StarBorderIcon
+import kotlinx.coroutines.launch
+import java.io.File
 
 /**
- * Edits one note in a visual editor: checkboxes are real checkboxes, bold is bold, and so on.
- * Markdown typed by hand ("- [ ] ", "# ", "**x**") turns into formatting as you type, and the
- * note is still stored as Markdown. [noteId] 0 means a new note. It is saved once, on leaving.
+ * Edits one note in a visual editor: checkboxes (with sub-tasks) are real checkboxes, bold is
+ * bold, links open from a chip, and images sit between the text. Markdown typed by hand still
+ * works as a shortcut, and the note is stored as Markdown. [noteId] 0 means a new note.
  */
 @Composable
 fun NoteEditorScreen(
@@ -126,8 +151,13 @@ fun NoteEditorScreen(
     var pinned by rememberSaveable(noteId) { mutableStateOf(false) }
     var closed by remember(noteId) { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf(false) }
+    var imageMenuOpen by remember { mutableStateOf(false) }
+    var viewing by remember { mutableStateOf<File?>(null) }
+    var linkTarget by remember { mutableStateOf<Pair<Long, TextRange>?>(null) }
     val editor = remember(noteId) { BlockEditorState(savedContent) }
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val images = viewModel.images
 
     LaunchedEffect(noteId) {
         if (noteId == 0L) {
@@ -149,6 +179,35 @@ fun NoteEditorScreen(
         snapshotFlow { editor.toMarkdown() }.collect { savedContent = it }
     }
 
+    // ---- Images: gallery (several at once) and camera ----
+    val imageError = stringResource(R.string.image_error)
+    fun addImages(uris: List<Uri>) {
+        if (uris.isEmpty()) return
+        scope.launch {
+            val names = viewModel.importImages(uris)
+            if (names.size < uris.size) Toast.makeText(context, imageError, Toast.LENGTH_SHORT).show()
+            editor.insertImages(names)
+        }
+    }
+    val pickImages = rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia(10)) {
+        addImages(it)
+    }
+    var cameraTarget by remember { mutableStateOf<Pair<File, Uri>?>(null) }
+    val takePicture = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok ->
+        val target = cameraTarget
+        if (ok && target != null) {
+            scope.launch {
+                addImages(listOf(target.second))
+            }
+        }
+    }
+    fun openGallery() = pickImages.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+    fun openCamera() {
+        val target = images.newCameraTarget()
+        cameraTarget = target
+        runCatching { takePicture.launch(target.second) }
+    }
+
     // Guarded so a double back press (or a tap during the exit animation) can't save twice.
     fun close() {
         if (closed) return
@@ -161,8 +220,16 @@ fun NoteEditorScreen(
         val text = listOf(title.trim(), markdownToShareText(editor.toMarkdown()).trim())
             .filter { it.isNotEmpty() }
             .joinToString("\n\n")
-        val send = Intent(Intent.ACTION_SEND).apply {
-            type = "text/plain"
+        val uris = ArrayList(images.shareUris(editor.imageNames()))
+        val send = if (uris.isEmpty()) {
+            Intent(Intent.ACTION_SEND).apply { type = "text/plain" }
+        } else {
+            Intent(Intent.ACTION_SEND_MULTIPLE).apply {
+                type = "image/*"
+                putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+        }.apply {
             putExtra(Intent.EXTRA_SUBJECT, title)
             putExtra(Intent.EXTRA_TEXT, text)
         }
@@ -187,6 +254,15 @@ fun NoteEditorScreen(
                 GlassIconButton(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back), ::close)
                 Spacer(Modifier.weight(1f))
                 GlassPill {
+                    Box {
+                        PillIcon(ImageIcon, stringResource(R.string.add_image), { imageMenuOpen = true })
+                        ImageSourceMenu(
+                            expanded = imageMenuOpen,
+                            onDismiss = { imageMenuOpen = false },
+                            onGallery = { imageMenuOpen = false; openGallery() },
+                            onCamera = { imageMenuOpen = false; openCamera() },
+                        )
+                    }
                     PillIcon(
                         if (pinned) Icons.Filled.Star else StarBorderIcon,
                         stringResource(if (pinned) R.string.unpin else R.string.pin),
@@ -214,7 +290,7 @@ fun NoteEditorScreen(
                 ) {
                     TitleField(title, { title = it }, onNext = editor::focusFirst)
                     Spacer(Modifier.height(12.dp))
-                    BlockList(editor)
+                    BlockList(editor, images::file, onOpenImage = { viewing = it })
                     // Tapping the empty space under the text continues writing at the end.
                     Box(
                         Modifier
@@ -229,14 +305,52 @@ fun NoteEditorScreen(
                 }
             }
 
+            // Cursor on a link → a chip to open it (tapping the text itself keeps editing it).
+            val focusedBlock = editor.focused
+            val link = focusedBlock?.value?.let { v -> if (v.selection.collapsed) linkAt(v.text, v.selection.start) else null }
             AnimatedVisibility(
-                visible = editor.focusedId != null,
+                visible = link != null,
+                enter = fadeIn(glassSpring()) + expandVertically(glassSpring()),
+                exit = fadeOut(glassSpring()) + shrinkVertically(glassSpring()),
+            ) {
+                var lastLink by remember { mutableStateOf("") }
+                if (link != null) lastLink = link
+                LinkChip(lastLink)
+            }
+
+            AnimatedVisibility(
+                visible = focusedBlock != null,
                 enter = fadeIn(glassSpring()) + slideInVertically(glassSpring()) { it / 2 },
                 exit = fadeOut(glassSpring()) + slideOutVertically(glassSpring()) { it / 2 },
             ) {
-                FormatToolbar(editor)
+                FormatToolbar(
+                    editor,
+                    onLink = {
+                        editor.focused?.let { linkTarget = it.id to it.value.selection }
+                    },
+                    onImage = ::openGallery,
+                )
             }
         }
+    }
+
+    viewing?.let { ImageViewer(it) { viewing = null } }
+
+    linkTarget?.let { (id, selection) ->
+        val block = editor.blocks.firstOrNull { it.id == id }
+        val selected = block?.value?.text?.let {
+            val s = minOf(selection.start, selection.end).coerceIn(0, it.length)
+            val e = maxOf(selection.start, selection.end).coerceIn(0, it.length)
+            it.substring(s, e)
+        } ?: ""
+        LinkDialog(
+            initialLabel = selected,
+            onDismiss = { linkTarget = null },
+            onConfirm = { label, url ->
+                editor.insertLink(id, selection, label, url)
+                linkTarget = null
+            },
+        )
     }
 
     if (confirmDelete) {
@@ -260,6 +374,56 @@ fun NoteEditorScreen(
                 TextButton(onClick = { confirmDelete = false }) { Text(stringResource(R.string.cancel)) }
             },
         )
+    }
+}
+
+@Composable
+private fun ImageSourceMenu(expanded: Boolean, onDismiss: () -> Unit, onGallery: () -> Unit, onCamera: () -> Unit) {
+    DropdownMenu(
+        expanded = expanded,
+        onDismissRequest = onDismiss,
+        shape = RoundedCornerShape(20.dp),
+        containerColor = LocalGlass.current.menu,
+    ) {
+        DropdownMenuItem(
+            text = { Text(stringResource(R.string.from_gallery)) },
+            leadingIcon = { Icon(ImageIcon, null) },
+            onClick = onGallery,
+        )
+        DropdownMenuItem(
+            text = { Text(stringResource(R.string.from_camera)) },
+            leadingIcon = { Icon(CameraIcon, null) },
+            onClick = onCamera,
+        )
+    }
+}
+
+@Composable
+private fun LinkChip(url: String) {
+    val uriHandler = LocalUriHandler.current
+    Row(
+        Modifier
+            .padding(bottom = 8.dp)
+            .fillMaxWidth()
+            .height(48.dp)
+            .glass(CircleShape, GlassKind.Chrome, elevation = 8.dp)
+            .padding(start = 18.dp, end = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(LinkIcon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+        Spacer(Modifier.width(10.dp))
+        Text(
+            displayHost(url),
+            style = MaterialTheme.typography.bodyMedium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f),
+        )
+        TextButton(onClick = { runCatching { uriHandler.openUri(normalizeUrl(url)) } }) {
+            Icon(OpenInNewIcon, null, Modifier.size(18.dp))
+            Spacer(Modifier.width(6.dp))
+            Text(stringResource(R.string.link_open), fontWeight = FontWeight.Bold)
+        }
     }
 }
 
@@ -290,9 +454,8 @@ private fun TitleField(value: String, onChange: (String) -> Unit, onNext: () -> 
 }
 
 @Composable
-private fun BlockList(editor: BlockEditorState) {
+private fun BlockList(editor: BlockEditorState, fileFor: (String) -> File, onOpenImage: (File) -> Unit) {
     val colors = MaterialTheme.colorScheme
-    val typography = MaterialTheme.typography
     val transformation = remember(colors) {
         LiveInlineMarkdown(linkColor = colors.primary, codeBackground = colors.onSurface.copy(alpha = 0.08f))
     }
@@ -304,27 +467,73 @@ private fun BlockList(editor: BlockEditorState) {
         editor.pendingFocus = null
     }
 
-    var number = 0
+    val numbers = editor.numberLabels()
+    val blocks = editor.blocks.toList()
     Column {
-        editor.blocks.forEach { block ->
-            number = if (block.type == BlockType.NUMBERED) number + 1 else 0
-            val label = number
-            // key(): each block keeps its own text field (and keyboard focus) when blocks are
-            // inserted or removed around it.
-            key(block.id) {
-                if (block.type == BlockType.DIVIDER) {
+        var i = 0
+        while (i < blocks.size) {
+            val block = blocks[i]
+            when {
+                block.type == BlockType.IMAGE && block.small -> {
+                    // Consecutive small images form a gallery, three per row.
+                    var end = i
+                    while (end + 1 < blocks.size && blocks[end + 1].type == BlockType.IMAGE && blocks[end + 1].small) end++
+                    val run = blocks.subList(i, end + 1)
+                    key(block.id) {
+                        Column(Modifier.padding(vertical = 6.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            run.chunked(3).forEach { row ->
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    row.forEach { img -> ImageBlock(img, editor, fileFor, onOpenImage, Modifier.weight(1f)) }
+                                    repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
+                                }
+                            }
+                        }
+                    }
+                    i = end + 1
+                    continue
+                }
+                block.type == BlockType.IMAGE -> key(block.id) {
+                    ImageBlock(block, editor, fileFor, onOpenImage, Modifier.fillMaxWidth().padding(vertical = 6.dp))
+                }
+                block.type == BlockType.DIVIDER -> key(block.id) {
                     HorizontalDivider(Modifier.padding(vertical = 14.dp))
-                } else {
-                    BlockRow(block, label, editor, requesters.getOrPut(block.id) { FocusRequester() }, transformation)
+                }
+                // key(): each block keeps its own text field (and keyboard focus) when blocks are
+                // inserted or removed around it.
+                else -> key(block.id) {
+                    BlockRow(
+                        block, numbers[block.id] ?: 0, editor,
+                        requesters.getOrPut(block.id) { FocusRequester() }, transformation,
+                    )
                 }
             }
+            i++
         }
     }
 }
 
+@Composable
+private fun ImageBlock(
+    block: EditorBlock,
+    editor: BlockEditorState,
+    fileFor: (String) -> File,
+    onOpenImage: (File) -> Unit,
+    modifier: Modifier,
+) {
+    val file = fileFor(block.imageName)
+    NoteImage(
+        file = file,
+        small = block.small,
+        onOpen = { onOpenImage(file) },
+        onToggleSize = { block.small = !block.small },
+        onDelete = { editor.removeImage(block) },
+        modifier = modifier,
+    )
+}
+
 /**
- * One block. The layout is the same for every type (leading marker + text field) so that turning
- * a line into a checkbox or a heading keeps the very same text field and the keyboard stays open.
+ * One text block. The layout is the same for every type (leading marker + text field) so that
+ * turning a line into a checkbox or a heading keeps the very same text field and the keyboard.
  */
 @Composable
 private fun BlockRow(
@@ -365,9 +574,7 @@ private fun BlockRow(
         rowModifier.fillMaxWidth().height(IntrinsicSize.Min),
         verticalAlignment = if (type == BlockType.TASK) Alignment.CenterVertically else Alignment.Top,
     ) {
-        if (type == BlockType.TASK || type == BlockType.BULLET || type == BlockType.NUMBERED) {
-            Spacer(Modifier.width((block.indent * 24).dp))
-        }
+        if (type in NestableTypes) Spacer(Modifier.width((block.indent * 28).dp))
         when (type) {
             BlockType.TASK -> CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
                 Checkbox(
@@ -378,7 +585,7 @@ private fun BlockRow(
                 )
             }
             BlockType.BULLET, BlockType.NUMBERED -> Text(
-                if (type == BlockType.BULLET) "•" else "$number.",
+                if (type == BlockType.BULLET) listOf("•", "◦", "▪")[block.indent % 3] else "$number.",
                 style = body.copy(color = colors.primary, fontWeight = FontWeight.Bold),
                 modifier = Modifier.width(28.dp),
             )
@@ -422,10 +629,7 @@ private fun BlockField(
         keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
         modifier = modifier
             .focusRequester(requester)
-            .onFocusChanged { state ->
-                if (state.isFocused) editor.focusedId = block.id
-                else if (editor.focusedId == block.id) editor.focusedId = null
-            }
+            .onFocusChanged { editor.onFocus(block, it.isFocused) }
             .onPreviewKeyEvent { event ->
                 event.type == KeyEventType.KeyDown && event.key == Key.Backspace && editor.onBackspaceAtStart(block)
             },
@@ -442,8 +646,9 @@ private fun BlockField(
 
 /** Glass formatting bar that sits above the keyboard while a line is being edited. */
 @Composable
-private fun FormatToolbar(editor: BlockEditorState) {
-    val type = editor.focused?.type
+private fun FormatToolbar(editor: BlockEditorState, onLink: () -> Unit, onImage: () -> Unit) {
+    val focused = editor.focused
+    val type = focused?.type
     Row(
         Modifier
             .padding(bottom = 12.dp)
@@ -456,6 +661,15 @@ private fun FormatToolbar(editor: BlockEditorState) {
     ) {
         ToolIcon(CheckBoxIcon, stringResource(R.string.fmt_checklist), type == BlockType.TASK) {
             editor.toggleType(BlockType.TASK)
+        }
+        // Sub-tasks: only offered on list lines.
+        if (type in NestableTypes) {
+            ToolIcon(IndentIcon, stringResource(R.string.fmt_indent), false, enabled = editor.canIndent(focused)) {
+                editor.indentFocused()
+            }
+            ToolIcon(OutdentIcon, stringResource(R.string.fmt_outdent), false, enabled = (focused?.indent ?: 0) > 0) {
+                editor.outdentFocused()
+            }
         }
         ToolIcon(BulletListIcon, stringResource(R.string.fmt_bullets), type == BlockType.BULLET) {
             editor.toggleType(BlockType.BULLET)
@@ -478,6 +692,8 @@ private fun FormatToolbar(editor: BlockEditorState) {
         ToolText("S", stringResource(R.string.fmt_strike), decoration = TextDecoration.LineThrough) {
             editor.editFocused { toggleWrap(it, "~~") }
         }
+        ToolIcon(LinkIcon, stringResource(R.string.fmt_link), false, onClick = onLink)
+        ToolIcon(ImageIcon, stringResource(R.string.add_image), false, onClick = onImage)
         ToolText("</>", stringResource(R.string.fmt_code), monospace = true) {
             editor.editFocused { toggleWrap(it, "`") }
         }
@@ -488,8 +704,25 @@ private fun FormatToolbar(editor: BlockEditorState) {
 }
 
 @Composable
-private fun ToolIcon(icon: ImageVector, label: String, selected: Boolean, onClick: () -> Unit) {
-    PillIcon(icon, label, onClick, selected = selected, width = 48.dp)
+private fun ToolIcon(
+    icon: ImageVector,
+    label: String,
+    selected: Boolean,
+    enabled: Boolean = true,
+    onClick: () -> Unit,
+) {
+    Box(Modifier.then(if (enabled) Modifier else Modifier.semantics { }), contentAlignment = Alignment.Center) {
+        PillIcon(icon, label, { if (enabled) onClick() }, selected = selected, width = 48.dp)
+        if (!enabled) {
+            // Dim disabled tools without changing the bar's layout.
+            Box(
+                Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .background(LocalGlass.current.chrome.copy(alpha = 0.6f)),
+            )
+        }
+    }
 }
 
 @Composable

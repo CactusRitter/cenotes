@@ -83,7 +83,12 @@ import com.example.notas.ui.glass.GlassPill
 import com.example.notas.ui.glass.PillIcon
 import com.example.notas.ui.glass.glass
 import com.example.notas.ui.glass.glassSpring
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import coil3.compose.AsyncImage
+import com.example.notas.NotesApp
 import com.example.notas.ui.markdown.MarkdownPreview
+import com.example.notas.ui.markdown.firstImage
 import com.example.notas.ui.markdown.taskStats
 import com.example.notas.ui.theme.CheckBoxIcon
 import com.example.notas.ui.theme.GridViewIcon
@@ -308,14 +313,25 @@ private fun NoteCard(
 ) {
     var menuOpen by remember { mutableStateOf(false) }
     val shape = RoundedCornerShape(24.dp)
+    val context = LocalContext.current
+    val cover = remember(note.content) { firstImage(note.content) }
     Box(modifier) {
         Column(
             Modifier
                 .fillMaxWidth()
                 .glass(shape, if (note.pinned) GlassKind.Pinned else GlassKind.Card)
-                .combinedClickable(onClick = onClick, onLongClick = { menuOpen = true })
-                .padding(16.dp),
+                .combinedClickable(onClick = onClick, onLongClick = { menuOpen = true }),
         ) {
+            // The note's first image works as its cover, like in Keep.
+            if (cover != null) {
+                AsyncImage(
+                    model = (context.applicationContext as NotesApp).images.file(cover),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxWidth().height(if (maxLines > 4) 130.dp else 150.dp),
+                )
+            }
+            Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.Top) {
                 Text(
                     text = note.title.ifBlank { stringResource(R.string.untitled) },
@@ -379,6 +395,7 @@ private fun NoteCard(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
+            }
             }
         }
         DropdownMenu(

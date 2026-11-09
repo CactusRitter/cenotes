@@ -15,13 +15,15 @@ import androidx.compose.ui.text.style.TextDecoration
 
 private val CodeSpan = Regex("""`([^`\n]+)`""")
 private val LinkSpan = Regex("""\[([^\]\n]+)]\(([^)\s]*)\)""")
-private val BoldSpan = Regex("""(\*\*|__)(?=\S)(.+?)(?<=\S)\1""")
-private val StrikeSpan = Regex("""~~(?=\S)(.+?)(?<=\S)~~""")
-private val ItalicStarSpan = Regex("""(?<![\w*])\*(?![\s*])(.+?)(?<![\s*])\*(?![\w*])""")
-private val ItalicUnderscoreSpan = Regex("""(?<![\w_])_(?![\s_])(.+?)(?<![\s_])_(?![\w_])""")
+// The closing marker may follow a space: while typing "**hola **" the text must stay bold
+// (otherwise the markers flash on screen after every space).
+private val BoldSpan = Regex("""(\*\*|__)(.+?)\1""")
+private val StrikeSpan = Regex("""~~(.+?)~~""")
+private val ItalicStarSpan = Regex("""(?<![\w*])\*(?![\s*])(.+?)(?<!\*)\*(?![\w*])""")
+private val ItalicUnderscoreSpan = Regex("""(?<![\w_])_(?![\s_])(.+?)(?<!_)_(?![\w_])""")
 /** Marker pairs inserted by the toolbar before anything is typed between them. */
 private val EmptyPairs = Regex("""\*\*\*\*|~~~~|(?<![\w_])__(?![\w_])|(?<!`)``(?!`)""")
-private val BareUrl = Regex("""https?://[^\s)]+""")
+private val BareUrl = Regex("""(?:https?://|www\.)[^\s)]+""")
 
 /**
  * WYSIWYG for inline Markdown: `**bold**` is shown as **bold** with the asterisks hidden.
@@ -113,6 +115,19 @@ private fun selectWord(value: TextFieldValue): TextFieldValue {
     return value.copy(selection = TextRange(a, b))
 }
 
+/**
+ * Leaves a styled run whose closing marker (length [m]) starts at [c]. Spaces typed just before
+ * leaving move outside the style ("**uno **" → "**uno** "), so the saved text stays clean.
+ */
+private fun stepOut(value: TextFieldValue, c: Int, m: Int): TextFieldValue {
+    val t = value.text
+    var ws = 0
+    while (c - ws - 1 >= 0 && t[c - ws - 1] == ' ') ws++
+    val marker = t.substring(c, c + m)
+    val newText = t.substring(0, c - ws) + marker + t.substring(c - ws, c) + t.substring(c + m)
+    return TextFieldValue(newText, TextRange(c + m))
+}
+
 private fun runBefore(t: String, index: Int, c: Char): Int {
     var k = 0
     while (index - k - 1 >= 0 && t[index - k - 1] == c) k++
@@ -130,6 +145,17 @@ private fun runAfter(t: String, index: Int, c: Char): Int {
  * it; with the cursor on empty space it inserts an (invisible) empty pair to type into.
  */
 fun toggleEmphasis(value: TextFieldValue, bold: Boolean): TextFieldValue {
+    // Typing in bold and pressing B again: step out of the bold part (jump past its closing marker).
+    if (value.selection.collapsed) {
+        val c = value.selection.start
+        for (ch in listOf('*', '_')) {
+            val after = runAfter(value.text, c, ch)
+            val closes = if (bold) after >= 2 else (after == 1 || after >= 3)
+            if (closes && runBefore(value.text, c, ch) == 0) {
+                return stepOut(value, c, if (bold) 2 else 1)
+            }
+        }
+    }
     val v = selectWord(value)
     val start = minOf(v.selection.start, v.selection.end)
     val end = maxOf(v.selection.start, v.selection.end)
@@ -154,6 +180,14 @@ fun toggleEmphasis(value: TextFieldValue, bold: Boolean): TextFieldValue {
 
 /** Toolbar strikethrough / code: wraps the selection (or word) in [marker], or unwraps it. */
 fun toggleWrap(value: TextFieldValue, marker: String): TextFieldValue {
+    // Pressing it again while typing inside: step out past the closing marker.
+    if (value.selection.collapsed) {
+        val c = value.selection.start
+        val before = value.text.substring(0, c)
+        if (value.text.startsWith(marker, c) && before.contains(marker) && !before.endsWith(marker)) {
+            return stepOut(value, c, marker.length)
+        }
+    }
     val v = selectWord(value)
     val text = v.text
     val start = minOf(v.selection.start, v.selection.end)

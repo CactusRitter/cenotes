@@ -1,13 +1,16 @@
 package com.example.notas.ui
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.notas.NotesApp
+import com.example.notas.data.ImageStore
 import com.example.notas.data.Note
 import com.example.notas.data.NoteDao
+import com.example.notas.ui.markdown.imageNames
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -16,7 +19,18 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-class NotesViewModel(private val dao: NoteDao) : ViewModel() {
+class NotesViewModel(private val dao: NoteDao, val images: ImageStore) : ViewModel() {
+
+    init {
+        // Once per app start: drop image files that no note uses any more.
+        viewModelScope.launch {
+            val referenced = dao.allContents().flatMap { imageNames(it) }.toSet()
+            images.cleanUp(referenced)
+        }
+    }
+
+    /** Imports picked/captured pictures into the app; returns their file names (failures skipped). */
+    suspend fun importImages(uris: List<Uri>): List<String> = uris.mapNotNull { images.import(it) }
 
     private val _query = MutableStateFlow("")
     val query: StateFlow<String> = _query.asStateFlow()
@@ -100,7 +114,7 @@ class NotesViewModel(private val dao: NoteDao) : ViewModel() {
         val Factory = viewModelFactory {
             initializer {
                 val app = this[APPLICATION_KEY] as NotesApp
-                NotesViewModel(app.database.noteDao())
+                NotesViewModel(app.database.noteDao(), app.images)
             }
         }
     }

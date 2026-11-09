@@ -27,7 +27,31 @@ sealed interface MdBlock {
     data class Code(val text: String) : MdBlock
     data object Rule : MdBlock
     data class Paragraph(val text: String) : MdBlock
+    data class Image(val name: String, val small: Boolean) : MdBlock
     data object Blank : MdBlock
+}
+
+/** `![small](img_x.jpg)` — the alt text only says how big it is shown. */
+internal val ImageRegex = Regex("""^!\[(small)?]\(([^)\s]+)\)\s*$""")
+
+/** File name of the first image in a note (for the thumbnail on its card). */
+fun firstImage(source: String): String? =
+    source.lineSequence().firstNotNullOfOrNull { ImageRegex.matchEntire(it)?.groupValues?.get(2) }
+
+fun imageNames(source: String): List<String> =
+    source.lineSequence().mapNotNull { ImageRegex.matchEntire(it)?.groupValues?.get(2) }.toList()
+
+private val LinkAtRegex = Regex("""\[([^\]\n]+)]\(([^)\s]+)\)|https?://[^\s)]+|www\.[^\s)]+""")
+
+/** The URL of the link the cursor is on (Markdown link or bare address), or null. */
+fun linkAt(text: String, cursor: Int): String? {
+    for (m in LinkAtRegex.findAll(text)) {
+        if (cursor in m.range.first..m.range.last + 1) {
+            val url = m.groups[2]?.value ?: m.value
+            return if (url.startsWith("www.")) "https://$url" else url
+        }
+    }
+    return null
 }
 
 internal val TaskRegex = Regex("""^(\s*)[-*+]\s+\[([ xX])]\s?(.*)$""")
@@ -60,6 +84,9 @@ fun parseMarkdown(source: String): List<MdBlock> {
         }
         blocks += when {
             line.isBlank() -> MdBlock.Blank
+            ImageRegex.matches(line) -> ImageRegex.matchEntire(line)!!.let {
+                MdBlock.Image(it.groupValues[2], it.groupValues[1] == "small")
+            }
             RuleRegex.matches(line) -> MdBlock.Rule
             else -> TaskRegex.matchEntire(line)?.let {
                 MdBlock.Task(it.groupValues[2] != " ", it.groupValues[3], indentLevel(it.groupValues[1]), i)
@@ -96,19 +123,21 @@ fun taskStats(source: String): TaskStats {
 
 /** Plain text for sharing: drops the most noisy markers but keeps checkboxes readable. */
 fun markdownToShareText(source: String): String =
-    source.lines().joinToString("\n") { line ->
-        TaskRegex.matchEntire(line)?.let {
-            it.groupValues[1] + (if (it.groupValues[2] == " ") "☐ " else "☑ ") + it.groupValues[3]
-        } ?: line
-    }
+    source.lines()
+        .filterNot { ImageRegex.matches(it) } // images are shared as files, not as text
+        .joinToString("\n") { line ->
+            TaskRegex.matchEntire(line)?.let {
+                it.groupValues[1] + (if (it.groupValues[2] == " ") "☐ " else "☑ ") + it.groupValues[3]
+            } ?: line
+        }
 
 private val InlineRegex = Regex(
     """(\*\*|__)(.+?)\1""" + // 1,2 bold
         """|~~(.+?)~~""" + // 3 strike
         """|`([^`]+)`""" + // 4 code
         """|\[([^\]]+)]\(([^)\s]+)\)""" + // 5,6 link
-        """|(?<![\w*])\*(?![\s*])(.+?)(?<![\s*])\*(?![\w*])""" + // 7 italic *
-        """|(?<![\w_])_(?![\s_])(.+?)(?<![\s_])_(?![\w_])""" + // 8 italic _
+        """|(?<![\w*])\*(?![\s*])(.+?)(?<!\*)\*(?![\w*])""" + // 7 italic *
+        """|(?<![\w_])_(?![\s_])(.+?)(?<!_)_(?![\w_])""" + // 8 italic _
         """|(https?://[^\s)]+)""", // 9 bare URL
 )
 

@@ -47,4 +47,22 @@
     <string name="fmt_code">Código</string>
     <string name="fmt_quote">Cita</string>
     <string name="tasks_progress">%1$d/%2$d</string>
+    <string name="fmt_indent">Convertir en subtarea</string>
+    <string name="fmt_outdent">Subir un nivel</string>
+    <string name="fmt_link">Enlace</string>
+    <string name="add_image">Añadir imagen</string>
+    <string name="from_gallery">Desde la galería</string>
+    <string name="from_camera">Hacer una foto</string>
+    <string name="image">Imagen</string>
+    <string name="image_options">Opciones de la imagen</string>
+    <string name="image_view">Ver</string>
+    <string name="image_make_small">Hacer pequeña</string>
+    <string name="image_make_large">Hacer grande</string>
+    <string name="image_error">No se pudo añadir la imagen</string>
+    <string name="close">Cerrar</string>
+    <string name="link_add">Añadir enlace</string>
+    <string name="link_text">Texto</string>
+    <string name="link_url">Dirección</string>
+    <string name="link_insert">Insertar</string>
+    <string name="link_open">Abrir</string>
 </resources>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Camera writes its photo here before it is imported. -->
+    <cache-path name="camera" path="camera/" />
+    <!-- Note images, shared together with the note text. -->
+    <files-path name="images" path="images/" />
+</paths>
