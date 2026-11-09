@@ -1,4 +1,4 @@
-package com.cenotes.app.ui
+﻿package com.cenotes.app.ui
 
 import android.text.format.DateUtils
 import androidx.activity.compose.BackHandler
@@ -14,6 +14,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
@@ -317,62 +318,19 @@ fun NotesListScreen(
                 }
             }
 
-            // Bottom glass pill: layout and the "Fijadas" filter. Sliding a finger across it
-            // switches between the grid and list views (like Celandar's view pill).
-            val haptics = LocalHapticFeedback.current
-            val density = LocalDensity.current
-            val currentLayout by rememberUpdatedState(layout)
-            val changeLayout by rememberUpdatedState(onLayoutChange)
-            GlassPill(
-                Modifier
+            // Bottom glass pill: layout and the "Fijadas" filter. The highlight slides under the
+            // finger when dragging across the pill (like Celandar's view pill).
+            LayoutPill(
+                layout = layout,
+                onLayoutChange = onLayoutChange,
+                pinnedOnly = pinnedOnly,
+                onTogglePinned = { viewModel.setPinnedOnly(!pinnedOnly) },
+                hazeState = hazeState,
+                modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .navigationBarsPadding()
-                    .padding(bottom = 16.dp)
-                    .pointerInput(Unit) {
-                        // Pill geometry in dp from its left edge: 4 padding + 4 spacer, then the grid
-                        // icon (64), the list icon (64), the divider and the star.
-                        val gridEnd = with(density) { 72.dp.toPx() }
-                        val listEnd = with(density) { 140.dp.toPx() }
-                        detectHorizontalDragGestures { change, _ ->
-                            val x = change.position.x
-                            val target = when {
-                                x < gridEnd -> NoteLayout.GRID
-                                x < listEnd -> NoteLayout.LIST
-                                else -> null
-                            }
-                            if (target != null && target != currentLayout) {
-                                changeLayout(target)
-                                haptics.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)
-                            }
-                        }
-                    },
-                height = 64.dp,
-                hazeState = hazeState,
-            ) {
-                Spacer(Modifier.width(4.dp))
-                PillIcon(
-                    GridViewIcon, stringResource(R.string.layout_grid),
-                    onClick = { onLayoutChange(NoteLayout.GRID) },
-                    selected = layout == NoteLayout.GRID, width = 64.dp,
-                )
-                PillIcon(
-                    ViewAgendaIcon, stringResource(R.string.layout_list),
-                    onClick = { onLayoutChange(NoteLayout.LIST) },
-                    selected = layout == NoteLayout.LIST, width = 64.dp,
-                )
-                Box(
-                    Modifier
-                        .padding(horizontal = 10.dp)
-                        .size(width = 1.dp, height = 32.dp)
-                        .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)),
-                )
-                PillIcon(
-                    Icons.Filled.Star, stringResource(R.string.pinned_tab),
-                    onClick = { viewModel.setPinnedOnly(!pinnedOnly) },
-                    selected = pinnedOnly, width = 64.dp,
-                )
-                Spacer(Modifier.width(4.dp))
-            }
+                    .padding(bottom = 16.dp),
+            )
 
             SnackbarHost(
                 snackbarHostState,
@@ -760,5 +718,95 @@ private fun EmptyText(text: String) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
+    }
+}
+
+/**
+ * Bottom pill with the grid / list switch and the "Fijadas" filter. The highlight behind the grid
+ * and list icons is one capsule that springs between them, and when a finger slides across the pill
+ * the capsule follows the finger (clamped to the two icons) and settles on release, like Celandar's
+ * view pill. The view changes as soon as the finger crosses the middle.
+ */
+@Composable
+private fun LayoutPill(
+    layout: NoteLayout,
+    onLayoutChange: (NoteLayout) -> Unit,
+    pinnedOnly: Boolean,
+    onTogglePinned: () -> Unit,
+    hazeState: HazeState,
+    modifier: Modifier = Modifier,
+) {
+    val haptics = LocalHapticFeedback.current
+    val density = LocalDensity.current
+    val scope = rememberCoroutineScope()
+    val slot = with(density) { 64.dp.toPx() } // width of one icon
+    val edge = with(density) { 8.dp.toPx() } // pill padding + spacer before the first icon
+    val currentLayout by rememberUpdatedState(layout)
+    val changeLayout by rememberUpdatedState(onLayoutChange)
+    fun slotX(l: NoteLayout) = if (l == NoteLayout.LIST) slot else 0f
+
+    val indicator = remember { androidx.compose.animation.core.Animatable(slotX(layout)) }
+    var dragging by remember { mutableStateOf(false) }
+    LaunchedEffect(layout, dragging) {
+        if (!dragging) indicator.animateTo(slotX(layout), glassSpring())
+    }
+
+    GlassPill(
+        modifier.pointerInput(Unit) {
+            detectHorizontalDragGestures(
+                onDragStart = { dragging = true },
+                onDragEnd = { dragging = false },
+                onDragCancel = { dragging = false },
+            ) { change, _ ->
+                val local = change.position.x - edge // finger position measured from the first icon
+                scope.launch { indicator.snapTo((local - slot / 2).coerceIn(0f, slot)) }
+                val target = when {
+                    local < slot -> NoteLayout.GRID
+                    local < slot * 2.25f -> NoteLayout.LIST
+                    else -> null // over the star: it is a filter, not a view
+                }
+                if (target != null && target != currentLayout) {
+                    changeLayout(target)
+                    haptics.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)
+                }
+            }
+        },
+        height = 64.dp,
+        hazeState = hazeState,
+    ) {
+        Spacer(Modifier.width(4.dp))
+        Box(Modifier.height(48.dp)) {
+            Box(
+                Modifier
+                    .offset { androidx.compose.ui.unit.IntOffset(indicator.value.toInt(), 0) }
+                    .size(width = 64.dp, height = 48.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primaryContainer),
+            )
+            Row {
+                PillIcon(
+                    GridViewIcon, stringResource(R.string.layout_grid),
+                    onClick = { onLayoutChange(NoteLayout.GRID) },
+                    selected = layout == NoteLayout.GRID, width = 64.dp, showBackground = false,
+                )
+                PillIcon(
+                    ViewAgendaIcon, stringResource(R.string.layout_list),
+                    onClick = { onLayoutChange(NoteLayout.LIST) },
+                    selected = layout == NoteLayout.LIST, width = 64.dp, showBackground = false,
+                )
+            }
+        }
+        Box(
+            Modifier
+                .padding(horizontal = 10.dp)
+                .size(width = 1.dp, height = 32.dp)
+                .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)),
+        )
+        PillIcon(
+            Icons.Filled.Star, stringResource(R.string.pinned_tab),
+            onClick = onTogglePinned,
+            selected = pinnedOnly, width = 64.dp,
+        )
+        Spacer(Modifier.width(4.dp))
     }
 }

@@ -162,10 +162,12 @@ fun PillIcon(
     width: Dp = 52.dp,
     /** Fixed icon colour (e.g. a label's colour); the background highlight is then not used. */
     tintOverride: Color? = null,
+    /** false when something else (a sliding indicator) draws the highlight behind the icon. */
+    showBackground: Boolean = true,
 ) {
     val colors = MaterialTheme.colorScheme
     val container by animateColorAsState(
-        if (selected) colors.primaryContainer else Color.Transparent, glassSpring(), label = "pillBg",
+        if (selected && showBackground) colors.primaryContainer else Color.Transparent, glassSpring(), label = "pillBg",
     )
     val tint by animateColorAsState(
         if (selected) colors.primary else colors.onSurface, glassSpring(), label = "pillTint",
