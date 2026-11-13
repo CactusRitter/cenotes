@@ -1,3 +1,8 @@
+## 0.11.1
+- Die Schaltfläche für eine neue Notiz ist unten rechts, rund und 60 dp groß wie die Schreiben-Schaltfläche von Cemail; die Suche ist eine runde Schaltfläche oben.
+- Die untere Leiste ist kleiner, mit denselben Maßen wie die Leisten von Cemail.
+- Retro 98: Kontrollkästchen sehen aus wie unter Windows 98 (weiß, vertiefter Rand, schwarzes Häkchen).
+
 ## 0.11.0
 - Cenotes sieht jetzt aus wie Cemail: Die Einstellungen sind ein Baum aus Bildschirmen mit großen Zeilen (Aussehen, Label-Farben, Sicherung, Sicherung der Einstellungen und Updates), mit denselben Übergängen.
 - Aussehen: die sechs Designs von Cemail (Glas, Modern, AMOLED, Retro 98, Papier und Brutalist), hell oder dunkel (oder wie das System), sechs Hintergrundstile für das Glas (Polarlicht, Klassisch, Neutral, Sonnenuntergang, Ozean und Neon), 3D-Schatten und Transparenz.

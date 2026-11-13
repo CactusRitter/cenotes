@@ -8,7 +8,7 @@ App de notas para Android. Forma parte de las apps "Ce" de César Caballero y su
 - AGP 9.5 (Kotlin integrado: **no** se aplica `org.jetbrains.kotlin.android`) · Kotlin 2.4 · Room · Haze (cristal) · Coil · Glance (widgets)
 - Las versiones de las dependencias están en [gradle/libs.versions.toml](gradle/libs.versions.toml).
 
-Documentación: [docs/DESIGN.md](docs/DESIGN.md) (diseño compartido con Cemail y Celander, **leer antes de tocar la interfaz**) y [CHANGELOG.md](CHANGELOG.md).
+Documentación: [docs/DESIGN.md](docs/DESIGN.md) (diseño compartido con Cemail y Celander, **leer antes de tocar la interfaz**), [docs/ROADMAP.md](docs/ROADMAP.md) (plan de desarrollo) y [CHANGELOG.md](CHANGELOG.md).
 
 ## Comandos
 

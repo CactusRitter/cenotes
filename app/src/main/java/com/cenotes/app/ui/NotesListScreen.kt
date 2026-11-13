@@ -116,6 +116,9 @@ import com.cenotes.app.ui.glass.PillIcon
 import com.cenotes.app.ui.glass.glass
 import com.cenotes.app.ui.glass.glassSpring
 import com.cenotes.app.ui.glass.onBackdrop
+import com.cenotes.app.ui.glass.popIn
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.semantics.Role
 import com.cenotes.app.ui.glass.pressScale
 import com.cenotes.app.ui.glass.softBounceSpring
 import com.cenotes.app.ui.markdown.MarkdownPreview
@@ -305,18 +308,17 @@ fun NotesListScreen(
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.padding(horizontal = 76.dp),
                         )
-                        GlassPill(Modifier.align(Alignment.CenterEnd), hazeState = hazeState) {
-                            PillIcon(
-                                Icons.Filled.Search,
-                                stringResource(R.string.search),
-                                onClick = {
-                                    if (searchOpen) viewModel.setQuery("")
-                                    searchOpen = !searchOpen
-                                },
-                                selected = searchOpen,
-                            )
-                            PillIcon(Icons.Filled.Add, stringResource(R.string.new_note), onNewNote)
-                        }
+                        // Like Cemail: a round search button opposite the menu one (new note is the button at the bottom).
+                        GlassIconButton(
+                            if (searchOpen) Icons.Filled.Close else Icons.Filled.Search,
+                            stringResource(if (searchOpen) R.string.clear_search else R.string.search),
+                            {
+                                if (searchOpen) viewModel.setQuery("")
+                                searchOpen = !searchOpen
+                            },
+                            Modifier.align(Alignment.CenterEnd),
+                            hazeState = hazeState,
+                        )
                     }
                 }
                 AnimatedVisibility(
@@ -339,8 +341,29 @@ fun NotesListScreen(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .navigationBarsPadding()
-                    .padding(bottom = 16.dp),
+                    .padding(bottom = 18.dp),
             )
+
+            // New note: the same floating button as Cemail's "write" (60 dp, accent glass, bottom corner).
+            if (!selecting) {
+                Box(
+                    Modifier
+                        .align(Alignment.BottomEnd)
+                        .navigationBarsPadding()
+                        .padding(16.dp)
+                        .popIn(delayMillis = 220, initialScale = 0.3f)
+                        .pressScale(0.88f)
+                        .size(60.dp)
+                        .glass(
+                            LocalSkin.current.fabCorner?.let { RoundedCornerShape(it) } ?: CircleShape,
+                            GlassKind.Pinned, elevation = 10.dp, hazeState = hazeState,
+                        )
+                        .clickable(role = Role.Button, onClickLabel = stringResource(R.string.new_note), onClick = onNewNote),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(Icons.Filled.Add, stringResource(R.string.new_note), tint = MaterialTheme.colorScheme.primary)
+                }
+            }
 
             SnackbarHost(
                 snackbarHostState,
@@ -635,7 +658,7 @@ private fun NoteCard(
                         val allDone = tasks.done == tasks.total
                         Row(
                             Modifier
-                                .clip(CircleShape)
+                                .clip(LocalSkin.current.shape(CircleShape))
                                 .background(if (allDone) primary else MaterialTheme.colorScheme.primaryContainer)
                                 .padding(horizontal = 8.dp, vertical = 3.dp),
                             verticalAlignment = Alignment.CenterVertically,
@@ -751,7 +774,7 @@ private fun LayoutPill(
     val haptics = LocalHapticFeedback.current
     val density = LocalDensity.current
     val scope = rememberCoroutineScope()
-    val slot = with(density) { 64.dp.toPx() } // width of one icon
+    val slot = with(density) { 52.dp.toPx() } // width of one icon
     val edge = with(density) { 8.dp.toPx() } // pill padding + spacer before the first icon
     val currentLayout by rememberUpdatedState(layout)
     val changeLayout by rememberUpdatedState(onLayoutChange)
@@ -783,7 +806,6 @@ private fun LayoutPill(
                 }
             }
         },
-        height = 64.dp,
         hazeState = hazeState,
     ) {
         Spacer(Modifier.width(4.dp))
@@ -791,7 +813,7 @@ private fun LayoutPill(
             Box(
                 Modifier
                     .offset { androidx.compose.ui.unit.IntOffset(indicator.value.toInt(), 0) }
-                    .size(width = 64.dp, height = 48.dp)
+                    .size(width = 52.dp, height = 48.dp)
                     .clip(LocalSkin.current.shape(CircleShape))
                     .background(MaterialTheme.colorScheme.primaryContainer),
             )
@@ -799,25 +821,25 @@ private fun LayoutPill(
                 PillIcon(
                     GridViewIcon, stringResource(R.string.layout_grid),
                     onClick = { onLayoutChange(NoteLayout.GRID) },
-                    selected = layout == NoteLayout.GRID, width = 64.dp, showBackground = false,
+                    selected = layout == NoteLayout.GRID, showBackground = false,
                 )
                 PillIcon(
                     ViewAgendaIcon, stringResource(R.string.layout_list),
                     onClick = { onLayoutChange(NoteLayout.LIST) },
-                    selected = layout == NoteLayout.LIST, width = 64.dp, showBackground = false,
+                    selected = layout == NoteLayout.LIST, showBackground = false,
                 )
             }
         }
         Box(
             Modifier
-                .padding(horizontal = 10.dp)
+                .padding(horizontal = 6.dp)
                 .size(width = 1.dp, height = 32.dp)
                 .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)),
         )
         PillIcon(
             Icons.Filled.Star, stringResource(R.string.pinned_tab),
             onClick = onTogglePinned,
-            selected = pinnedOnly, width = 64.dp,
+            selected = pinnedOnly,
         )
         Spacer(Modifier.width(4.dp))
     }

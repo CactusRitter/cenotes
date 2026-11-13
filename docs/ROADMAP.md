@@ -1,0 +1,69 @@
+# Plan de desarrollo de Cenotes
+
+**Idea guía:** Cenotes es una app de notas **sencilla, como Google Keep**, con el aspecto de las apps "Ce". Se copia lo útil de Keep, Samsung Notes y Notion, pero solo lo que se entiende sin explicación. Cada función nueva tiene que poder usarse sin leer nada y no puede añadir botones a la pantalla principal si no se usa a menudo (lo poco frecuente va en el menú «⋮» de la nota o en Ajustes).
+
+## Qué tiene cada app y qué nos sirve
+
+| | Google Keep | Samsung Notes | Notion | ¿Para Cenotes? |
+|---|---|---|---|---|
+| Listas con casillas, subtareas | ✅ | ✅ | ✅ | **Ya está** |
+| Etiquetas, fijar, archivo | ✅ | carpetas | páginas | **Ya está** |
+| Imágenes, enlaces, compartir | ✅ | ✅ | ✅ | **Ya está** |
+| Widgets, atajos del icono | ✅ | ✅ | — | **Ya está** |
+| **Papelera** (recuperar 7 días) | ✅ | ✅ (15 días) | ✅ | **Sí** (fase 1) |
+| **Color de fondo de la nota** | ✅ | ✅ | — | **Sí** (fase 1) |
+| Casillas marcadas al final, reordenar arrastrando | ✅ | — | ✅ | **Sí** (fase 1) |
+| Ordenar notas (editada, creada, a mano) | a mano | ✅ | ✅ | **Sí** (fase 1) |
+| **Recordatorios** con notificación | ✅ | ✅ | ✅ | **Sí** (fase 2) |
+| **Compartir hacia Cenotes** desde otras apps | ✅ | ✅ | ✅ | **Sí** (fase 2) |
+| Bloquear notas con huella o PIN | — | ✅ | — | **Sí** (fase 3) |
+| Notas de voz (con texto transcrito) | ✅ | ✅ | — | **Sí** (fase 3) |
+| Copiar texto de una foto (OCR) | ✅ | ✅ | — | Sí, en el dispositivo (fase 3) |
+| Dibujo a mano | ✅ | ✅ (S Pen, muy completo) | — | Sencillo (fase 4) |
+| Enlaces entre notas, bloques desplegables, menú «/» | — | — | ✅ | Ligero (fase 4) |
+| Plantillas | — | ✅ | ✅ | Pocas y fijas (fase 4) |
+| Exportar a PDF / Markdown / texto | Docs | ✅ PDF, Word | ✅ | **Sí** (fase 3) |
+| Historial de versiones de una nota | — | — | ✅ | Más adelante |
+| Tabletas: lista y nota a la vez | ✅ | ✅ | ✅ | Como Cemail (fase 5) |
+| Fuentes, tamaños y colores de texto, páginas, maquetación | — | ✅ (como Word) | — | **No**: lo hace difícil |
+| Anotar PDF, S Pen avanzado | — | ✅ | — | **No** |
+| Bases de datos, tablas, wiki de equipo | — | — | ✅ | **No**: no es para notas rápidas |
+| Colaborar en tiempo real, sincronizar con nube propia | ✅ | ✅ | ✅ | **No** por ahora (necesita servidor); la copia de seguridad cubre el cambio de móvil |
+| Resúmenes con IA | ✅ (Gemini) | ✅ (Galaxy AI) | ✅ | **No** por ahora |
+
+## Fases
+
+### Fase 1 · 0.12 — Lo básico que falta (como Keep)
+- **Papelera**: borrar manda la nota a la Papelera (en el menú lateral, debajo de Archivo); se borra sola a los 7 días; desde allí, restaurar o vaciar.
+- **Color de la nota**: 8–10 colores suaves (los de las etiquetas) que tiñen la tarjeta y el editor, adaptados a cada diseño y a claro/oscuro. Se elige en el menú «⋮» de la nota y en la selección múltiple.
+- **Listas**: «Mover las marcadas al final» (Ajustes → Notas) y reordenar elementos arrastrándolos por un asa.
+- **Orden de las notas**: última edición, creación o a mano (arrastrando, como Keep). Ajustes → Notas.
+
+### Fase 2 · 0.13 — Recordatorios y entrada rápida
+- **Recordatorios**: fecha y hora (hoy, mañana, la semana que viene, otra), repetición (diaria, semanal, mensual) y notificación con «Hecho» y «Posponer». Sección «Recordatorios» en el menú.
+- **Compartir a Cenotes**: texto, enlaces e imágenes de cualquier app crean una nota (con su título y su enlace).
+- **Mosaico de Ajustes rápidos** para una nota nueva.
+- **Ecosistema "Ce"**: «Crear evento en Celander» desde una nota con fecha cuando Celander lo permita; y desde Cemail, «Guardar en Cenotes» un correo.
+
+### Fase 3 · 0.14 — Privacidad y más formas de capturar
+- **Bloquear notas** con la huella o el bloqueo del móvil (`BiometricPrompt`); la tarjeta muestra solo el título y un candado.
+- **Notas de voz**: grabar dentro de la nota; el texto se transcribe en el móvil y se puede buscar.
+- **Texto de una imagen** (OCR en el dispositivo, sin enviar la foto a ningún sitio).
+- **Exportar** una nota a PDF, Markdown o texto, y compartirla así.
+
+### Fase 4 · 0.15 — Un editor un poco más potente, sin volverse Word
+- **Menú «/»**: escribir «/» al empezar una línea ofrece casilla, lista, título, cita, código, imagen, separador.
+- **Bloque desplegable** (como el «toggle» de Notion) para esconder detalles.
+- **Enlaces entre notas**: escribir «[[» busca una nota y la enlaza.
+- **Plantillas** fijas: lista de la compra, reunión, diario, viaje.
+- **Dibujo a mano** sencillo: un lienzo con 3–4 grosores y los colores del tema, que se guarda como imagen de la nota.
+
+### Fase 5 · 0.16 — Tabletas y pulido
+- Dos paneles desde 840 dp como Cemail (lista a la izquierda y nota a la derecha), Ajustes movibles.
+- Accesibilidad con TalkBack revisada en todas las pantallas.
+- Historial de versiones de una nota (las últimas 20 ediciones, para deshacer un borrado grande).
+
+## Cómo se decide qué entra
+1. ¿Lo usaría alguien cada semana? Si no, no entra o va escondido en «⋮».
+2. ¿Se entiende sin explicación? Si necesita un tutorial, se simplifica o no entra.
+3. ¿Encaja con Cemail y Celander? Mismo diseño, mismos componentes, mismos textos en inglés, español y alemán.

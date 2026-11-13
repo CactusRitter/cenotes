@@ -1,3 +1,8 @@
+## 0.11.1
+- The new note button is at the bottom right, round and 60 dp like Cemail's write button; search is a round button at the top.
+- The bottom bar is smaller, with the same sizes as Cemail's bars.
+- Retro 98: checkboxes look like Windows 98 ones (white, sunken edge, black tick).
+
 ## 0.11.0
 - Cenotes now looks like Cemail: Settings is a tree of screens with big rows (Appearance, Label colours, Backup, Settings backup and Updates), with the same transitions.
 - Appearance: Cemail's six designs (Glass, Modern, AMOLED, Retro 98, Paper and Brutalist), light or dark (or the system's), six background styles for the glass (Aurora, Classic, Neutral, Sunset, Ocean and Neon), 3D shadow and transparency.

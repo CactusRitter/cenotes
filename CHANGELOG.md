@@ -2,6 +2,12 @@
 
 Cada versión se guarda en Google Drive (`Mi unidad/Notas app/Cenotes-x.y.z.apk`, sin reemplazar la anterior) y, desde la 0.11.0, también como *release* de GitHub (`vx.y.z`, con el APK), que es de donde la app avisa de versiones nuevas. Lo que ve el usuario en Ajustes → Actualizaciones está en `app/src/main/res/raw*/changelog.txt` (inglés, español y alemán).
 
+## 0.11.1 — 2026-11-13
+- Botón de nota nueva abajo a la derecha (60 dp, como el de redactar de Cemail) y búsqueda como botón redondo arriba.
+- Barra inferior con las medidas de Cemail (56 dp de alto, iconos de 52 dp).
+- Retro 98: casillas de Windows 98 (`ui/glass/TaskCheckbox.kt`).
+- Plan de desarrollo en `docs/ROADMAP.md`.
+
 ## 0.11.0 — 2026-11-13
 - Cenotes se parece a Cemail: el sistema de diseño (tema, diseños, cristal, movimiento, interruptor y deslizador) es el mismo código que en Cemail.
 - Ajustes es un árbol de pantallas con filas grandes: Apariencia, Colores de etiquetas, Copia de seguridad, Copia de ajustes y Actualizaciones.

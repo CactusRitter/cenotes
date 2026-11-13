@@ -679,13 +679,21 @@ private fun BlockRow(
     ) {
         if (type in NestableTypes) Spacer(Modifier.width((block.indent * 28).dp))
         when (type) {
-            BlockType.TASK -> CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
-                Checkbox(
-                    checked = block.checked,
-                    onCheckedChange = { editor.toggleChecked(block) },
-                    colors = CheckboxDefaults.colors(checkedColor = colors.primary),
-                    modifier = Modifier.padding(end = 12.dp, top = 6.dp, bottom = 6.dp),
-                )
+            BlockType.TASK -> com.cenotes.app.ui.glass.TaskCheckbox(
+                checked = block.checked,
+                onCheckedChange = { editor.toggleChecked(block) },
+                // Same footprint as Material's box (20 dp + padding), so text lines up in every design.
+                modifier = Modifier.padding(start = 2.dp, end = 14.dp, top = 8.dp, bottom = 8.dp),
+                size = 18.dp,
+            ) {
+                CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
+                    Checkbox(
+                        checked = block.checked,
+                        onCheckedChange = { editor.toggleChecked(block) },
+                        colors = CheckboxDefaults.colors(checkedColor = colors.primary),
+                        modifier = Modifier.padding(end = 12.dp, top = 6.dp, bottom = 6.dp),
+                    )
+                }
             }
             BlockType.BULLET, BlockType.NUMBERED -> Text(
                 if (type == BlockType.BULLET) listOf("•", "◦", "▪")[block.indent % 3] else "$number.",

@@ -1,3 +1,8 @@
+## 0.11.1
+- El botón de nota nueva está abajo a la derecha, redondo y de 60 dp como el de redactar de Cemail; la búsqueda es un botón redondo arriba.
+- La barra inferior es más pequeña, con las mismas medidas que las barras de Cemail.
+- Retro 98: las casillas son como las de Windows 98 (blancas, borde hundido y tic negro).
+
 ## 0.11.0
 - Cenotes se parece a Cemail: Ajustes es ahora un árbol de pantallas con filas grandes (Apariencia, Colores de etiquetas, Copia de seguridad, Copia de ajustes y Actualizaciones), con las mismas transiciones.
 - Apariencia: los seis diseños de Cemail (Cristal, Moderno, AMOLED, Retro 98, Papel y Brutalista), claro u oscuro (o el del sistema), seis estilos de fondo para el cristal (Aurora, Clásico, Neutro, Atardecer, Océano y Neón), sombra 3D y transparencia.
