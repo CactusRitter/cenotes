@@ -1,0 +1,56 @@
+## 0.11.0
+- Cenotes sieht jetzt aus wie Cemail: Die Einstellungen sind ein Baum aus Bildschirmen mit großen Zeilen (Aussehen, Label-Farben, Sicherung, Sicherung der Einstellungen und Updates), mit denselben Übergängen.
+- Aussehen: die sechs Designs von Cemail (Glas, Modern, AMOLED, Retro 98, Papier und Brutalist), hell oder dunkel (oder wie das System), sechs Hintergrundstile für das Glas (Polarlicht, Klassisch, Neutral, Sonnenuntergang, Ozean und Neon), 3D-Schatten und Transparenz.
+- Die acht Farben von Celander und Cemail, dazu eine eigene Farbe aus einer Regenbogenleiste.
+- Sicherung der Einstellungen: Speichere alle Einstellungen in einer Datei und stelle sie hier oder auf einem anderen Gerät wieder her.
+- Updates: Cenotes sucht auf GitHub nach neuen Versionen, zeigt sie oben bei deinen Notizen an, und unter Einstellungen → Updates siehst du, was jede Version gebracht hat.
+- Cenotes auf Englisch und Deutsch sowie Spanisch, je nach Sprache des Handys.
+- Eigene Schalter und Schieberegler sowie Schaltflächen und Karten, die beim Antippen kleiner werden und zurückfedern, wie in Cemail.
+
+## 0.10.2
+- Wenn eine Notiz sehr schnell wieder geöffnet wird, funktioniert die Zurück-Taste weiterhin.
+
+## 0.10.1
+- Die Markierung der unteren Leiste folgt dem Finger.
+
+## 0.10
+- Notizen öffnen sich aus ihrer Karte heraus, wie in Google Keep, und man kann über die untere Leiste ziehen.
+
+## 0.9.5
+- Das Label-Symbol ist hohl, wenn eine Notiz keine Labels hat.
+
+## 0.9.4
+- Das Label-Symbol hat seine Farbe, und das Menü ist besser lesbar.
+
+## 0.9.3
+- Seitenmenü aus durchsichtigem Glas.
+
+## 0.9.2
+- Schmales Seitenmenü, wie in Google Keep.
+
+## 0.9.1
+- Eigene Farben für Labels.
+
+## 0.9
+- Label-Farben.
+
+## 0.8
+- Labels, Archiv, Seitenmenü und Auswahl mehrerer Notizen.
+
+## 0.7
+- Sicherung deiner Notizen, Widgets und Verknüpfungen am App-Symbol.
+
+## 0.6
+- Die App heißt jetzt Cenotes.
+
+## 0.5
+- Unteraufgaben, Links, die sich öffnen, und Bilder in Notizen.
+
+## 0.4
+- Visueller Editor: Kontrollkästchen und Formatierung, ohne das Markdown zu sehen.
+
+## 0.3
+- Kontrollkästchen und Markdown.
+
+## 0.2
+- Erste Version: Notizen im Milchglas-Look.

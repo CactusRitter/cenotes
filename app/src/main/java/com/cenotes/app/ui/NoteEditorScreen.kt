@@ -605,10 +605,9 @@ private fun BlockList(editor: BlockEditorState, fileFor: (String) -> File, onOpe
                 // key(): each block keeps its own text field (and keyboard focus) when blocks are
                 // inserted or removed around it.
                 else -> key(block.id) {
-                    BlockRow(
-                        block, numbers[block.id] ?: 0, editor,
-                        requesters.getOrPut(block.id) { FocusRequester() }, transformation,
-                    )
+                    // The same requester the editor keeps for this block (it moves the focus between blocks).
+                    val requester = remember(block.id) { requesters.getOrPut(block.id) { FocusRequester() } }
+                    BlockRow(block, numbers[block.id] ?: 0, editor, requester, transformation)
                 }
             }
             i++

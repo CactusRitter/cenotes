@@ -12,8 +12,8 @@ android {
         applicationId = "com.cenotes.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 17
-        versionName = "0.10.2"
+        versionCode = 18
+        versionName = "0.11.0"
     }
 
     buildTypes {
@@ -29,6 +29,12 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
+    }
+
+    androidResources {
+        // Builds locales_config.xml from the values-xx folders → per-app language in Android settings (13+).
+        generateLocaleConfig = true
     }
 }
 

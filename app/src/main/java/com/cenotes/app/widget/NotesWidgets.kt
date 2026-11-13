@@ -81,7 +81,7 @@ private fun liveWidgetData(context: Context, initial: WidgetData): WidgetData {
     }
     val notes by notesFlow.collectAsState(initial.notes)
     val settings by app.settings.state.collectAsState()
-    return WidgetData(notes, settings.accent.light, settings.accent.dark)
+    return WidgetData(notes, settings.accentPalette.light, settings.accentPalette.dark)
 }
 
 class NotesWidgetReceiver : GlanceAppWidgetReceiver() {
@@ -103,7 +103,7 @@ private suspend fun loadWidgetData(context: Context): WidgetData = withContext(D
     val app = context.applicationContext as CenotesApp
     // Archived notes stay out of the home screen, like out of the main list.
     val notes = app.database.noteDao().all().filterNot { it.archived }.take(30).map(::toWidgetNote)
-    val accent = app.settings.state.value.accent
+    val accent = app.settings.state.value.accentPalette
     WidgetData(notes, accent.light, accent.dark)
 }
 

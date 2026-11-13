@@ -1,0 +1,56 @@
+## 0.11.0
+- Cenotes now looks like Cemail: Settings is a tree of screens with big rows (Appearance, Label colours, Backup, Settings backup and Updates), with the same transitions.
+- Appearance: Cemail's six designs (Glass, Modern, AMOLED, Retro 98, Paper and Brutalist), light or dark (or the system's), six background styles for the glass (Aurora, Classic, Neutral, Sunset, Ocean and Neon), 3D shadow and transparency.
+- The eight colours of Celander and Cemail, plus a custom colour from a rainbow bar.
+- Settings backup: save every setting to a file and restore it here or on another device.
+- Updates: Cenotes looks for new versions on GitHub, shows them at the top of your notes, and Settings → Updates shows what each version brought.
+- Cenotes in English and German as well as Spanish, following the phone's language.
+- Its own switches and sliders, and buttons and cards that shrink when pressed and bounce back, as in Cemail.
+
+## 0.10.2
+- Reopening a note very quickly no longer makes the Back button stop working.
+
+## 0.10.1
+- The highlight of the bottom pill follows your finger.
+
+## 0.10
+- Notes open out of their card, as in Google Keep, and you can drag along the bottom pill.
+
+## 0.9.5
+- The label icon is hollow when a note has no labels.
+
+## 0.9.4
+- The label icon has its colour and the menu is easier to read.
+
+## 0.9.3
+- See-through glass side menu.
+
+## 0.9.2
+- Narrow side menu, as in Google Keep.
+
+## 0.9.1
+- Your own colours for labels.
+
+## 0.9
+- Label colours.
+
+## 0.8
+- Labels, archive, side menu and selecting several notes.
+
+## 0.7
+- Backup of your notes, widgets and app icon shortcuts.
+
+## 0.6
+- The app is now called Cenotes.
+
+## 0.5
+- Subtasks, links that open, and images in notes.
+
+## 0.4
+- Visual editor: checkboxes and formatting without seeing the Markdown.
+
+## 0.3
+- Checkboxes and Markdown.
+
+## 0.2
+- First version: notes with a frosted-glass look.

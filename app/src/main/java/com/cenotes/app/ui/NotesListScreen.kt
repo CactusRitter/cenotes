@@ -37,6 +37,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -114,6 +115,9 @@ import com.cenotes.app.ui.glass.GlassPill
 import com.cenotes.app.ui.glass.PillIcon
 import com.cenotes.app.ui.glass.glass
 import com.cenotes.app.ui.glass.glassSpring
+import com.cenotes.app.ui.glass.onBackdrop
+import com.cenotes.app.ui.glass.pressScale
+import com.cenotes.app.ui.glass.softBounceSpring
 import com.cenotes.app.ui.markdown.MarkdownPreview
 import com.cenotes.app.ui.markdown.firstImage
 import com.cenotes.app.ui.markdown.taskStats
@@ -122,6 +126,7 @@ import com.cenotes.app.ui.theme.CheckBoxIcon
 import com.cenotes.app.ui.theme.GridViewIcon
 import com.cenotes.app.ui.theme.LabelIcon
 import com.cenotes.app.ui.theme.LocalGlass
+import com.cenotes.app.ui.theme.LocalSkin
 import com.cenotes.app.ui.theme.NotesIcon
 import com.cenotes.app.ui.theme.UnarchiveIcon
 import com.cenotes.app.ui.theme.ViewAgendaIcon
@@ -240,6 +245,10 @@ fun NotesListScreen(
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
                         modifier = Modifier.fillMaxSize(),
                     ) {
+                        // A newer Cenotes on GitHub: the notice goes first, across the whole width (like Cemail's Inbox).
+                        if (section == Section.All && query.isBlank()) {
+                            item(key = "update", span = StaggeredGridItemSpan.FullLine) { UpdateBanner() }
+                        }
                         items(list, key = { it.note.id }) { item ->
                             val id = item.note.id
                             NoteCard(
@@ -251,7 +260,7 @@ fun NotesListScreen(
                                 onLongClick = { viewModel.toggleSelected(id) },
                                 modifier = Modifier
                                     .animateItem(
-                                        fadeInSpec = glassSpring(), placementSpec = glassSpring(), fadeOutSpec = glassSpring(),
+                                        fadeInSpec = glassSpring(), placementSpec = softBounceSpring(), fadeOutSpec = glassSpring(),
                                     )
                                     .noteSharedBounds(id),
                             )
@@ -291,6 +300,7 @@ fun NotesListScreen(
                             sectionTitle,
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
+                            color = onBackdrop(MaterialTheme.colorScheme.onSurface),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.padding(horizontal = 76.dp),
@@ -402,6 +412,7 @@ private fun SelectionBar(
             stringResource(R.string.selected_count, count),
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
+            color = onBackdrop(MaterialTheme.colorScheme.onSurface),
         )
         Spacer(Modifier.weight(1f))
         GlassPill(hazeState = hazeState) {
@@ -563,6 +574,7 @@ private fun NoteCard(
     Box(modifier) {
         Column(
             Modifier
+                .pressScale(0.97f)
                 .fillMaxWidth()
                 .glass(shape, if (note.pinned) GlassKind.Pinned else GlassKind.Card)
                 .then(if (selected) Modifier.border(2.5.dp, primary, shape) else Modifier)
@@ -715,7 +727,7 @@ private fun EmptyText(text: String) {
         Text(
             text = text,
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = onBackdrop(MaterialTheme.colorScheme.onSurfaceVariant),
             textAlign = TextAlign.Center,
         )
     }
@@ -780,7 +792,7 @@ private fun LayoutPill(
                 Modifier
                     .offset { androidx.compose.ui.unit.IntOffset(indicator.value.toInt(), 0) }
                     .size(width = 64.dp, height = 48.dp)
-                    .clip(CircleShape)
+                    .clip(LocalSkin.current.shape(CircleShape))
                     .background(MaterialTheme.colorScheme.primaryContainer),
             )
             Row {

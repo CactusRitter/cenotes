@@ -36,6 +36,7 @@ import com.cenotes.app.ui.NotesViewModel
 import com.cenotes.app.ui.SettingsScreen
 import com.cenotes.app.ui.glass.glassSpring
 import com.cenotes.app.ui.theme.CenotesTheme
+import com.cenotes.app.ui.theme.isDarkNow
 
 /** Swallows every pointer event before the children see it. */
 private suspend fun PointerInputScope.blockAllTouches() {
@@ -60,6 +61,21 @@ class MainActivity : ComponentActivity() {
         val repo = app.settings
         setContent {
             val settings by repo.state.collectAsStateWithLifecycle()
+            // Light or dark chosen in Settings (not the phone's): the clock and icons of the system bars follow it.
+            val darkBars = settings.skin.darkBars(settings.isDarkNow())
+            LaunchedEffect(darkBars) {
+                val transparent = android.graphics.Color.TRANSPARENT
+                val style = if (darkBars) {
+                    androidx.activity.SystemBarStyle.dark(transparent)
+                } else {
+                    androidx.activity.SystemBarStyle.light(transparent, transparent)
+                }
+                enableEdgeToEdge(statusBarStyle = style, navigationBarStyle = style)
+            }
+            // Once or twice a day (Updates skips earlier asks by itself): is there a newer Cenotes on GitHub?
+            LaunchedEffect(settings.checkUpdates) {
+                if (settings.checkUpdates) runCatching { app.updates.check() }
+            }
             CenotesTheme(settings) {
                 val vm: NotesViewModel = viewModel(factory = NotesViewModel.Factory)
                 // null = list; 0 = new note; otherwise the id of the note being edited.
@@ -143,12 +159,9 @@ class MainActivity : ComponentActivity() {
                             )
                             target == "settings" -> SettingsScreen(
                                 settings = settings,
+                                repo = repo,
                                 backup = app.backup,
-                                onAccentChange = { accent ->
-                                    repo.setAccent(accent)
-                                    vm.refreshExternalViews() // widgets use the accent colour too
-                                },
-                                onTransparencyChange = repo::setTransparency,
+                                onAccentChanged = vm::refreshExternalViews, // widgets use the accent colour too
                                 onAddColor = vm::addCustomColor,
                                 onEditColor = vm::editCustomColor,
                                 onDeleteColor = vm::deleteCustomColor,

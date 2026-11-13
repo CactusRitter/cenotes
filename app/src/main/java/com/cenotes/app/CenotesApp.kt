@@ -23,6 +23,9 @@ class CenotesApp : Application() {
 
     val backup: Backup by lazy { Backup(this, database.noteDao(), images) }
 
+    /** New versions published on GitHub (Settings → Updates and the notice at the top of the notes). */
+    val updates: com.cenotes.app.update.Updates by lazy { com.cenotes.app.update.Updates(this) }
+
     /** Lives as long as the process: saves started while leaving a screen always finish. */
     val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 }

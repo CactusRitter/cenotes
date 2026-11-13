@@ -1,0 +1,56 @@
+## 0.11.0
+- Cenotes se parece a Cemail: Ajustes es ahora un árbol de pantallas con filas grandes (Apariencia, Colores de etiquetas, Copia de seguridad, Copia de ajustes y Actualizaciones), con las mismas transiciones.
+- Apariencia: los seis diseños de Cemail (Cristal, Moderno, AMOLED, Retro 98, Papel y Brutalista), claro u oscuro (o el del sistema), seis estilos de fondo para el cristal (Aurora, Clásico, Neutro, Atardecer, Océano y Neón), sombra 3D y transparencia.
+- Los ocho colores de Celander y Cemail, más un color personalizado con una barra arcoíris.
+- Copia de ajustes: guarda todos los ajustes en un archivo y restáuralos aquí o en otro dispositivo.
+- Actualizaciones: Cenotes busca versiones nuevas en GitHub, las avisa arriba en tus notas y desde Ajustes → Actualizaciones se ven las novedades de cada versión.
+- Cenotes en inglés y alemán, además de español, según el idioma del teléfono.
+- Interruptores y deslizadores propios, y botones y tarjetas que se encogen al pulsarlos y rebotan, como en Cemail.
+
+## 0.10.2
+- Al reabrir una nota muy rápido, el botón atrás ya no se ignora.
+
+## 0.10.1
+- El resaltado de la píldora inferior sigue al dedo.
+
+## 0.10
+- Las notas se abren desde su tarjeta, como en Google Keep, y se puede arrastrar por la píldora inferior.
+
+## 0.9.5
+- El icono de etiqueta sale hueco cuando la nota no tiene etiquetas.
+
+## 0.9.4
+- El icono de etiqueta lleva su color y el menú se lee mejor.
+
+## 0.9.3
+- Menú lateral de cristal translúcido.
+
+## 0.9.2
+- Menú lateral estrecho, como en Google Keep.
+
+## 0.9.1
+- Colores propios para las etiquetas.
+
+## 0.9
+- Colores de etiquetas.
+
+## 0.8
+- Etiquetas, archivo, menú lateral y selección múltiple.
+
+## 0.7
+- Copia de seguridad de las notas, widgets y atajos del icono.
+
+## 0.6
+- La app pasa a llamarse Cenotes.
+
+## 0.5
+- Subtareas, enlaces que se abren e imágenes en las notas.
+
+## 0.4
+- Editor visual: casillas y formato sin ver el Markdown.
+
+## 0.3
+- Casillas de verificación y Markdown.
+
+## 0.2
+- Primera versión: notas con estilo de cristal esmerilado.
