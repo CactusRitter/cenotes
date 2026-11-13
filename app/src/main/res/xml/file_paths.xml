@@ -4,4 +4,6 @@
     <cache-path name="camera" path="camera/" />
     <!-- Note images, shared together with the note text. -->
     <files-path name="images" path="images/" />
+    <!-- A downloaded update, handed to Android's installer (Settings → Updates). -->
+    <external-files-path name="updates" path="Download/" />
 </paths>

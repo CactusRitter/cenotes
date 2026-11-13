@@ -157,9 +157,19 @@ class Updates(private val context: Context) {
      * false while it is not fully downloaded. Android shows what is being installed and asks first.
      */
     fun install(update: AppUpdate): Boolean {
-        if (prefs.getString(KEY_DOWNLOADED, null) != update.version) return false
+        if (prefs.getString(KEY_DOWNLOADED, null) != update.version) {
+            Log.w(TAG, "install: ${update.version} was not downloaded")
+            return false
+        }
         val manager = context.getSystemService(DownloadManager::class.java)
-        val file = manager.getUriForDownloadedFile(prefs.getLong(KEY_DOWNLOAD, -1)) ?: return false
+        // The download manager's link to the file, or (when it does not give one, as on some emulators) the file
+        // itself, which is in Cenotes' own folder, through our FileProvider.
+        val file = manager.getUriForDownloadedFile(prefs.getLong(KEY_DOWNLOAD, -1))
+            ?: downloadedApk(update)?.let { androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.files", it) }
+        if (file == null) {
+            Log.w(TAG, "install: the APK of ${update.version} is not there (yet)")
+            return false
+        }
         return try {
             context.startActivity(
                 Intent(Intent.ACTION_VIEW).setDataAndType(file, APK)
@@ -170,6 +180,19 @@ class Updates(private val context: Context) {
             Log.e(TAG, "could not open the installer", e)
             false
         }
+    }
+
+    /** The downloaded APK of [update] in Cenotes' download folder, once it is complete. */
+    private fun downloadedApk(update: AppUpdate): java.io.File? {
+        val manager = context.getSystemService(DownloadManager::class.java)
+        val done = runCatching {
+            manager.query(DownloadManager.Query().setFilterById(prefs.getLong(KEY_DOWNLOAD, -1))).use { c ->
+                c.moveToFirst() && c.getInt(c.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS)) == DownloadManager.STATUS_SUCCESSFUL
+            }
+        }.getOrDefault(false)
+        val file = java.io.File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "Cenotes-${update.version}.apk")
+        Log.i(TAG, "install: download finished=$done, file=${file.length()} bytes")
+        return file.takeIf { done && it.length() > 0 }
     }
 
     private fun stored(): AppUpdate? {

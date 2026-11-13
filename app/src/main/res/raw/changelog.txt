@@ -1,3 +1,6 @@
+## 0.12.1
+- Updates: Install now opens Android's installer even when the download manager does not hand over the downloaded file (seen on the emulator, where Install did nothing).
+
 ## 0.12.0
 - Trash: deleted notes go to the Trash (in the menu, under Archive) and are deleted for good after 7 days. From there you can restore them, delete them for good or empty the whole Trash.
 - Note colour: give a note a soft background colour from its menu (⋮ → Colour), or to several at once from the selection.

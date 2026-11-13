@@ -1,3 +1,6 @@
+## 0.12.1
+- Actualizaciones: Instalar abre el instalador de Android aunque el gestor de descargas no entregue el archivo descargado (visto en el emulador, donde Instalar no hacía nada).
+
 ## 0.12.0
 - Papelera: las notas eliminadas van a la papelera (en el menú, debajo de Archivo) y se borran para siempre a los 7 días. Desde allí se pueden restaurar, eliminar para siempre o vaciar la papelera entera.
 - Color de nota: da a una nota un color de fondo suave desde su menú (⋮ → Color), o a varias a la vez desde la selección.

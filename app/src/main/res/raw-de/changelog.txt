@@ -1,3 +1,6 @@
+## 0.12.1
+- Updates: Installieren öffnet das Android-Installationsprogramm jetzt auch dann, wenn der Download-Manager die heruntergeladene Datei nicht herausgibt (im Emulator gesehen, wo Installieren nichts tat).
+
 ## 0.12.0
 - Papierkorb: Gelöschte Notizen landen im Papierkorb (im Menü, unter Archiv) und werden nach 7 Tagen endgültig gelöscht. Dort kannst du sie wiederherstellen, endgültig löschen oder den ganzen Papierkorb leeren.
 - Notizfarbe: Gib einer Notiz über ihr Menü (⋮ → Farbe) eine sanfte Hintergrundfarbe, oder mehreren auf einmal über die Auswahl.
