@@ -330,6 +330,9 @@ class BlockEditorState(markdown: String) {
         return index + 1..end
     }
 
+    /** Settings → Notes: ticked items sink to the end of their list, and unticked ones come back up (like Keep). */
+    var checkedToBottom = false
+
     /** Ticking a task ticks all its sub-tasks; the parents then follow their children. */
     fun toggleChecked(block: EditorBlock) {
         val index = blocks.indexOf(block)
@@ -337,6 +340,79 @@ class BlockEditorState(markdown: String) {
         val checked = !block.checked
         block.checked = checked
         for (i in descendants(index)) if (blocks[i].type == BlockType.TASK) blocks[i].checked = checked
+        recomputeParents()
+        if (checkedToBottom) sortChecked()
+    }
+
+    /**
+     * Within every run of tasks that sit next to each other at the same level, the unticked ones go first and the ticked
+     * ones last, each keeping its order and taking its sub-tasks along. Sub-task lists are sorted the same way.
+     */
+    private fun sortChecked() {
+        val sorted = arrange(blocks.toList())
+        if (sorted.map { it.id } != blocks.map { it.id }) {
+            blocks.clear()
+            blocks.addAll(sorted)
+        }
+    }
+
+    /** One item of a list together with the items nested under it. */
+    private class ListItem(val head: EditorBlock, val nested: List<EditorBlock>)
+
+    private fun arrange(list: List<EditorBlock>): List<EditorBlock> {
+        if (list.isEmpty()) return list
+        val base = list.minOf { if (it.type in NestableTypes) it.indent else 0 }
+        val units = mutableListOf<ListItem>()
+        var i = 0
+        while (i < list.size) {
+            val head = list[i]
+            var end = i
+            if (head.type in NestableTypes && head.indent == base) {
+                while (end + 1 < list.size && list[end + 1].type in NestableTypes && list[end + 1].indent > base) end++
+            }
+            units += ListItem(head, arrange(list.subList(i + 1, end + 1)))
+            i = end + 1
+        }
+        val result = mutableListOf<EditorBlock>()
+        val run = mutableListOf<ListItem>()
+        fun flush() {
+            (run.filterNot { it.head.checked } + run.filter { it.head.checked }).forEach { result += it.head; result += it.nested }
+            run.clear()
+        }
+        for (u in units) {
+            if (u.head.type == BlockType.TASK && u.head.indent == base) {
+                run += u
+            } else {
+                flush()
+                result += u.head
+                result += u.nested
+            }
+        }
+        flush()
+        return result
+    }
+
+    /**
+     * Moves [block] (with the items nested under it) next to [target]: just before it, or after it and its own
+     * nested items. The moved item takes the target's level. Used when an item is dragged by its handle.
+     */
+    fun moveItem(block: EditorBlock, target: EditorBlock, after: Boolean) {
+        if (block.id == target.id) return
+        val from = blocks.indexOf(block)
+        if (from < 0) return
+        val last = maxOf(from, descendants(from).last)
+        if (blocks.indexOf(target) in from..last) return
+        val unit = blocks.subList(from, last + 1).toList()
+        repeat(unit.size) { blocks.removeAt(from) }
+        val t = blocks.indexOf(target)
+        if (t < 0) {
+            blocks.addAll(from, unit)
+            return
+        }
+        val at = if (after) maxOf(t, descendants(t).last) + 1 else t
+        val shift = target.indent - block.indent
+        unit.forEach { it.indent = (it.indent + shift).coerceIn(0, MaxIndent) }
+        blocks.addAll(at, unit)
         recomputeParents()
     }
 

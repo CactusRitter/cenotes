@@ -1,5 +1,7 @@
 package com.cenotes.app.ui
 
+import com.cenotes.app.ui.theme.NotesIcon
+import com.cenotes.app.data.NoteSort
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -101,6 +103,7 @@ import kotlin.math.roundToInt
 private object SettingsRoute {
     const val MAIN = "main"
     const val APPEARANCE = "appearance"
+    const val NOTES = "notes"
     const val LABEL_COLORS = "label_colors"
     const val BACKUP = "backup"
     const val SETTINGS_BACKUP = "settings_backup"
@@ -128,6 +131,7 @@ fun SettingsScreen(
 
     val title = when (route) {
         SettingsRoute.APPEARANCE -> stringResource(R.string.appearance)
+        SettingsRoute.NOTES -> stringResource(R.string.section_notes)
         SettingsRoute.LABEL_COLORS -> stringResource(R.string.label_colors)
         SettingsRoute.BACKUP -> stringResource(R.string.backup)
         SettingsRoute.SETTINGS_BACKUP -> stringResource(R.string.settings_section_backup)
@@ -176,6 +180,7 @@ fun SettingsScreen(
                     when (target) {
                         SettingsRoute.MAIN -> MainPage(settings) { route = it }
                         SettingsRoute.APPEARANCE -> AppearancePage(settings, repo, onAccentChanged)
+                        SettingsRoute.NOTES -> NotesPage(settings, repo)
                         SettingsRoute.LABEL_COLORS -> LabelColorsPage(settings, onAddColor, onEditColor, onDeleteColor)
                         SettingsRoute.BACKUP -> BackupPage(backup, onNotesImported)
                         SettingsRoute.SETTINGS_BACKUP -> SettingsBackupPage(repo, onAccentChanged)
@@ -194,6 +199,7 @@ private fun MainPage(settings: AppSettings, onRoute: (String) -> Unit) {
     val version = BuildConfig.VERSION_NAME
     val rows: List<Triple<String, String, Pair<String, ImageVector>>> = listOf(
         Triple(stringResource(R.string.appearance), stringResource(R.string.settings_row_appearance_body), SettingsRoute.APPEARANCE to PaletteIcon),
+        Triple(stringResource(R.string.section_notes), stringResource(R.string.settings_row_notes_body), SettingsRoute.NOTES to NotesIcon),
         Triple(stringResource(R.string.label_colors), stringResource(R.string.label_colors_summary, settings.customColors.size, MaxCustomColors), SettingsRoute.LABEL_COLORS to LabelIcon),
         Triple(stringResource(R.string.backup), stringResource(R.string.backup_summary), SettingsRoute.BACKUP to BackupIcon),
         Triple(stringResource(R.string.settings_section_backup), stringResource(R.string.settings_row_backup_body), SettingsRoute.SETTINGS_BACKUP to SettingsBackupIcon),
@@ -519,4 +525,26 @@ private fun UpdatesPage(settings: AppSettings, repo: SettingsRepository) {
         }
     }
     WhatsNew()
+}
+
+// --- Notes ---
+
+/** Settings → Notes: the order of the list and how checklists behave. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun NotesPage(settings: AppSettings, repo: SettingsRepository) {
+    SettingsCard {
+        Text(stringResource(R.string.sort_title), style = MaterialTheme.typography.titleSmall)
+        Text(stringResource(R.string.sort_body), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            listOf(
+                NoteSort.EDITED to R.string.sort_edited,
+                NoteSort.CREATED to R.string.sort_created,
+                NoteSort.TITLE to R.string.sort_title_az,
+            ).forEach { (sort, label) ->
+                ChoiceChip(stringResource(label), settings.sort == sort) { repo.setSort(sort) }
+            }
+        }
+    }
+    SwitchRow(R.string.checked_bottom_title, R.string.checked_bottom_body, settings.checkedToBottom, repo::setCheckedToBottom)
 }

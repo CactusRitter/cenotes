@@ -5,11 +5,21 @@ import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-@Database(entities = [Note::class, Label::class, NoteLabel::class], version = 3, exportSchema = false)
+@Database(entities = [Note::class, Label::class, NoteLabel::class], version = 4, exportSchema = false)
 abstract class NotesDatabase : RoomDatabase() {
     abstract fun noteDao(): NoteDao
 
     companion object {
+        /** 0.11 → 0.12: Trash, note colours and the creation date (existing notes take their last edit as it). */
+        val Migration3To4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `notes` ADD COLUMN `trashedAt` INTEGER")
+                db.execSQL("ALTER TABLE `notes` ADD COLUMN `color` INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE `notes` ADD COLUMN `createdAt` INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("UPDATE `notes` SET `createdAt` = `updatedAt`")
+            }
+        }
+
         /** 0.8 → 0.9: label colours (0 = automatic, so existing labels look the same). */
         val Migration2To3 = object : Migration(2, 3) {
             override fun migrate(db: SupportSQLiteDatabase) {

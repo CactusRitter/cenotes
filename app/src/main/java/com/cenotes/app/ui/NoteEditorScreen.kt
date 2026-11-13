@@ -1,5 +1,14 @@
 package com.cenotes.app.ui
 
+import com.cenotes.app.ui.theme.DragHandleIcon
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.zIndex
+import androidx.compose.ui.layout.positionInParent
+import androidx.compose.ui.layout.onGloballyPositioned
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
@@ -134,6 +143,7 @@ import com.cenotes.app.ui.theme.ImageIcon
 import com.cenotes.app.ui.theme.IndentIcon
 import com.cenotes.app.ui.theme.LinkIcon
 import com.cenotes.app.ui.theme.LocalGlass
+import com.cenotes.app.ui.theme.PaletteIcon
 import com.cenotes.app.ui.theme.NumberedListIcon
 import com.cenotes.app.ui.theme.OpenInNewIcon
 import com.cenotes.app.ui.theme.OutdentIcon
@@ -163,12 +173,13 @@ fun NoteEditorScreen(
     var savedContent by rememberSaveable(noteId) { mutableStateOf(if (noteId == 0L) template else "") }
     var pinned by rememberSaveable(noteId) { mutableStateOf(false) }
     var archived by rememberSaveable(noteId) { mutableStateOf(false) }
+    var color by rememberSaveable(noteId) { mutableStateOf(0) }
+    var pickingColor by remember { mutableStateOf(false) }
     // A new note created while looking at a label starts with that label.
     var labelIds by rememberSaveable(noteId) {
         mutableStateOf(if (noteId == 0L) listOfNotNull(viewModel.labelForNewNote()) else emptyList())
     }
     var closed by remember(noteId) { mutableStateOf(false) }
-    var confirmDelete by remember { mutableStateOf(false) }
     var imageMenuOpen by remember { mutableStateOf(false) }
     var moreMenuOpen by remember { mutableStateOf(false) }
     var pickingLabels by remember { mutableStateOf(false) }
@@ -176,6 +187,8 @@ fun NoteEditorScreen(
     var viewing by remember { mutableStateOf<File?>(null) }
     var linkTarget by remember { mutableStateOf<Pair<Long, TextRange>?>(null) }
     val editor = remember(noteId) { BlockEditorState(savedContent) }
+    val appSettings by viewModel.settings.collectAsStateWithLifecycle()
+    SideEffect { editor.checkedToBottom = appSettings.checkedToBottom }
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val images = viewModel.images
@@ -192,6 +205,7 @@ fun NoteEditorScreen(
             editor.load(note.content)
             pinned = note.pinned
             archived = note.archived
+            color = note.color
             labelIds = viewModel.labelIdsOf(noteId)
         }
         loaded = true
@@ -233,7 +247,7 @@ fun NoteEditorScreen(
 
     // Guarded so a double back press (or a tap during the exit animation) can't save twice.
     fun saveNow() {
-        if (loaded) viewModel.save(original, title, editor.toMarkdown(), pinned, labelIds, archived)
+        if (loaded) viewModel.save(original, title, editor.toMarkdown(), pinned, labelIds, archived, color)
     }
 
     fun close() {
@@ -340,14 +354,27 @@ fun NoteEditorScreen(
                                 onClick = { moreMenuOpen = false; toggleArchived() },
                             )
                             DropdownMenuItem(
+                                text = { Text(stringResource(R.string.note_color)) },
+                                leadingIcon = { Icon(PaletteIcon, null) },
+                                onClick = { moreMenuOpen = false; pickingColor = true },
+                            )
+                            DropdownMenuItem(
                                 text = { Text(stringResource(R.string.share)) },
                                 leadingIcon = { Icon(Icons.Filled.Share, null) },
                                 onClick = { moreMenuOpen = false; share() },
                             )
+                            // Goes to the Trash (with undo), so no question first, as in Google Keep.
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.delete)) },
                                 leadingIcon = { Icon(Icons.Filled.Delete, null) },
-                                onClick = { moreMenuOpen = false; confirmDelete = true },
+                                onClick = {
+                                    moreMenuOpen = false
+                                    if (!closed) {
+                                        closed = true
+                                        if (loaded) viewModel.saveAndTrash(original, title, editor.toMarkdown(), pinned, labelIds, archived, color)
+                                        onClose()
+                                    }
+                                },
                             )
                         }
                     }
@@ -360,7 +387,8 @@ fun NoteEditorScreen(
                     .weight(1f)
                     .fillMaxWidth()
                     .padding(bottom = 12.dp)
-                    .glass(RoundedCornerShape(28.dp), if (pinned) GlassKind.Pinned else GlassKind.Card),
+                    .glass(RoundedCornerShape(28.dp), if (pinned) GlassKind.Pinned else GlassKind.Card)
+                    .noteTint(color),
             ) {
                 Column(
                     Modifier
@@ -457,27 +485,8 @@ fun NoteEditorScreen(
         )
     }
 
-    if (confirmDelete) {
-        AlertDialog(
-            onDismissRequest = { confirmDelete = false },
-            shape = RoundedCornerShape(28.dp),
-            containerColor = LocalGlass.current.menu,
-            title = { Text(stringResource(R.string.delete_confirm_title), fontWeight = FontWeight.Bold) },
-            text = { Text(stringResource(R.string.delete_confirm_text)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    confirmDelete = false
-                    if (!closed) {
-                        closed = true
-                        original?.let(viewModel::delete)
-                        onClose()
-                    }
-                }) { Text(stringResource(R.string.delete), fontWeight = FontWeight.Bold) }
-            },
-            dismissButton = {
-                TextButton(onClick = { confirmDelete = false }) { Text(stringResource(R.string.cancel)) }
-            },
-        )
+    if (pickingColor) {
+        NoteColorDialog(color, onPick = { color = it }, onDismiss = { pickingColor = false })
     }
 }
 
@@ -573,6 +582,27 @@ private fun BlockList(editor: BlockEditorState, fileFor: (String) -> File, onOpe
 
     val numbers = editor.numberLabels()
     val blocks = editor.blocks.toList()
+
+    // Dragging a checklist item by its handle: the row follows the finger and, when let go, the item (with its
+    // sub-items) goes before or after the item it was dropped on.
+    val rows = remember { mutableMapOf<Long, Pair<Float, Int>>() } // block id → top and height in the list
+    var dragId by remember { mutableStateOf<Long?>(null) }
+    var dragOffset by remember { mutableFloatStateOf(0f) }
+    fun drop() {
+        val id = dragId ?: return
+        dragId = null
+        val offset = dragOffset
+        dragOffset = 0f
+        val (top, height) = rows[id] ?: return
+        val center = top + height / 2f + offset
+        val dragged = editor.blocks.firstOrNull { it.id == id } ?: return
+        val target = editor.blocks
+            .filter { it.type == BlockType.TASK && it.id != id && rows[it.id] != null }
+            .minByOrNull { b -> rows.getValue(b.id).let { (t, h) -> kotlin.math.abs(t + h / 2f - center) } } ?: return
+        val (tTop, tHeight) = rows.getValue(target.id)
+        editor.moveItem(dragged, target, after = center > tTop + tHeight / 2f)
+    }
+
     Column {
         var i = 0
         while (i < blocks.size) {
@@ -607,7 +637,40 @@ private fun BlockList(editor: BlockEditorState, fileFor: (String) -> File, onOpe
                 else -> key(block.id) {
                     // The same requester the editor keeps for this block (it moves the focus between blocks).
                     val requester = remember(block.id) { requesters.getOrPut(block.id) { FocusRequester() } }
-                    BlockRow(block, numbers[block.id] ?: 0, editor, requester, transformation)
+                    val dragging = dragId == block.id
+                    BlockRow(
+                        block, numbers[block.id] ?: 0, editor, requester, transformation,
+                        modifier = Modifier
+                            .onGloballyPositioned { rows[block.id] = it.positionInParent().y to it.size.height }
+                            .then(
+                                if (dragging) {
+                                    Modifier.zIndex(1f).graphicsLayer {
+                                        translationY = dragOffset
+                                        scaleX = 1.02f
+                                        scaleY = 1.02f
+                                        alpha = 0.9f
+                                    }
+                                } else Modifier,
+                            ),
+                        dragHandle = if (block.type == BlockType.TASK) {
+                            Modifier.pointerInput(block.id) {
+                                detectDragGestures(
+                                    onDragStart = {
+                                        dragId = block.id
+                                        dragOffset = 0f
+                                    },
+                                    onDragEnd = { drop() },
+                                    onDragCancel = {
+                                        dragId = null
+                                        dragOffset = 0f
+                                    },
+                                ) { change, amount ->
+                                    change.consume()
+                                    dragOffset += amount.y
+                                }
+                            }
+                        } else null,
+                    )
                 }
             }
             i++
@@ -645,6 +708,9 @@ private fun BlockRow(
     editor: BlockEditorState,
     requester: FocusRequester,
     transformation: LiveInlineMarkdown,
+    modifier: Modifier = Modifier,
+    /** For checklist items: the gesture of the handle at the start of the row (null = no handle). */
+    dragHandle: Modifier? = null,
 ) {
     val colors = MaterialTheme.colorScheme
     val typography = MaterialTheme.typography
@@ -674,9 +740,17 @@ private fun BlockRow(
     }
 
     Row(
-        rowModifier.fillMaxWidth().height(IntrinsicSize.Min),
+        modifier.then(rowModifier).fillMaxWidth().height(IntrinsicSize.Min),
         verticalAlignment = if (type == BlockType.TASK) Alignment.CenterVertically else Alignment.Top,
     ) {
+        if (dragHandle != null) {
+            Icon(
+                DragHandleIcon,
+                stringResource(R.string.drag_item),
+                Modifier.then(dragHandle).padding(end = 4.dp).size(20.dp),
+                tint = colors.onSurfaceVariant.copy(alpha = 0.5f),
+            )
+        }
         if (type in NestableTypes) Spacer(Modifier.width((block.indent * 28).dp))
         when (type) {
             BlockType.TASK -> com.cenotes.app.ui.glass.TaskCheckbox(

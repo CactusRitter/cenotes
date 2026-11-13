@@ -12,12 +12,30 @@ import kotlinx.coroutines.flow.Flow
 abstract class NoteDao {
     // ---- Notes ----
 
-    @Query("SELECT * FROM notes ORDER BY pinned DESC, updatedAt DESC")
+    /** Every note that is not in the Trash (the list, widgets, shortcuts and backups only see these). */
+    @Query("SELECT * FROM notes WHERE trashedAt IS NULL ORDER BY pinned DESC, updatedAt DESC")
     abstract fun observeAll(): Flow<List<Note>>
 
-    @Query("SELECT * FROM notes ORDER BY pinned DESC, updatedAt DESC")
+    @Query("SELECT * FROM notes WHERE trashedAt IS NULL ORDER BY pinned DESC, updatedAt DESC")
     abstract suspend fun all(): List<Note>
 
+    /** The Trash, most recently deleted first. */
+    @Query("SELECT * FROM notes WHERE trashedAt IS NOT NULL ORDER BY trashedAt DESC")
+    abstract fun observeTrash(): Flow<List<Note>>
+
+    @Query("UPDATE notes SET trashedAt = :at WHERE id IN (:ids)")
+    abstract suspend fun setTrashed(ids: Collection<Long>, at: Long?)
+
+    @Query("SELECT id FROM notes WHERE trashedAt IS NOT NULL AND trashedAt < :before")
+    abstract suspend fun trashedBefore(before: Long): List<Long>
+
+    @Query("SELECT id FROM notes WHERE trashedAt IS NOT NULL")
+    abstract suspend fun trashIds(): List<Long>
+
+    @Query("UPDATE notes SET color = :color WHERE id IN (:ids)")
+    abstract suspend fun setColor(ids: Collection<Long>, color: Int)
+
+    /** Contents of every note, Trash included (its images are kept until the note is gone for good). */
     @Query("SELECT content FROM notes")
     abstract suspend fun allContents(): List<String>
 

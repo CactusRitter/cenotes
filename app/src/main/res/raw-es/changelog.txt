@@ -1,3 +1,9 @@
+## 0.12.0
+- Papelera: las notas eliminadas van a la papelera (en el menú, debajo de Archivo) y se borran para siempre a los 7 días. Desde allí se pueden restaurar, eliminar para siempre o vaciar la papelera entera.
+- Color de nota: da a una nota un color de fondo suave desde su menú (⋮ → Color), o a varias a la vez desde la selección.
+- Listas: lo que marcas baja al final y vuelve a subir si lo desmarcas (Ajustes → Notas), y puedes arrastrar los elementos por su asa para cambiarlos de orden.
+- Orden de las notas: última edición, fecha de creación o título (Ajustes → Notas). Las fijadas van siempre primero.
+
 ## 0.11.1
 - El botón de nota nueva está abajo a la derecha, redondo y de 60 dp como el de redactar de Cemail; la búsqueda es un botón redondo arriba.
 - La barra inferior es más pequeña, con las mismas medidas que las barras de Cemail.

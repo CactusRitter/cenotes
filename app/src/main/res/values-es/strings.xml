@@ -17,9 +17,6 @@
     <string name="unpin">Dejar de fijar</string>
     <string name="delete">Eliminar</string>
     <string name="cancel">Cancelar</string>
-    <string name="delete_confirm_title">¿Eliminar esta nota?</string>
-    <string name="delete_confirm_text">Podrás deshacerlo justo después.</string>
-    <string name="note_deleted">Nota eliminada</string>
     <string name="undo">Deshacer</string>
     <string name="pinned">Fijada</string>
     <string name="pinned_tab">Fijadas</string>
@@ -110,7 +107,6 @@
     <string name="archived_many">%1$d notas archivadas</string>
     <string name="unarchived_one">Nota sacada del archivo</string>
     <string name="unarchived_many">%1$d notas sacadas del archivo</string>
-    <string name="notes_deleted">%1$d notas eliminadas</string>
     <string name="cancel_selection">Cancelar selección</string>
     <string name="pin_selected">Fijar o dejar de fijar</string>
     <string name="empty_label">No hay notas con esta etiqueta.\nPulsa + para crear una.</string>
@@ -189,4 +185,38 @@
     <string name="update_found">Hay una versión nueva: aparece arriba en tus notas.</string>
     <string name="update_check_failed">No se pudo comprobar. Revisa la conexión.</string>
     <string name="update_checking">Buscando…</string>
+
+    <!-- 0.12: papelera, color de nota, listas, orden -->
+    <string name="section_trash">Papelera</string>
+    <string name="note_trashed">Nota enviada a la papelera</string>
+    <string name="notes_trashed">%1$d notas enviadas a la papelera</string>
+    <string name="restored_one">Nota restaurada</string>
+    <string name="restored_many">%1$d notas restauradas</string>
+    <string name="restore">Restaurar</string>
+    <string name="delete_forever">Eliminar para siempre</string>
+    <string name="empty_trash">Vaciar papelera</string>
+    <string name="empty_trash_title">¿Vaciar la papelera?</string>
+    <string name="empty_trash_list">La papelera está vacía.\nLas notas eliminadas se quedan aquí una semana.</string>
+    <plurals name="delete_forever_title">
+        <item quantity="one">¿Eliminar %1$d nota para siempre?</item>
+        <item quantity="many">¿Eliminar %1$d notas para siempre?</item>
+        <item quantity="other">¿Eliminar %1$d notas para siempre?</item>
+    </plurals>
+    <string name="delete_forever_text">No se podrán recuperar.</string>
+    <plurals name="trash_info">
+        <item quantity="one">Las notas de la papelera se eliminan pasado %1$d día.</item>
+        <item quantity="many">Las notas de la papelera se eliminan pasados %1$d días.</item>
+        <item quantity="other">Las notas de la papelera se eliminan pasados %1$d días.</item>
+    </plurals>
+    <string name="note_color">Color</string>
+    <string name="note_color_none">Sin color</string>
+    <string name="drag_item">Arrastrar para mover</string>
+    <string name="settings_row_notes_body">Orden y listas</string>
+    <string name="sort_title">Orden</string>
+    <string name="sort_body">Las notas fijadas van siempre primero.</string>
+    <string name="sort_edited">Última edición</string>
+    <string name="sort_created">Fecha de creación</string>
+    <string name="sort_title_az">Título (A–Z)</string>
+    <string name="checked_bottom_title">Marcadas al final</string>
+    <string name="checked_bottom_body">En una lista, lo que marcas baja al final, y vuelve a subir si lo desmarcas.</string>
 </resources>

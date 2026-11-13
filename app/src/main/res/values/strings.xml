@@ -18,9 +18,6 @@
     <string name="unpin">Unpin</string>
     <string name="delete">Delete</string>
     <string name="cancel">Cancel</string>
-    <string name="delete_confirm_title">Delete this note?</string>
-    <string name="delete_confirm_text">You can undo it right afterwards.</string>
-    <string name="note_deleted">Note deleted</string>
     <string name="undo">Undo</string>
     <string name="pinned">Pinned</string>
     <string name="pinned_tab">Pinned</string>
@@ -113,7 +110,6 @@
     <string name="archived_many">%1$d notes archived</string>
     <string name="unarchived_one">Note moved out of archive</string>
     <string name="unarchived_many">%1$d notes moved out of archive</string>
-    <string name="notes_deleted">%1$d notes deleted</string>
     <string name="selected_count" translatable="false">%1$d</string>
     <string name="cancel_selection">Cancel selection</string>
     <string name="pin_selected">Pin or unpin</string>
@@ -195,4 +191,36 @@
     <string name="update_found">There is a new version: it is shown at the top of your notes.</string>
     <string name="update_check_failed">Could not check. Check your connection.</string>
     <string name="update_checking">Looking…</string>
+
+    <!-- 0.12: Trash, note colour, checklists, order -->
+    <string name="section_trash">Trash</string>
+    <string name="note_trashed">Note moved to the Trash</string>
+    <string name="notes_trashed">%1$d notes moved to the Trash</string>
+    <string name="restored_one">Note restored</string>
+    <string name="restored_many">%1$d notes restored</string>
+    <string name="restore">Restore</string>
+    <string name="delete_forever">Delete for good</string>
+    <string name="empty_trash">Empty Trash</string>
+    <string name="empty_trash_title">Empty the Trash?</string>
+    <string name="empty_trash_list">The Trash is empty.\nDeleted notes stay here for a week.</string>
+    <plurals name="delete_forever_title">
+        <item quantity="one">Delete %1$d note for good?</item>
+        <item quantity="other">Delete %1$d notes for good?</item>
+    </plurals>
+    <string name="delete_forever_text">They can\'t be brought back.</string>
+    <plurals name="trash_info">
+        <item quantity="one">Notes in the Trash are deleted after %1$d day.</item>
+        <item quantity="other">Notes in the Trash are deleted after %1$d days.</item>
+    </plurals>
+    <string name="note_color">Colour</string>
+    <string name="note_color_none">No colour</string>
+    <string name="drag_item">Drag to move</string>
+    <string name="settings_row_notes_body">Order and checklists</string>
+    <string name="sort_title">Order</string>
+    <string name="sort_body">Pinned notes always come first.</string>
+    <string name="sort_edited">Last edited</string>
+    <string name="sort_created">Date created</string>
+    <string name="sort_title_az">Title (A–Z)</string>
+    <string name="checked_bottom_title">Ticked items to the bottom</string>
+    <string name="checked_bottom_body">In a checklist, what you tick moves to the end, and comes back up if you untick it.</string>
 </resources>

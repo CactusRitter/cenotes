@@ -10,10 +10,10 @@
 | Etiquetas, fijar, archivo | ✅ | carpetas | páginas | **Ya está** |
 | Imágenes, enlaces, compartir | ✅ | ✅ | ✅ | **Ya está** |
 | Widgets, atajos del icono | ✅ | ✅ | — | **Ya está** |
-| **Papelera** (recuperar 7 días) | ✅ | ✅ (15 días) | ✅ | **Sí** (fase 1) |
-| **Color de fondo de la nota** | ✅ | ✅ | — | **Sí** (fase 1) |
-| Casillas marcadas al final, reordenar arrastrando | ✅ | — | ✅ | **Sí** (fase 1) |
-| Ordenar notas (editada, creada, a mano) | a mano | ✅ | ✅ | **Sí** (fase 1) |
+| **Papelera** (recuperar 7 días) | ✅ | ✅ (15 días) | ✅ | **Ya está** (0.12) |
+| **Color de fondo de la nota** | ✅ | ✅ | — | **Ya está** (0.12) |
+| Casillas marcadas al final, reordenar arrastrando | ✅ | — | ✅ | **Ya está** (0.12) |
+| Ordenar notas (editada, creada, a mano) | a mano | ✅ | ✅ | **Ya está** salvo a mano (0.12) |
 | **Recordatorios** con notificación | ✅ | ✅ | ✅ | **Sí** (fase 2) |
 | **Compartir hacia Cenotes** desde otras apps | ✅ | ✅ | ✅ | **Sí** (fase 2) |
 | Bloquear notas con huella o PIN | — | ✅ | — | **Sí** (fase 3) |
@@ -33,11 +33,12 @@
 
 ## Fases
 
-### Fase 1 · 0.12 — Lo básico que falta (como Keep)
-- **Papelera**: borrar manda la nota a la Papelera (en el menú lateral, debajo de Archivo); se borra sola a los 7 días; desde allí, restaurar o vaciar.
-- **Color de la nota**: 8–10 colores suaves (los de las etiquetas) que tiñen la tarjeta y el editor, adaptados a cada diseño y a claro/oscuro. Se elige en el menú «⋮» de la nota y en la selección múltiple.
-- **Listas**: «Mover las marcadas al final» (Ajustes → Notas) y reordenar elementos arrastrándolos por un asa.
-- **Orden de las notas**: última edición, creación o a mano (arrastrando, como Keep). Ajustes → Notas.
+### Fase 1 · 0.12 — Lo básico que falta (como Keep) ✅ hecha en 0.12.0
+- ✅ **Papelera**: borrar manda la nota a la Papelera (en el menú lateral, debajo de Archivo); se borra sola a los 7 días; desde allí, restaurar, eliminar para siempre o vaciar.
+- ✅ **Color de la nota**: los 10 colores de las etiquetas como velo suave sobre la tarjeta y el editor, en todos los diseños y en claro/oscuro. Menú «⋮» de la nota y selección múltiple.
+- ✅ **Listas**: «Marcadas al final» (Ajustes → Notas) y reordenar elementos arrastrándolos por su asa.
+- ✅ **Orden de las notas**: última edición, creación o título. Ajustes → Notas.
+- ⏳ **Orden a mano** (arrastrar tarjetas en la lista, como Keep): pendiente; choca con «mantener pulsado = seleccionar» y con la cuadrícula escalonada, así que necesita su propio diseño. Pasa a la fase 5.
 
 ### Fase 2 · 0.13 — Recordatorios y entrada rápida
 - **Recordatorios**: fecha y hora (hoy, mañana, la semana que viene, otra), repetición (diaria, semanal, mensual) y notificación con «Hecho» y «Posponer». Sección «Recordatorios» en el menú.
@@ -62,6 +63,7 @@
 - Dos paneles desde 840 dp como Cemail (lista a la izquierda y nota a la derecha), Ajustes movibles.
 - Accesibilidad con TalkBack revisada en todas las pantallas.
 - Historial de versiones de una nota (las últimas 20 ediciones, para deshacer un borrado grande).
+- Orden a mano de las notas arrastrando las tarjetas (viene de la fase 1).
 
 ## Cómo se decide qué entra
 1. ¿Lo usaría alguien cada semana? Si no, no entra o va escondido en «⋮».

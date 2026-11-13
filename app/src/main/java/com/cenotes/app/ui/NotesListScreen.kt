@@ -1,5 +1,11 @@
 ﻿package com.cenotes.app.ui
 
+import com.cenotes.app.data.TrashDays
+import com.cenotes.app.ui.theme.DeleteForeverIcon
+import com.cenotes.app.ui.theme.RestoreFromTrashIcon
+import com.cenotes.app.ui.theme.PaletteIcon
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.material3.AlertDialog
 import android.text.format.DateUtils
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
@@ -167,6 +173,9 @@ fun NotesListScreen(
     val scope = rememberCoroutineScope()
     var searchOpen by rememberSaveable { mutableStateOf(query.isNotEmpty()) }
     var bulkLabels by remember { mutableStateOf(false) }
+    var bulkColor by remember { mutableStateOf(false) }
+    // What "Delete for good" is about to delete (it asks first: there is no way back).
+    var confirmForever by remember { mutableStateOf<ForeverTarget?>(null) }
     var manageLabels by remember { mutableStateOf(false) }
     LaunchedEffect(searchRequest) { if (searchRequest > 0) searchOpen = true }
 
@@ -189,6 +198,7 @@ fun NotesListScreen(
     val sectionTitle = when (val s = section) {
         Section.All -> stringResource(R.string.app_name)
         Section.Archive -> stringResource(R.string.section_archive)
+        Section.Trash -> stringResource(R.string.section_trash)
         is Section.ByLabel -> labels.firstOrNull { it.id == s.labelId }?.name ?: stringResource(R.string.app_name)
     }
 
@@ -234,6 +244,7 @@ fun NotesListScreen(
                                 query.isNotBlank() -> R.string.empty_search
                                 pinnedOnly -> R.string.empty_pinned
                                 section == Section.Archive -> R.string.empty_archive
+                                section == Section.Trash -> R.string.empty_trash_list
                                 else -> R.string.empty_label
                             },
                         ),
@@ -252,6 +263,12 @@ fun NotesListScreen(
                         if (section == Section.All && query.isBlank()) {
                             item(key = "update", span = StaggeredGridItemSpan.FullLine) { UpdateBanner() }
                         }
+                        // The Trash says how long notes stay in it, and can be emptied at once.
+                        if (section == Section.Trash) {
+                            item(key = "trash", span = StaggeredGridItemSpan.FullLine) {
+                                TrashHeader(onEmpty = { confirmForever = ForeverTarget.All })
+                            }
+                        }
                         items(list, key = { it.note.id }) { item ->
                             val id = item.note.id
                             NoteCard(
@@ -259,7 +276,8 @@ fun NotesListScreen(
                                 maxLines = if (layout == NoteLayout.GRID) 8 else 4,
                                 selected = id in selected,
                                 // While selecting, a tap adds/removes; otherwise it opens the note.
-                                onClick = { if (selecting) viewModel.toggleSelected(id) else onOpenNote(id) },
+                                // In the Trash a note is not opened: a tap picks it, to restore it or delete it for good.
+                                onClick = { if (selecting || section == Section.Trash) viewModel.toggleSelected(id) else onOpenNote(id) },
                                 onLongClick = { viewModel.toggleSelected(id) },
                                 modifier = Modifier
                                     .animateItem(
@@ -282,12 +300,16 @@ fun NotesListScreen(
                     SelectionBar(
                         count = selected.size,
                         archiveSection = section == Section.Archive,
+                        trash = section == Section.Trash,
                         hazeState = hazeState,
                         onClose = viewModel::clearSelection,
                         onPin = viewModel::pinSelected,
+                        onColor = { bulkColor = true },
                         onLabel = { bulkLabels = true },
                         onArchive = { viewModel.archiveSelected(section != Section.Archive) },
                         onDelete = viewModel::deleteSelected,
+                        onRestore = viewModel::restoreSelected,
+                        onDeleteForever = { confirmForever = ForeverTarget.Selection },
                     )
                 } else {
                     // Menu on the left, section title centred, search + new note on the right.
@@ -345,7 +367,7 @@ fun NotesListScreen(
             )
 
             // New note: the same floating button as Cemail's "write" (60 dp, accent glass, bottom corner).
-            if (!selecting) {
+            if (!selecting && section != Section.Trash) {
                 Box(
                     Modifier
                         .align(Alignment.BottomEnd)
@@ -389,6 +411,33 @@ fun NotesListScreen(
         }
     }
 
+    if (bulkColor) {
+        // The colour the selected notes share, if they all have the same one (otherwise nothing is ticked).
+        val shared = notes.orEmpty().filter { it.note.id in selected }.map { it.note.color }.distinct().singleOrNull() ?: -1
+        NoteColorDialog(shared, onPick = viewModel::setColorOnSelected, onDismiss = { bulkColor = false })
+    }
+    confirmForever?.let { target ->
+        AlertDialog(
+            onDismissRequest = { confirmForever = null },
+            shape = RoundedCornerShape(LocalSkin.current.radius(28.dp)),
+            containerColor = LocalGlass.current.menu,
+            title = {
+                Text(
+                    if (target == ForeverTarget.All) stringResource(R.string.empty_trash_title)
+                    else pluralStringResource(R.plurals.delete_forever_title, selected.size, selected.size),
+                    fontWeight = FontWeight.Bold,
+                )
+            },
+            text = { Text(stringResource(R.string.delete_forever_text)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmForever = null
+                    if (target == ForeverTarget.All) viewModel.emptyTrash() else viewModel.deleteSelectedForever()
+                }) { Text(stringResource(R.string.delete_forever), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = { TextButton(onClick = { confirmForever = null }) { Text(stringResource(R.string.cancel)) } },
+        )
+    }
     if (bulkLabels) {
         val items = notes.orEmpty()
         BulkLabelDialog(
@@ -416,18 +465,43 @@ fun NotesListScreen(
     }
 }
 
-/** Replaces the header while notes are selected: count, then pin / label / archive / delete. */
+/**
+ * Replaces the header while notes are selected: count, then pin / colour / label / archive / delete. In the Trash:
+ * restore and delete for good.
+ */
 @Composable
 private fun SelectionBar(
     count: Int,
     archiveSection: Boolean,
+    trash: Boolean,
     hazeState: HazeState,
     onClose: () -> Unit,
     onPin: () -> Unit,
+    onColor: () -> Unit,
     onLabel: () -> Unit,
     onArchive: () -> Unit,
     onDelete: () -> Unit,
+    onRestore: () -> Unit,
+    onDeleteForever: () -> Unit,
 ) {
+    if (trash) {
+        Row(Modifier.fillMaxWidth().height(HeaderHeight), verticalAlignment = Alignment.CenterVertically) {
+            GlassIconButton(Icons.Filled.Close, stringResource(R.string.cancel_selection), onClose, hazeState = hazeState)
+            Spacer(Modifier.width(14.dp))
+            Text(
+                stringResource(R.string.selected_count, count),
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                color = onBackdrop(MaterialTheme.colorScheme.onSurface),
+            )
+            Spacer(Modifier.weight(1f))
+            GlassPill(hazeState = hazeState) {
+                PillIcon(RestoreFromTrashIcon, stringResource(R.string.restore), onRestore)
+                PillIcon(DeleteForeverIcon, stringResource(R.string.delete_forever), onDeleteForever)
+            }
+        }
+        return
+    }
     Row(Modifier.fillMaxWidth().height(HeaderHeight), verticalAlignment = Alignment.CenterVertically) {
         GlassIconButton(Icons.Filled.Close, stringResource(R.string.cancel_selection), onClose, hazeState = hazeState)
         Spacer(Modifier.width(14.dp))
@@ -438,15 +512,18 @@ private fun SelectionBar(
             color = onBackdrop(MaterialTheme.colorScheme.onSurface),
         )
         Spacer(Modifier.weight(1f))
+        // Five actions: a little narrower than usual (like Cemail's selection pill) so they fit next to the count.
         GlassPill(hazeState = hazeState) {
-            PillIcon(Icons.Filled.Star, stringResource(R.string.pin_selected), onPin)
-            PillIcon(LabelIcon, stringResource(R.string.labels), onLabel)
+            PillIcon(Icons.Filled.Star, stringResource(R.string.pin_selected), onPin, width = 46.dp)
+            PillIcon(PaletteIcon, stringResource(R.string.note_color), onColor, width = 46.dp)
+            PillIcon(LabelIcon, stringResource(R.string.labels), onLabel, width = 46.dp)
             PillIcon(
                 if (archiveSection) UnarchiveIcon else ArchiveIcon,
                 stringResource(if (archiveSection) R.string.unarchive else R.string.archive),
                 onArchive,
+                width = 46.dp,
             )
-            PillIcon(Icons.Filled.Delete, stringResource(R.string.delete), onDelete)
+            PillIcon(Icons.Filled.Delete, stringResource(R.string.delete), onDelete, width = 46.dp)
         }
     }
 }
@@ -518,8 +595,12 @@ private fun SideMenu(
             }
             MenuItem(Icons.Filled.Edit, stringResource(R.string.labels_edit), false, colors, onEditLabels)
             HorizontalDivider(Modifier.padding(vertical = 10.dp, horizontal = 16.dp))
+            // Archive, then Trash, as in Google Keep.
             MenuItem(ArchiveIcon, stringResource(R.string.section_archive), section == Section.Archive, colors) {
                 onSection(Section.Archive)
+            }
+            MenuItem(Icons.Filled.Delete, stringResource(R.string.section_trash), section == Section.Trash, colors) {
+                onSection(Section.Trash)
             }
             MenuItem(Icons.Filled.Settings, stringResource(R.string.settings), false, colors, onSettings)
             Spacer(Modifier.height(24.dp))
@@ -590,7 +671,7 @@ private fun NoteCard(
     modifier: Modifier = Modifier,
 ) {
     val note = item.note
-    val shape = RoundedCornerShape(24.dp)
+    val shape = LocalSkin.current.shape(RoundedCornerShape(24.dp))
     val context = LocalContext.current
     val cover = remember(note.content) { firstImage(note.content) }
     val primary = MaterialTheme.colorScheme.primary
@@ -600,6 +681,7 @@ private fun NoteCard(
                 .pressScale(0.97f)
                 .fillMaxWidth()
                 .glass(shape, if (note.pinned) GlassKind.Pinned else GlassKind.Card)
+                .noteTint(note.color)
                 .then(if (selected) Modifier.border(2.5.dp, primary, shape) else Modifier)
                 .combinedClickable(onClick = onClick, onLongClick = onLongClick),
         ) {
@@ -842,5 +924,29 @@ private fun LayoutPill(
             selected = pinnedOnly,
         )
         Spacer(Modifier.width(4.dp))
+    }
+}
+
+/** What "Delete for good" deletes: the selected notes of the Trash, or all of it. */
+private enum class ForeverTarget { Selection, All }
+
+/** First row of the Trash: notes go after a week, and a button to empty it now. */
+@Composable
+private fun TrashHeader(onEmpty: () -> Unit) {
+    Row(
+        Modifier
+            .popIn(initialScale = 0.9f)
+            .fillMaxWidth()
+            .glass(RoundedCornerShape(24.dp), GlassKind.Card)
+            .padding(start = 18.dp, end = 8.dp, top = 10.dp, bottom = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            pluralStringResource(R.plurals.trash_info, TrashDays, TrashDays),
+            Modifier.weight(1f),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        TextButton(onClick = onEmpty) { Text(stringResource(R.string.empty_trash), fontWeight = FontWeight.Bold) }
     }
 }

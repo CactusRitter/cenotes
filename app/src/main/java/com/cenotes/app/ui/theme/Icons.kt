@@ -205,3 +205,25 @@ val SettingsBackupIcon: ImageVector by lazy {
             "C8.04,20.3 9.94,21 12,21c4.97,0 9,-4.03 9,-9s-4.03,-9 -9,-9z",
     )
 }
+
+/** Two bars: the handle to drag a list item up or down. */
+val DragHandleIcon: ImageVector by lazy {
+    pathIcon("DragHandle", "M20,9H4v2h16V9zM4,15h16v-2H4V15z")
+}
+
+/** A bin with an arrow up: bring a note back from the Trash. */
+val RestoreFromTrashIcon: ImageVector by lazy {
+    pathIcon(
+        "RestoreFromTrash",
+        "M19,4h-3.5l-1,-1h-5l-1,1H5v2h14zM6,7v12c0,1.1 0.9,2 2,2h8c1.1,0 2,-0.9 2,-2V7H6zM14,14v4h-4v-4H8l4,-4 4,4h-2z",
+    )
+}
+
+/** A bin with a cross: delete for good. */
+val DeleteForeverIcon: ImageVector by lazy {
+    pathIcon(
+        "DeleteForever",
+        "M6,19c0,1.1 0.9,2 2,2h8c1.1,0 2,-0.9 2,-2V7H6v12zM8.46,11.88l1.41,-1.41L12,12.59l2.12,-2.12 1.41,1.41L13.41,14" +
+            "l2.12,2.12 -1.41,1.41L12,15.41l-2.12,2.12 -1.41,-1.41L10.59,14l-2.13,-2.12zM15.5,4l-1,-1h-5l-1,1H5v2h14V4z",
+    )
+}

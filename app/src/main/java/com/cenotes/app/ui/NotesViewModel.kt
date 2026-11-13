@@ -14,7 +14,10 @@ import com.cenotes.app.data.ImageStore
 import com.cenotes.app.data.Label
 import com.cenotes.app.data.Note
 import com.cenotes.app.data.NoteDao
+import com.cenotes.app.data.NoteSort
+import com.cenotes.app.data.TrashDays
 import com.cenotes.app.ui.markdown.imageNames
+import com.cenotes.app.ui.markdown.markdownToPlainText
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -25,10 +28,11 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/** What the main list shows: everything active, one label, or the archive. */
+/** What the main list shows: everything active, one label, the archive or the Trash. */
 sealed interface Section {
     data object All : Section
     data object Archive : Section
+    data object Trash : Section
     data class ByLabel(val labelId: Long) : Section
 }
 
@@ -52,6 +56,9 @@ class NotesViewModel(private val app: CenotesApp) : ViewModel() {
         // Once per app start: drop image files that no note uses any more, and make sure the
         // widgets and launcher shortcuts show the current notes.
         viewModelScope.launch {
+            // Notes that have been in the Trash for longer than a week go for good (like Google Keep).
+            val expired = dao.trashedBefore(System.currentTimeMillis() - TrashDays * 24L * 60 * 60 * 1000)
+            if (expired.isNotEmpty()) dao.deleteNotes(expired)
             val referenced = dao.allContents().flatMap { imageNames(it) }.toSet()
             images.cleanUp(referenced)
             ExternalViews.refresh(app)
@@ -81,18 +88,36 @@ class NotesViewModel(private val app: CenotesApp) : ViewModel() {
 
     private val links = dao.observeLinks()
 
+    /** The notes out of the Trash and those in it, and the order chosen in Settings. */
+    private val sources = combine(dao.observeAll(), dao.observeTrash(), app.settings.state.map { it.sort }) { all, trash, sort ->
+        Triple(all, trash, sort)
+    }
+
     /** Notes for the current section, search and "Fijadas" tab, each with its labels. */
-    val notes: StateFlow<List<NoteItem>?> = combine(dao.observeAll(), links, labels, filter) { all, links, labels, f ->
+    val notes: StateFlow<List<NoteItem>?> = combine(sources, links, labels, filter) { (all, trash, sort), links, labels, f ->
         val labelById = labels.associateBy { it.id }
         val labelsOf = links.groupBy({ it.noteId }, { labelById[it.labelId] }).mapValues { (_, l) ->
             l.filterNotNull().sortedBy { it.name.lowercase() }
         }
         val term = f.query.trim()
-        all.asSequence()
+        // The Trash keeps its own order (last deleted first); elsewhere pinned notes go first, then the chosen order.
+        val ordered = if (f.section == Section.Trash) trash else all.sortedWith(
+            compareByDescending<Note> { it.pinned }.then(
+                when (sort) {
+                    NoteSort.EDITED -> compareByDescending { it.updatedAt }
+                    NoteSort.CREATED -> compareByDescending { it.createdAt }
+                    NoteSort.TITLE -> compareBy(String.CASE_INSENSITIVE_ORDER) { n: Note ->
+                        n.title.ifBlank { markdownToPlainText(n.content).trim().lineSequence().firstOrNull().orEmpty() }
+                    }
+                },
+            ),
+        )
+        ordered.asSequence()
             .filter { n ->
                 when (val s = f.section) {
                     Section.All -> !n.archived
                     Section.Archive -> n.archived
+                    Section.Trash -> true
                     is Section.ByLabel -> !n.archived && labelsOf[n.id].orEmpty().any { it.id == s.labelId }
                 }
             }
@@ -169,29 +194,63 @@ class NotesViewModel(private val app: CenotesApp) : ViewModel() {
         pinned: Boolean,
         labelIds: List<Long>,
         archived: Boolean,
-    ) = write {
+        color: Int,
+    ) = write { persist(original, title, content, pinned, labelIds, archived, color) }
+
+    /**
+     * "Delete" in the editor: what is on screen is saved first and then the note goes to the Trash, in one go (so
+     * the copy in the Trash has the latest text), with undo.
+     */
+    fun saveAndTrash(
+        original: Note?,
+        title: String,
+        content: String,
+        pinned: Boolean,
+        labelIds: List<Long>,
+        archived: Boolean,
+        color: Int,
+    ) {
+        write {
+            val id = persist(original, title, content, pinned, labelIds, archived, color) ?: return@write
+            dao.setTrashed(listOf(id), System.currentTimeMillis())
+            offerUndo(R.string.note_trashed, R.string.notes_trashed, 1) { dao.setTrashed(listOf(id), null) }
+        }
+    }
+
+    /** Stores the editor's content; returns the note's id, or null when the note was empty (and is gone). */
+    private suspend fun persist(
+        original: Note?,
+        title: String,
+        content: String,
+        pinned: Boolean,
+        labelIds: List<Long>,
+        archived: Boolean,
+        color: Int,
+    ): Long? {
         if (title.isBlank() && content.isBlank()) {
             original?.let { dao.deleteNotes(listOf(it.id)) }
-            return@write
+            return null
         }
         if (original == null) {
-            val id = dao.insert(Note(title = title, content = content, pinned = pinned, archived = archived))
+            val id = dao.insert(Note(title = title, content = content, pinned = pinned, archived = archived, color = color))
             dao.setLabels(id, labelIds)
-            return@write
+            return id
         }
         val textChanged = original.title != title || original.content != content
-        if (textChanged || original.pinned != pinned || original.archived != archived) {
+        if (textChanged || original.pinned != pinned || original.archived != archived || original.color != color) {
             dao.update(
                 original.copy(
                     title = title,
                     content = content,
                     pinned = pinned,
                     archived = archived,
+                    color = color,
                     updatedAt = if (textChanged) System.currentTimeMillis() else original.updatedAt,
                 ),
             )
         }
         if (dao.labelIdsOf(original.id).toSet() != labelIds.toSet()) dao.setLabels(original.id, labelIds)
+        return original.id
     }
 
     /** Archiving from the editor: the list then offers "Deshacer". */
@@ -201,9 +260,6 @@ class NotesViewModel(private val app: CenotesApp) : ViewModel() {
         else R.string.unarchived_one to R.string.unarchived_many
         offerUndo(one, many, 1) { dao.setArchived(listOf(noteId), !archived) }
     }
-
-    /** Deletes one note (from the editor), with undo. */
-    fun delete(note: Note) = deleteIds(setOf(note.id))
 
     // ---- Bulk actions on the selection ----
 
@@ -218,17 +274,41 @@ class NotesViewModel(private val app: CenotesApp) : ViewModel() {
 
     fun deleteSelected() = deleteIds(takeSelection())
 
+    /** "Delete" sends notes to the Trash (with undo); they are deleted for good after [TrashDays] days. */
     private fun deleteIds(ids: Set<Long>) {
         if (ids.isEmpty()) return
-        write {
-            val notes = dao.getMany(ids)
-            val links = dao.links().filter { it.noteId in ids }
-            dao.deleteNotes(ids)
-            offerUndo(R.string.note_deleted, R.string.notes_deleted, notes.size) {
-                notes.forEach { dao.insert(it) }
-                dao.insertLinks(links)
-            }
-        }
+        write { dao.setTrashed(ids, System.currentTimeMillis()) }
+        offerUndo(R.string.note_trashed, R.string.notes_trashed, ids.size) { dao.setTrashed(ids, null) }
+    }
+
+    // ---- Trash ----
+
+    /** Brings the selected notes back from the Trash (where they were: list or archive). */
+    fun restoreSelected() {
+        val ids = takeSelection()
+        if (ids.isEmpty()) return
+        write { dao.setTrashed(ids, null) }
+        offerUndo(R.string.restored_one, R.string.restored_many, ids.size) { dao.setTrashed(ids, System.currentTimeMillis()) }
+    }
+
+    /** Deletes the selected notes of the Trash for good (the screen asks first; there is no undo). */
+    fun deleteSelectedForever() {
+        val ids = takeSelection()
+        if (ids.isNotEmpty()) write { dao.deleteNotes(ids) }
+    }
+
+    /** Empties the whole Trash for good (the screen asks first). */
+    fun emptyTrash() {
+        clearSelection()
+        write { dao.deleteNotes(dao.trashIds()) }
+    }
+
+    // ---- Colour ----
+
+    /** Gives the selected notes a background colour (0 = none). Keeps the selection. */
+    fun setColorOnSelected(color: Int) {
+        val ids = _selected.value
+        if (ids.isNotEmpty()) write { dao.setColor(ids, color) }
     }
 
     /** Pins all selected notes, or unpins them if they all were pinned already. */
@@ -270,6 +350,9 @@ class NotesViewModel(private val app: CenotesApp) : ViewModel() {
     }
 
     fun setLabelColor(id: Long, color: Int) = write { dao.setLabelColor(id, color) }
+
+    /** The app settings (the editor needs "checked items to the bottom"). */
+    val settings = app.settings.state
 
     val customColors: StateFlow<List<Int>> =
         app.settings.state.map { it.customColors }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())

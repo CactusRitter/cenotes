@@ -2,6 +2,13 @@
 
 Cada versión se guarda en Google Drive (`Mi unidad/Notas app/Cenotes-x.y.z.apk`, sin reemplazar la anterior) y, desde la 0.11.0, también como *release* de GitHub (`vx.y.z`, con el APK), que es de donde la app avisa de versiones nuevas. Lo que ve el usuario en Ajustes → Actualizaciones está en `app/src/main/res/raw*/changelog.txt` (inglés, español y alemán).
 
+## 0.12.0 — 2026-11-14 (fase 1 del plan)
+- Papelera: borrar envía a la papelera (`Note.trashedAt`), con deshacer; se vacía sola a los 7 días (`TrashDays`) al abrir la app; restaurar, eliminar para siempre (pregunta antes) y vaciar. La papelera no entra en widgets, atajos ni copias.
+- Color de nota (`Note.color`, colores de las etiquetas) como velo suave sobre la tarjeta y el editor (`noteTint`, sirve en todos los diseños); desde el menú de la nota y desde la selección.
+- Listas: marcadas al final (Ajustes → Notas, activado por defecto) y reordenar arrastrando por el asa (`BlockEditorState.moveItem`).
+- Orden de las notas: última edición, creación (`Note.createdAt`) o título.
+- Base de datos v4 (migración 3→4) y copia de seguridad formato 4 (color y fecha de creación). Borrar desde el editor ya no pregunta: va a la papelera.
+
 ## 0.11.1 — 2026-11-13
 - Botón de nota nueva abajo a la derecha (60 dp, como el de redactar de Cemail) y búsqueda como botón redondo arriba.
 - Barra inferior con las medidas de Cemail (56 dp de alto, iconos de 52 dp).

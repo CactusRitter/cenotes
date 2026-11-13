@@ -15,6 +15,9 @@ import org.json.JSONObject
 
 enum class NoteLayout { GRID, LIST }
 
+/** How the notes are ordered (pinned ones always go first). */
+enum class NoteSort { EDITED, CREATED, TITLE }
+
 data class AppSettings(
     val accent: Accent = Accent.INDIGO,
     /** A colour of the free hue bar (0–360) instead of [accent]; null = the chosen accent. */
@@ -34,6 +37,9 @@ data class AppSettings(
     val customColors: List<Int> = emptyList(),
     /** Ask GitHub once or twice a day whether there is a newer Cenotes. */
     val checkUpdates: Boolean = true,
+    val sort: NoteSort = NoteSort.EDITED,
+    /** Ticked items of a checklist sink to the end of their list (like Google Keep). */
+    val checkedToBottom: Boolean = true,
 ) {
     /** The app's colour in its four shades: the custom one, or the chosen accent. */
     val accentPalette: AccentPalette
@@ -64,7 +70,19 @@ class SettingsRepository(context: Context) {
         customColors = prefs.getString(KEY_COLORS, null).orEmpty()
             .split(',').mapNotNull { it.toIntOrNull() }.take(MaxCustomColors),
         checkUpdates = prefs.getBoolean(KEY_UPDATES, true),
+        sort = enumPref(KEY_SORT, NoteSort.EDITED),
+        checkedToBottom = prefs.getBoolean(KEY_CHECKED_BOTTOM, true),
     )
+
+    fun setSort(value: NoteSort) {
+        prefs.edit().putString(KEY_SORT, value.name).apply()
+        _state.value = _state.value.copy(sort = value)
+    }
+
+    fun setCheckedToBottom(value: Boolean) {
+        prefs.edit().putBoolean(KEY_CHECKED_BOTTOM, value).apply()
+        _state.value = _state.value.copy(checkedToBottom = value)
+    }
 
     fun setCheckUpdates(value: Boolean) {
         prefs.edit().putBoolean(KEY_UPDATES, value).apply()
@@ -182,5 +200,7 @@ class SettingsRepository(context: Context) {
         const val KEY_LAYOUT = "layout"
         const val KEY_COLORS = "customColors"
         const val KEY_UPDATES = "check_updates"
+        const val KEY_SORT = "sort"
+        const val KEY_CHECKED_BOTTOM = "checked_to_bottom"
     }
 }
