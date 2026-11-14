@@ -10,6 +10,7 @@ import androidx.compose.animation.EnterExitState
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.Composable
 import com.cenotes.app.ui.LocalNoteTransition
 import com.cenotes.app.ui.NoteTransition
 import androidx.compose.animation.fadeIn
@@ -140,13 +141,42 @@ class MainActivity : FragmentActivity() {
                     pendingAction = null
                 }
 
-                val screen = when {
+                // Tablets and open foldables (wide windows): the list and the open note side by side, as in Cemail.
+                val twoPane = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp >= com.cenotes.app.ui.TWO_PANE_MIN_WIDTH
+                val noteKey = when {
                     editingId == 0L -> "note:0:$newNoteSession"
                     editingId != null -> "note:$editingId:$openCount"
+                    else -> null
+                }
+                val screen = when {
                     showSettings -> "settings"
+                    noteKey != null && !twoPane -> noteKey
                     else -> "list"
                 }
+                val editorFor: @Composable (String) -> Unit = { key ->
+                    NoteEditorScreen(
+                        noteId = key.split(':')[1].toLong(),
+                        template = newNoteTemplate,
+                        initialTitle = newNoteTitle,
+                        viewModel = vm,
+                        onClose = { editingId = null },
+                    )
+                }
+                val listScreen: @Composable () -> Unit = {
+                    NotesListScreen(
+                        viewModel = vm,
+                        layout = settings.layout,
+                        searchRequest = searchRequest,
+                        onLayoutChange = repo::setLayout,
+                        onOpenNote = ::openNote,
+                        onNewNote = { startNewNote("") },
+                        onOpenSettings = { showSettings = true },
+                    )
+                }
 
+                CompositionLocalProvider(com.cenotes.app.ui.glass.LocalListOnRight provides (settings.listOnRight && twoPane)) {
+                // One background behind everything: on wide screens it shows beside a centred screen.
+                com.cenotes.app.ui.glass.GlassBackground {
                 SharedTransitionLayout {
                 AnimatedContent(
                     targetState = screen,
@@ -174,36 +204,27 @@ class MainActivity : FragmentActivity() {
                             .then(if (leaving) Modifier.pointerInput(Unit) { blockAllTouches() } else Modifier),
                     ) {
                         when {
-                            target.startsWith("note:") -> NoteEditorScreen(
-                                noteId = target.split(':')[1].toLong(),
-                                template = newNoteTemplate,
-                                initialTitle = newNoteTitle,
-                                viewModel = vm,
-                                onClose = { editingId = null },
-                            )
-                            target == "settings" -> SettingsScreen(
-                                settings = settings,
-                                repo = repo,
-                                backup = app.backup,
-                                onAccentChanged = vm::refreshExternalViews, // widgets use the accent colour too
-                                onAddColor = vm::addCustomColor,
-                                onEditColor = vm::editCustomColor,
-                                onDeleteColor = vm::deleteCustomColor,
-                                onNotesImported = vm::refreshExternalViews,
-                                onBack = { showSettings = false },
-                            )
-                            else -> NotesListScreen(
-                                viewModel = vm,
-                                layout = settings.layout,
-                                searchRequest = searchRequest,
-                                onLayoutChange = repo::setLayout,
-                                onOpenNote = ::openNote,
-                                onNewNote = { startNewNote("") },
-                                onOpenSettings = { showSettings = true },
-                            )
+                            target.startsWith("note:") -> com.cenotes.app.ui.Centered { editorFor(target) }
+                            target == "settings" -> com.cenotes.app.ui.Dockable(settings.settingsDock, repo::setSettingsDock) {
+                                SettingsScreen(
+                                    settings = settings,
+                                    repo = repo,
+                                    backup = app.backup,
+                                    onAccentChanged = vm::refreshExternalViews, // widgets use the accent colour too
+                                    onAddColor = vm::addCustomColor,
+                                    onEditColor = vm::editCustomColor,
+                                    onDeleteColor = vm::deleteCustomColor,
+                                    onNotesImported = vm::refreshExternalViews,
+                                    onBack = { showSettings = false },
+                                )
+                            }
+                            twoPane -> com.cenotes.app.ui.TwoPane(list = listScreen, openKey = noteKey, note = editorFor)
+                            else -> com.cenotes.app.ui.Centered(listScreen)
                         }
                     }
                   }
+                }
+                }
                 }
                 }
             }

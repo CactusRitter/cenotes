@@ -16,7 +16,7 @@ import org.json.JSONObject
 enum class NoteLayout { GRID, LIST }
 
 /** How the notes are ordered (pinned ones always go first). */
-enum class NoteSort { EDITED, CREATED, TITLE }
+enum class NoteSort { EDITED, CREATED, TITLE, MANUAL }
 
 data class AppSettings(
     val accent: Accent = Accent.INDIGO,
@@ -40,6 +40,10 @@ data class AppSettings(
     val sort: NoteSort = NoteSort.EDITED,
     /** Ticked items of a checklist sink to the end of their list (like Google Keep). */
     val checkedToBottom: Boolean = true,
+    /** Tablets: the list on the right (and the floating buttons on the left), as in Cemail. */
+    val listOnRight: Boolean = false,
+    /** Where Settings sits on a wide screen: -1 start, 0 centre, 1 end (moved by dragging beside it), as in Cemail. */
+    val settingsDock: Int = 0,
 ) {
     /** The app's colour in its four shades: the custom one, or the chosen accent. */
     val accentPalette: AccentPalette
@@ -72,7 +76,19 @@ class SettingsRepository(context: Context) {
         checkUpdates = prefs.getBoolean(KEY_UPDATES, true),
         sort = enumPref(KEY_SORT, NoteSort.EDITED),
         checkedToBottom = prefs.getBoolean(KEY_CHECKED_BOTTOM, true),
+        listOnRight = prefs.getBoolean(KEY_LIST_RIGHT, false),
+        settingsDock = prefs.getInt(KEY_SETTINGS_DOCK, 0).coerceIn(-1, 1),
     )
+
+    fun setSettingsDock(value: Int) {
+        prefs.edit().putInt(KEY_SETTINGS_DOCK, value.coerceIn(-1, 1)).apply()
+        _state.value = _state.value.copy(settingsDock = value.coerceIn(-1, 1))
+    }
+
+    fun setListOnRight(value: Boolean) {
+        prefs.edit().putBoolean(KEY_LIST_RIGHT, value).apply()
+        _state.value = _state.value.copy(listOnRight = value)
+    }
 
     fun setSort(value: NoteSort) {
         prefs.edit().putString(KEY_SORT, value.name).apply()
@@ -202,5 +218,7 @@ class SettingsRepository(context: Context) {
         const val KEY_UPDATES = "check_updates"
         const val KEY_SORT = "sort"
         const val KEY_CHECKED_BOTTOM = "checked_to_bottom"
+        const val KEY_LIST_RIGHT = "list_on_right"
+        const val KEY_SETTINGS_DOCK = "settings_dock"
     }
 }

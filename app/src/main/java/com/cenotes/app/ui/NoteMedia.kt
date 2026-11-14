@@ -3,6 +3,7 @@ package com.cenotes.app.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Box
@@ -84,14 +85,14 @@ fun NoteImage(
             contentScale = ContentScale.Crop,
             modifier = (if (small) Modifier.fillMaxWidth().aspectRatio(1f) else Modifier.fillMaxWidth().heightIn(max = MaxImageHeight))
                 .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
-                .clickable(onClick = onOpen),
+                .clickable(onClickLabel = stringResource(R.string.image_view), role = Role.Image, onClick = onOpen),
         )
         Box(Modifier.align(Alignment.TopEnd).padding(6.dp)) {
             Box(
                 Modifier
                     .size(if (small) 28.dp else 34.dp)
                     .glass(CircleShape, GlassKind.Chrome)
-                    .clickable { menuOpen = true },
+                    .clickable(role = Role.Button) { menuOpen = true },
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(Icons.Filled.MoreVert, stringResource(R.string.image_options), Modifier.size(18.dp))

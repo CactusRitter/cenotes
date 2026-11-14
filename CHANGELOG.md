@@ -2,6 +2,15 @@
 
 Cada versión se guarda en Google Drive (`Mi unidad/Notas app/Cenotes-x.y.z.apk`, sin reemplazar la anterior) y, desde la 0.11.0, también como *release* de GitHub (`vx.y.z`, con el APK), que es de donde la app avisa de versiones nuevas. Lo que ve el usuario en Ajustes → Actualizaciones está en `app/src/main/res/raw*/changelog.txt` (inglés, español y alemán).
 
+## 0.16.0 — 2026-11-14 (fase 5 del plan)
+- Orden a mano (`NoteSort.MANUAL`, `Note.position`; los mayores primero, las notas nuevas arriba): mantener pulsada una tarjeta la selecciona como siempre y, si se mueve el dedo, se arrastra (`ui/CardReorder.kt`); las demás se apartan en vivo, la lista se desplaza sola en los bordes y al soltar se guarda (`NotesViewModel.applyOrder`: las notas visibles se reparten sus posiciones, así que las de otras secciones no cambian). Fijadas y no fijadas se ordenan por separado. TalkBack: acciones «Subir» y «Bajar».
+- Historial (`NoteVersion`, tabla `note_versions`): al cerrar una nota cuyo texto cambió se guarda el texto anterior con su fecha; se guardan las 20 últimas (`MaxVersions`) y se borran con la nota. ⋮ → Historial (`ui/HistoryViews.kt`) las enseña y «Restaurar» devuelve una al editor, guardando antes en el historial lo que había en pantalla.
+- Tabletas (≥ 840 dp, el mismo código que Cemail: `ui/Panes.kt` con `TwoPane`, `Centered` y `Dockable`): lista y nota lado a lado, Ajustes en una columna movible con flechas, y Aspecto → Lista de notas a la izquierda o a la derecha (`LocalListOnRight`, `floatingCorner`, menú lateral desde ese lado).
+- La animación de abrir y cerrar una nota recorta con las esquinas del diseño (`LocalSkin.shape`) en vez de 24 dp fijos: en Retro 98 ya no se ven redondas.
+- TalkBack: interruptores con `toggleable`, opciones con `selectable` (dicen si están elegidas), muestras de color con nombre, tarjetas con «Abrir»/«Seleccionar», y elementos de las listas con «Subir»/«Bajar».
+- Base de datos v7 (`position` empieza con la fecha de edición, así que el orden actual se mantiene); copia formato 7 (`position`; el historial no se exporta).
+- Notas de voz grabadas: descartadas por decisión de César (basta con dictar).
+
 ## 0.15.0 — 2026-11-14 (fase 4 del plan)
 - Bloques desplegables (`BlockType.TOGGLE`): se guardan como HTML estándar de Markdown (`<details open>` / `<details>`, `<summary>Título</summary>`, sus líneas, `</details>`), así que la nota sigue siendo Markdown legible. En el editor cada bloque tiene `depth` (dentro de cuántos desplegables está, hasta `MaxToggleDepth` = 3) y el título `collapsed`; `normalizeDepths()` mantiene la estructura válida. Intro en el título escribe dentro (o detrás si está cerrado), Intro en una línea vacía de dentro sale un nivel, y borrar al principio del título lo deja como texto normal (sus líneas salen). Las tarjetas y los widgets enseñan ▸/▾ y esconden lo de los cerrados; compartir y exportar enseñan todo.
 - Barra de formato: iconos de bloque desplegable, bloque de código (`{ }`) y línea separadora. Todo se hace con iconos; no hay menú «/» ni comandos escritos.

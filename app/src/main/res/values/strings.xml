@@ -227,6 +227,23 @@
     <string name="sort_edited">Last edited</string>
     <string name="sort_created">Date created</string>
     <string name="sort_title_az">Title (A–Z)</string>
+    <string name="color_swatch">Colour</string>
+    <string name="label_color_change">Change the label colour</string>
+    <string name="note_open">Open</string>
+    <string name="note_select">Select</string>
+    <string name="move_earlier">Move up</string>
+    <string name="move_later">Move down</string>
+    <string name="pane_empty">Choose a note to see it here.</string>
+    <string name="list_side_title">Note list</string>
+    <string name="list_side_body">On tablets, the side the list goes on. With the list on the right, the floating button moves to the left.</string>
+    <string name="list_side_left">Left</string>
+    <string name="list_side_right">Right</string>
+    <string name="sort_manual">By hand</string>
+    <string name="sort_manual_body">Hold a note and drag it to where you want it.</string>
+    <string name="history">History</string>
+    <string name="history_body">An earlier version is kept each time you close the note after changing it (the last %1$d).</string>
+    <string name="history_empty">No earlier versions yet. One is kept each time you close the note after changing it (the last %1$d).</string>
+    <string name="history_restore">Restore</string>
     <string name="checked_bottom_title">Ticked items to the bottom</string>
     <string name="checked_bottom_body">In a checklist, what you tick moves to the end, and comes back up if you untick it.</string>
 

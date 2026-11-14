@@ -76,11 +76,48 @@ abstract class NoteDao {
     @Query("DELETE FROM notes WHERE id IN (:ids)")
     protected abstract suspend fun deleteNotesOnly(ids: Collection<Long>)
 
-    /** Deletes notes together with their label links. */
+    /** Deletes notes together with their label links and their history. */
     @Transaction
     open suspend fun deleteNotes(ids: Collection<Long>) {
         deleteLinksOfNotes(ids)
+        deleteVersionsOf(ids)
         deleteNotesOnly(ids)
+    }
+
+    // ---- Order by hand ----
+
+    @Query("UPDATE notes SET position = :position WHERE id = :id")
+    abstract suspend fun setPosition(id: Long, position: Long)
+
+    /** Gives each note its new place (id → position) at once. */
+    @Transaction
+    open suspend fun setPositions(positions: Map<Long, Long>) {
+        positions.forEach { (id, p) -> setPosition(id, p) }
+    }
+
+    // ---- History ----
+
+    /** Earlier versions of a note, the latest first. */
+    @Query("SELECT * FROM note_versions WHERE noteId = :noteId ORDER BY savedAt DESC, id DESC")
+    abstract suspend fun versionsOf(noteId: Long): List<NoteVersion>
+
+    @Insert
+    protected abstract suspend fun insertVersion(version: NoteVersion)
+
+    @Query(
+        "DELETE FROM note_versions WHERE noteId = :noteId AND id NOT IN " +
+            "(SELECT id FROM note_versions WHERE noteId = :noteId ORDER BY savedAt DESC, id DESC LIMIT :keep)",
+    )
+    protected abstract suspend fun trimVersions(noteId: Long, keep: Int)
+
+    @Query("DELETE FROM note_versions WHERE noteId IN (:noteIds)")
+    protected abstract suspend fun deleteVersionsOf(noteIds: Collection<Long>)
+
+    /** Keeps [version] and drops the oldest ones beyond [MaxVersions]. */
+    @Transaction
+    open suspend fun addVersion(version: NoteVersion) {
+        insertVersion(version)
+        trimVersions(version.noteId, MaxVersions)
     }
 
     // ---- Labels ----

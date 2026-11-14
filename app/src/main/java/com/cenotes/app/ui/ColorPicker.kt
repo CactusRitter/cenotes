@@ -46,6 +46,10 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
@@ -65,13 +69,18 @@ val PresetColors = listOf(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun Swatch(color: Int, selected: Boolean, onClick: () -> Unit, onLongClick: (() -> Unit)? = null) {
+    val swatchName = stringResource(R.string.color_swatch)
     Box(
         Modifier
             .size(40.dp)
             .clip(CircleShape)
             .background(Color(color))
             .border(1.dp, Color.White.copy(alpha = 0.5f), CircleShape)
-            .combinedClickable(onClick = onClick, onLongClick = onLongClick),
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick, role = Role.RadioButton)
+            .semantics {
+                contentDescription = swatchName
+                this.selected = selected
+            },
         contentAlignment = Alignment.Center,
     ) {
         if (selected) Icon(Icons.Filled.Check, null, tint = Color.White)
@@ -111,7 +120,7 @@ fun CustomColorsRow(
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
                     .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f), CircleShape)
-                    .clickable { adding = true },
+                    .clickable(role = Role.Button) { adding = true },
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(Icons.Filled.Add, stringResource(R.string.color_add), tint = MaterialTheme.colorScheme.onSurface)

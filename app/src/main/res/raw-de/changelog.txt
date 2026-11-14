@@ -1,3 +1,10 @@
+## 0.16.0
+- Von Hand sortieren: Einstellungen → Notizen → Von Hand. Halte eine Notiz gedrückt und zieh sie an ihren Platz; die anderen machen ihr beim Ziehen Platz.
+- Verlauf: ⋮ → Verlauf in einer Notiz zeigt, wie sie vor jeder Änderung war (die letzten 20), und Wiederherstellen holt jede davon zurück. Was gerade zu sehen war, bleibt auch erhalten.
+- Tablets und aufgeklappte Foldables: Liste und geöffnete Notiz nebeneinander, und die Einstellungen in einer Spalte, die du zur Seite schieben kannst, wie in Cemail. Darstellung → Notizliste stellt die Liste links oder rechts.
+- Retro 98 und die anderen Designs behalten ihre Ecken, während sich eine Notiz öffnet und schließt.
+- TalkBack: Schalter und Auswahlen sagen, ob sie aktiv sind, Farben haben Namen, und Notizen und Listeneinträge lassen sich ohne Ziehen nach oben und unten verschieben.
+
 ## 0.15.0
 - Aufklappbare Blöcke: Das neue Symbol in der Formatleiste macht aus einer Zeile einen Titel mit Pfeil. Was du darunter schreibst (Eingabe), steht darin, und ein Tipp auf den Pfeil blendet es aus oder ein. Blöcke können ineinander liegen, bis zu drei tief; Eingabe in einer leeren Zeile darin bringt dich heraus.
 - Die Formatleiste hat auch Symbole für Codeblock und Trennlinie: Jede Zeilenart hat ihren eigenen Knopf.

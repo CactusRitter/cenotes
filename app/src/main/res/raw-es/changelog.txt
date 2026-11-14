@@ -1,3 +1,10 @@
+## 0.16.0
+- Orden a mano: Ajustes → Notas → A mano. Mantén pulsada una nota y arrástrala a donde quieras; las demás le hacen sitio mientras la mueves.
+- Historial: ⋮ → Historial en una nota enseña cómo estaba antes de cada cambio (las 20 últimas), y Restaurar recupera cualquiera. Lo que había en pantalla también se guarda.
+- Tabletas y plegables abiertos: la lista y la nota abierta lado a lado, y Ajustes en una columna que se mueve a cualquier lado, como en Cemail. Aspecto → Lista de notas pone la lista a la izquierda o a la derecha.
+- Retro 98 y los demás diseños mantienen sus esquinas mientras una nota se abre y se cierra.
+- TalkBack: los interruptores y las opciones dicen si están activados, los colores tienen nombre, y las notas y los elementos de las listas se pueden subir y bajar sin arrastrar.
+
 ## 0.15.0
 - Bloques desplegables: el nuevo icono de la barra de formato convierte una línea en un título con una flecha. Lo que escribes debajo (Intro) va dentro, y al tocar la flecha se esconde o se enseña. Pueden ir unos dentro de otros, hasta tres; Intro en una línea vacía de dentro te saca.
 - La barra de formato también tiene iconos para bloque de código y línea separadora: cada tipo de línea tiene su botón.

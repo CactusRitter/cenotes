@@ -223,6 +223,23 @@
     <string name="sort_edited">Última edición</string>
     <string name="sort_created">Fecha de creación</string>
     <string name="sort_title_az">Título (A–Z)</string>
+    <string name="color_swatch">Color</string>
+    <string name="label_color_change">Cambiar el color de la etiqueta</string>
+    <string name="note_open">Abrir</string>
+    <string name="note_select">Seleccionar</string>
+    <string name="move_earlier">Subir</string>
+    <string name="move_later">Bajar</string>
+    <string name="pane_empty">Elige una nota para verla aquí.</string>
+    <string name="list_side_title">Lista de notas</string>
+    <string name="list_side_body">En tabletas, el lado donde va la lista. Con la lista a la derecha, el botón flotante pasa a la izquierda.</string>
+    <string name="list_side_left">Izquierda</string>
+    <string name="list_side_right">Derecha</string>
+    <string name="sort_manual">A mano</string>
+    <string name="sort_manual_body">Mantén pulsada una nota y arrástrala a donde quieras.</string>
+    <string name="history">Historial</string>
+    <string name="history_body">Cada vez que cierras la nota después de cambiarla se guarda cómo estaba (las %1$d últimas).</string>
+    <string name="history_empty">Todavía no hay versiones anteriores. Cada vez que cierras la nota después de cambiarla se guarda cómo estaba (las %1$d últimas).</string>
+    <string name="history_restore">Restaurar</string>
     <string name="checked_bottom_title">Marcadas al final</string>
     <string name="checked_bottom_body">En una lista, lo que marcas baja al final, y vuelve a subir si lo desmarcas.</string>
 

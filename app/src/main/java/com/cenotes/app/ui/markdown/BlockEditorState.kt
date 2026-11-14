@@ -534,6 +534,22 @@ class BlockEditorState(markdown: String) {
         recomputeParents()
     }
 
+    /**
+     * The checklist item next to [block] at its own level (above when [up], else below), skipping sub-items; null at the
+     * start or end of its list. Lets TalkBack move items without dragging.
+     */
+    fun siblingTask(block: EditorBlock, up: Boolean): EditorBlock? {
+        val index = blocks.indexOf(block)
+        if (index < 0) return null
+        var i = index
+        while (true) {
+            i += if (up) -1 else 1
+            val b = blocks.getOrNull(i) ?: return null
+            if (b.type != BlockType.TASK || b.depth != block.depth || b.indent < block.indent) return null
+            if (b.indent == block.indent) return b
+        }
+    }
+
     /** A task with sub-tasks is done exactly when all of its sub-tasks are done. */
     fun recomputeParents() {
         normalizeDepths()

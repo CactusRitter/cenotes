@@ -15,6 +15,7 @@ import com.cenotes.app.data.Label
 import com.cenotes.app.data.Note
 import com.cenotes.app.data.NoteDao
 import com.cenotes.app.data.NoteSort
+import com.cenotes.app.data.NoteVersion
 import com.cenotes.app.data.Reminder
 import com.cenotes.app.data.TrashDays
 import com.cenotes.app.ui.markdown.imageNames
@@ -117,6 +118,7 @@ class NotesViewModel(private val app: CenotesApp) : ViewModel() {
                     NoteSort.TITLE -> compareBy(String.CASE_INSENSITIVE_ORDER) { n: Note ->
                         n.title.ifBlank { markdownToPlainText(n.content).trim().lineSequence().firstOrNull().orEmpty() }
                     }
+                    NoteSort.MANUAL -> compareByDescending<Note> { it.position }.thenByDescending { it.updatedAt }
                 },
             ),
         )
@@ -262,7 +264,9 @@ class NotesViewModel(private val app: CenotesApp) : ViewModel() {
             return id
         }
         val textChanged = original.title != title || original.content != content
-        if (textChanged || original.pinned != pinned || original.archived != archived || original.color != color ||
+        // History: the text as it was before this edit, with the time it was written.
+        if (textChanged) dao.addVersion(NoteVersion(noteId = original.id, title = original.title, content = original.content, savedAt = original.updatedAt))
+        if (textChanged ||original.pinned != pinned || original.archived != archived || original.color != color ||
             original.reminderAt != reminder.at || original.reminderRepeat != reminder.repeat.ordinal
         ) {
             dao.update(
@@ -280,6 +284,35 @@ class NotesViewModel(private val app: CenotesApp) : ViewModel() {
         }
         if (dao.labelIdsOf(original.id).toSet() != labelIds.toSet()) dao.setLabels(original.id, labelIds)
         return original.id
+    }
+
+    /** Earlier versions of a note, the latest first (⋮ → History). */
+    suspend fun versionsOf(noteId: Long): List<NoteVersion> = dao.versionsOf(noteId)
+
+    /** Before an earlier version replaces what is on screen, what is on screen goes to the history too (so it can come back). */
+    fun keepVersion(noteId: Long, title: String, content: String) {
+        if (noteId == 0L) return
+        write { dao.addVersion(NoteVersion(noteId = noteId, title = title, content = content, savedAt = System.currentTimeMillis())) }
+    }
+
+    /** Whether the list can be reordered by dragging (Settings → Notes → By hand, outside the Trash and Reminders). */
+    val canReorder: StateFlow<Boolean> = combine(app.settings.state, filter) { s, f ->
+        s.sort == NoteSort.MANUAL && f.section != Section.Trash && f.section != Section.Reminders && f.query.isBlank()
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    /**
+     * The notes [shown] in the list were dragged into the order [ids]. They swap their positions among themselves, so
+     * notes elsewhere (archive, other labels) keep their place around them.
+     */
+    fun applyOrder(ids: List<Long>, shown: List<Note>) {
+        val byId = shown.associateBy { it.id }
+        val order = ids.mapNotNull { byId[it] }
+        if (order.size != shown.size || order.map { it.id } == shown.map { it.id }) return
+        val positions = shown.map { it.position }.sortedDescending()
+        // Equal positions (notes that never had one) would not keep the order: spread them out.
+        val distinct = if (positions.toSet().size == positions.size) positions else positions.indices.map { positions.first() - it }
+        val changes = order.mapIndexed { i, n -> n.id to distinct[i] }.filter { (id, p) -> byId.getValue(id).position != p }
+        if (changes.isNotEmpty()) write { dao.setPositions(changes.toMap()) }
     }
 
     /** Archiving from the editor: the list then offers "Deshacer". */

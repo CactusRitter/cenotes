@@ -17,6 +17,9 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -253,6 +256,15 @@ private fun AppearancePage(settings: AppSettings, repo: SettingsRepository, onAc
         }
     }
     if (glassLook) SwitchRow(R.string.depth_title, R.string.depth_body, settings.depth3d, repo::setDepth3d)
+    // Which side the note list goes on: only where there are two panes (tablets, open foldables), not on phones.
+    if (androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp >= TWO_PANE_MIN_WIDTH) SettingsCard {
+        Text(stringResource(R.string.list_side_title), style = MaterialTheme.typography.titleSmall)
+        Text(stringResource(R.string.list_side_body), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            ChoiceChip(stringResource(R.string.list_side_left), !settings.listOnRight) { repo.setListOnRight(false) }
+            ChoiceChip(stringResource(R.string.list_side_right), settings.listOnRight) { repo.setListOnRight(true) }
+        }
+    }
     SettingsCard {
         if (glassLook) {
             Text(stringResource(R.string.style_title), style = MaterialTheme.typography.titleSmall)
@@ -332,7 +344,8 @@ private fun AccentDot(color: Color, name: String, selected: Boolean, onClick: ()
             .padding(ring + 2.dp)
             .clip(CircleShape)
             .background(color)
-            .clickable(role = Role.RadioButton, onClickLabel = name, onClick = onClick),
+            .selectable(selected = selected, role = Role.RadioButton, onClick = onClick)
+            .semantics { contentDescription = name },
         contentAlignment = Alignment.Center,
     ) {
         if (selected) Icon(Icons.Filled.Check, name, Modifier.size(20.dp), tint = Color.White)
@@ -541,9 +554,13 @@ private fun NotesPage(settings: AppSettings, repo: SettingsRepository) {
                 NoteSort.EDITED to R.string.sort_edited,
                 NoteSort.CREATED to R.string.sort_created,
                 NoteSort.TITLE to R.string.sort_title_az,
+                NoteSort.MANUAL to R.string.sort_manual,
             ).forEach { (sort, label) ->
                 ChoiceChip(stringResource(label), settings.sort == sort) { repo.setSort(sort) }
             }
+        }
+        if (settings.sort == NoteSort.MANUAL) {
+            Text(stringResource(R.string.sort_manual_body), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
     SwitchRow(R.string.checked_bottom_title, R.string.checked_bottom_body, settings.checkedToBottom, repo::setCheckedToBottom)

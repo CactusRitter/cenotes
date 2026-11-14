@@ -406,3 +406,10 @@ private fun Modifier.skinSegment(skin: SkinLook, pos: GroupPos, radius: Dp, fill
 /** Colour for text and icons drawn straight on the background: [default], unless the look needs another (Retro's teal desktop). */
 @Composable
 fun onBackdrop(default: Color): Color = LocalSkin.current.backdropInk ?: default
+
+/** Settings → Appearance → Note list: on the right (tablets), with the floating buttons then on the left. */
+val LocalListOnRight = androidx.compose.runtime.staticCompositionLocalOf { false }
+
+/** Where floating buttons and their panels sit: bottom right, or bottom left when the list is on the right. */
+@Composable
+fun floatingCorner(): Alignment = if (LocalListOnRight.current) Alignment.BottomStart else Alignment.BottomEnd

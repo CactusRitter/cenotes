@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.cenotes.app.ui.theme.LocalSkin
 
 /**
  * Scopes needed to animate a note card into the editor and back (like Google Keep): the card
@@ -30,12 +31,15 @@ fun Modifier.noteSharedBounds(noteId: Long, zIndex: Float = 0f): Modifier {
     val t = LocalNoteTransition.current ?: return this
     if (noteId <= 0L) return this
     val self = this
+    // The same corners as the note cards in this design (square in Retro 98, small in Paper…), so the card does not
+    // turn round while it grows or shrinks.
+    val shape = LocalSkin.current.shape(RoundedCornerShape(24.dp))
     return with(t.shared) {
         self.sharedBounds(
             sharedContentState = rememberSharedContentState(key = "note-$noteId"),
             animatedVisibilityScope = t.visibility,
             boundsTransform = { _, _ -> spring(dampingRatio = 0.9f, stiffness = Spring.StiffnessMediumLow) },
-            clipInOverlayDuringTransition = OverlayClip(RoundedCornerShape(24.dp)),
+            clipInOverlayDuringTransition = OverlayClip(shape),
             zIndexInOverlay = zIndex,
         )
     }

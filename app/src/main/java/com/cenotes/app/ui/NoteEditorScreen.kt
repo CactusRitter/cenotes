@@ -113,6 +113,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -143,6 +145,7 @@ import com.cenotes.app.ui.theme.ChevronRightIcon
 import com.cenotes.app.ui.theme.CodeBlockIcon
 import com.cenotes.app.ui.theme.DividerIcon
 import com.cenotes.app.ui.theme.ToggleBlockIcon
+import com.cenotes.app.ui.theme.HistoryIcon
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import com.cenotes.app.ui.markdown.linkAt
@@ -195,6 +198,8 @@ fun NoteEditorScreen(
     var locked by rememberSaveable(noteId) { mutableStateOf(false) }
     var pickingReminder by remember { mutableStateOf(false) }
     var exporting by remember { mutableStateOf(false) }
+    var showHistory by remember { mutableStateOf(false) }
+    var history by remember { mutableStateOf<List<com.cenotes.app.data.NoteVersion>?>(null) }
     val noLockText = stringResource(R.string.locked_no_lock)
     val exportFailedText = stringResource(R.string.export_failed)
     val askNotifications = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
@@ -424,6 +429,19 @@ fun NoteEditorScreen(
                                 leadingIcon = { Icon(PaletteIcon, null) },
                                 onClick = { moreMenuOpen = false; pickingColor = true },
                             )
+                            // Earlier versions of the note, to get back something deleted by mistake.
+                            if (noteId != 0L) {
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.history)) },
+                                    leadingIcon = { Icon(HistoryIcon, null) },
+                                    onClick = {
+                                        moreMenuOpen = false
+                                        history = null
+                                        showHistory = true
+                                        scope.launch { history = viewModel.versionsOf(noteId) }
+                                    },
+                                )
+                            }
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.export)) },
                                 leadingIcon = { Icon(OpenInNewIcon, null) },
@@ -568,6 +586,21 @@ fun NoteEditorScreen(
     if (pickingColor) {
         NoteColorDialog(color, onPick = { color = it }, onDismiss = { pickingColor = false })
     }
+    if (showHistory) {
+        HistoryDialog(
+            versions = history,
+            onRestore = { v ->
+                showHistory = false
+                // What is on screen goes to the history first, unless it is just what was saved (already kept on close).
+                val current = editor.toMarkdown()
+                if (current != original?.content || title != original?.title) viewModel.keepVersion(noteId, title, current)
+                title = v.title
+                editor.load(v.content)
+            },
+            onDismiss = { showHistory = false },
+        )
+    }
+
     if (exporting) {
         ExportDialog(
             onPick = { format ->
@@ -690,6 +723,8 @@ private fun BlockList(editor: BlockEditorState, fileFor: (String) -> File, onOpe
     }
 
     val numbers = editor.numberLabels()
+    val moveUpText = stringResource(R.string.move_earlier)
+    val moveDownText = stringResource(R.string.move_later)
     val blocks = editor.blocks.toList()
 
     // Dragging a checklist item by its handle: the row follows the finger and, when let go, the item (with its
@@ -760,6 +795,19 @@ private fun BlockList(editor: BlockEditorState, fileFor: (String) -> File, onOpe
                         block, numbers[block.id] ?: 0, editor, requester, transformation,
                         modifier = inset
                             .onGloballyPositioned { rows[block.id] = it.positionInParent().y to it.size.height }
+                            // TalkBack cannot drag the handle: "Move up" / "Move down" move the item one place.
+                            .then(
+                                if (block.type == BlockType.TASK) Modifier.semantics {
+                                    customActions = listOfNotNull(
+                                        editor.siblingTask(block, up = true)?.let { prev ->
+                                            CustomAccessibilityAction(moveUpText) { editor.moveItem(block, prev, after = false); true }
+                                        },
+                                        editor.siblingTask(block, up = false)?.let { next ->
+                                            CustomAccessibilityAction(moveDownText) { editor.moveItem(block, next, after = true); true }
+                                        },
+                                    )
+                                } else Modifier,
+                            )
                             .then(
                                 if (dragging) {
                                     Modifier.zIndex(1f).graphicsLayer {

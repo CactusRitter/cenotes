@@ -221,6 +221,23 @@
     <string name="sort_edited">Zuletzt bearbeitet</string>
     <string name="sort_created">Erstellungsdatum</string>
     <string name="sort_title_az">Titel (A–Z)</string>
+    <string name="color_swatch">Farbe</string>
+    <string name="label_color_change">Farbe des Labels ändern</string>
+    <string name="note_open">Öffnen</string>
+    <string name="note_select">Auswählen</string>
+    <string name="move_earlier">Nach oben</string>
+    <string name="move_later">Nach unten</string>
+    <string name="pane_empty">Wähle eine Notiz, um sie hier zu sehen.</string>
+    <string name="list_side_title">Notizliste</string>
+    <string name="list_side_body">Auf Tablets die Seite, auf der die Liste steht. Ist die Liste rechts, wandert die schwebende Schaltfläche nach links.</string>
+    <string name="list_side_left">Links</string>
+    <string name="list_side_right">Rechts</string>
+    <string name="sort_manual">Von Hand</string>
+    <string name="sort_manual_body">Halte eine Notiz gedrückt und zieh sie dorthin, wo du sie haben willst.</string>
+    <string name="history">Verlauf</string>
+    <string name="history_body">Jedes Mal, wenn du die Notiz nach einer Änderung schließt, wird die vorherige Fassung aufbewahrt (die letzten %1$d).</string>
+    <string name="history_empty">Noch keine früheren Fassungen. Jedes Mal, wenn du die Notiz nach einer Änderung schließt, wird die vorherige aufbewahrt (die letzten %1$d).</string>
+    <string name="history_restore">Wiederherstellen</string>
     <string name="checked_bottom_title">Abgehakte nach unten</string>
     <string name="checked_bottom_body">In einer Liste rutscht Abgehaktes ans Ende und kommt wieder nach oben, wenn du den Haken entfernst.</string>
 

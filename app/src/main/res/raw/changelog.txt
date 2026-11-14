@@ -1,3 +1,10 @@
+## 0.16.0
+- Order by hand: Settings → Notes → By hand. Hold a note and drag it where you want it; the others make room as you move it.
+- History: ⋮ → History in a note shows how it was before each change (the last 20), and Restore brings any of them back. What was on screen is kept too.
+- Tablets and open foldables: the list and the open note side by side, and Settings in a column you can move to either side, as in Cemail. Appearance → Note list puts the list on the left or right.
+- Retro 98 and the other designs keep their own corners while a note opens and closes.
+- TalkBack: switches and choices say whether they are on, colours have names, and notes and checklist items can be moved up and down without dragging.
+
 ## 0.15.0
 - Collapsible blocks: the new icon in the formatting bar turns a line into a title with an arrow. What you write under it (Enter) goes inside, and tapping the arrow hides or shows it. Blocks can go inside one another, up to three deep; Enter on an empty line inside takes you out.
 - The formatting bar also has icons for a code block and a dividing line, so every kind of line has its own button.

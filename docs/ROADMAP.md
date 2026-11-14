@@ -13,19 +13,19 @@
 | **Papelera** (recuperar 7 días) | ✅ | ✅ (15 días) | ✅ | **Ya está** (0.12) |
 | **Color de fondo de la nota** | ✅ | ✅ | — | **Ya está** (0.12) |
 | Casillas marcadas al final, reordenar arrastrando | ✅ | — | ✅ | **Ya está** (0.12) |
-| Ordenar notas (editada, creada, a mano) | a mano | ✅ | ✅ | **Ya está** salvo a mano (0.12) |
+| Ordenar notas (editada, creada, a mano) | a mano | ✅ | ✅ | **Ya está** (0.12; a mano en 0.16) |
 | **Recordatorios** con notificación | ✅ | ✅ | ✅ | **Ya está** (0.13) |
 | **Compartir hacia Cenotes** desde otras apps | ✅ | ✅ | ✅ | **Ya está** (0.13) |
 | Bloquear notas con huella o PIN | — | ✅ | — | **Ya está** (0.14, sección Protegidas) |
-| Notas de voz (con texto transcrito) | ✅ | ✅ | — | Dictado **ya está** (0.14); grabar audio, fase 5 |
+| Notas de voz (con texto transcrito) | ✅ | ✅ | — | Dictado **ya está** (0.14); grabar audio **no** |
 | Copiar texto de una foto (OCR) | ✅ | ✅ | — | **Ya está** (0.14) |
 | Dibujo a mano | ✅ | ✅ (S Pen, muy completo) | — | **No**: en Cenotes se escribe con el teclado |
 | Bloques desplegables | — | — | ✅ | **Ya está** (0.15), con un icono |
 | Enlaces entre notas, menú «/», comandos escritos | — | — | ✅ | **No**: poco intuitivo |
 | Plantillas | — | ✅ | ✅ | **No** |
 | Exportar a PDF / Markdown / texto | Docs | ✅ PDF, Word | ✅ | **Ya está** (0.14) |
-| Historial de versiones de una nota | — | — | ✅ | Más adelante |
-| Tabletas: lista y nota a la vez | ✅ | ✅ | ✅ | Como Cemail (fase 5) |
+| Historial de versiones de una nota | — | — | ✅ | **Ya está** (0.16) |
+| Tabletas: lista y nota a la vez | ✅ | ✅ | ✅ | **Ya está** (0.16), como Cemail |
 | Fuentes, tamaños y colores de texto, páginas, maquetación | — | ✅ (como Word) | — | **No**: lo hace difícil |
 | Anotar PDF, S Pen avanzado | — | ✅ | — | **No** |
 | Bases de datos, tablas, wiki de equipo | — | — | ✅ | **No**: no es para notas rápidas |
@@ -60,12 +60,13 @@
 
 Descartado por decisión de César (2026-11-14): menú «/» y «[[» (comandos escritos: poco intuitivos), enlaces entre notas, plantillas y dibujo a mano. En Cenotes se escribe con el teclado.
 
-### Fase 5 · 0.16 — Tabletas y pulido
-- Dos paneles desde 840 dp como Cemail (lista a la izquierda y nota a la derecha), Ajustes movibles.
-- Accesibilidad con TalkBack revisada en todas las pantallas.
-- Historial de versiones de una nota (las últimas 20 ediciones, para deshacer un borrado grande).
-- Orden a mano de las notas arrastrando las tarjetas (viene de la fase 1).
-- Notas de voz grabadas, con reproductor en la nota (viene de la fase 3).
+### Fase 5 · 0.16 — Tabletas y pulido ✅ hecha en 0.16.0
+- ✅ Dos paneles desde 840 dp como Cemail (lista y nota lado a lado, la lista a la izquierda o a la derecha), Ajustes movibles.
+- ✅ Accesibilidad con TalkBack revisada: estados de interruptores y opciones, nombres de colores, y mover notas y elementos sin arrastrar.
+- ✅ Historial de versiones de una nota (se guarda al cerrarla tras un cambio; las últimas 20; restaurar).
+- ✅ Orden a mano de las notas: mantener pulsada y arrastrar, como Keep.
+- ✅ Las animaciones de abrir y cerrar una nota respetan las esquinas de cada diseño.
+- ❌ Notas de voz grabadas: descartadas por decisión de César (2026-11-14); basta con dictar.
 
 ## Futuro (no se hace todavía)
 - **Enlaces entre las apps "Ce"**: «Crear evento en Celander» desde una nota con fecha, y «Guardar en Cenotes» un correo desde Cemail. Se hará cuando las tres apps estén claras y se decida junto con Cemail y Celander; hoy ninguna enlaza con otra.

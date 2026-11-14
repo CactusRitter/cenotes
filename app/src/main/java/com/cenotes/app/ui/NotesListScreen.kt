@@ -129,6 +129,10 @@ import com.cenotes.app.ui.glass.onBackdrop
 import com.cenotes.app.ui.glass.popIn
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import com.cenotes.app.ui.glass.pressScale
 import com.cenotes.app.ui.glass.softBounceSpring
 import com.cenotes.app.ui.markdown.MarkdownPreview
@@ -147,6 +151,12 @@ import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.coroutines.launch
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.foundation.gestures.scrollBy
+import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.zIndex
 
 private val HeaderHeight = 72.dp
 private val SearchHeight = 68.dp
@@ -194,6 +204,32 @@ fun NotesListScreen(
     }
     LaunchedEffect(section) { if (section == Section.Locked && !unlocked) askUnlock() }
 
+    // Sorting by hand: hold a card and drag it (see CardReorder).
+    val canReorder by viewModel.canReorder.collectAsStateWithLifecycle()
+    val gridState = rememberLazyStaggeredGridState()
+    val reorder = remember(gridState) { CardReorder(gridState) }
+    val haptics = LocalHapticFeedback.current
+    val latestNotes by rememberUpdatedState(notes)
+    // A card only swaps places with cards of its own group (pinned or not).
+    val sameGroup: (Long, Long) -> Boolean = { a, b ->
+        val all = latestNotes.orEmpty()
+        all.firstOrNull { it.note.id == a }?.note?.pinned == all.firstOrNull { it.note.id == b }?.note?.pinned
+    }
+    LaunchedEffect(notes) { reorder.settled() }
+    val moveUpText = stringResource(R.string.move_earlier)
+    val moveDownText = stringResource(R.string.move_later)
+    val edge = with(LocalDensity.current) { 72.dp.toPx() }
+    LaunchedEffect(reorder.dragId) {
+        while (reorder.dragId != null) {
+            val speed = reorder.edgeSpeed(edge)
+            if (speed != 0f) {
+                gridState.scrollBy(speed)
+                reorder.retarget(sameGroup)
+            }
+            withFrameNanos { }
+        }
+    }
+
     val selecting = selected.isNotEmpty()
     BackHandler(enabled = selecting) { viewModel.clearSelection() }
     BackHandler(enabled = drawerState.isOpen) { scope.launch { drawerState.close() } }
@@ -219,10 +255,17 @@ fun NotesListScreen(
         is Section.ByLabel -> labels.firstOrNull { it.id == s.labelId }?.name ?: stringResource(R.string.app_name)
     }
 
+    // With the list on the right (tablets), the menu slides in from the right too, as in Cemail: the drawer is laid out
+    // mirrored, and the menu and the screen inside it get the real direction back.
+    val direction = androidx.compose.ui.platform.LocalLayoutDirection.current
+    val drawerDirection = if (!com.cenotes.app.ui.glass.LocalListOnRight.current) direction
+        else if (direction == androidx.compose.ui.unit.LayoutDirection.Ltr) androidx.compose.ui.unit.LayoutDirection.Rtl else androidx.compose.ui.unit.LayoutDirection.Ltr
+    androidx.compose.runtime.CompositionLocalProvider(androidx.compose.ui.platform.LocalLayoutDirection provides drawerDirection) {
     ModalNavigationDrawer(
         drawerState = drawerState,
         gesturesEnabled = !selecting,
         drawerContent = {
+            androidx.compose.runtime.CompositionLocalProvider(androidx.compose.ui.platform.LocalLayoutDirection provides direction) {
             SideMenu(
                 hazeState = hazeState,
                 section = section,
@@ -241,8 +284,10 @@ fun NotesListScreen(
                     onOpenSettings()
                 },
             )
+            }
         },
     ) {
+        androidx.compose.runtime.CompositionLocalProvider(androidx.compose.ui.platform.LocalLayoutDirection provides direction) {
         Box(Modifier.fillMaxSize()) {
             // Everything in here is what the floating glass blurs.
             GlassBackground(Modifier.hazeSource(hazeState)) {
@@ -271,6 +316,7 @@ fun NotesListScreen(
                         ),
                     )
                     else -> LazyVerticalStaggeredGrid(
+                        state = gridState,
                         columns = if (layout == NoteLayout.GRID) StaggeredGridCells.Adaptive(160.dp)
                         else StaggeredGridCells.Fixed(1),
                         contentPadding = PaddingValues(
@@ -294,8 +340,14 @@ fun NotesListScreen(
                                 TrashHeader(onEmpty = { confirmForever = ForeverTarget.All })
                             }
                         }
-                        items(list, key = { it.note.id }) { item ->
+                        // While a card is dragged, the list follows the order being made (see CardReorder).
+                        val shown = reorder.order?.let { o ->
+                            val byId = list.associateBy { it.note.id }
+                            o.mapNotNull { byId[it] } + list.filter { it.note.id !in o }
+                        } ?: list
+                        items(shown, key = { it.note.id }) { item ->
                             val id = item.note.id
+                            val dragging = reorder.dragId == id
                             NoteCard(
                                 item = item,
                                 maxLines = if (layout == NoteLayout.GRID) 8 else 4,
@@ -305,10 +357,64 @@ fun NotesListScreen(
                                 // While selecting, a tap adds/removes; otherwise it opens the note.
                                 // In the Trash a note is not opened: a tap picks it, to restore it or delete it for good.
                                 onClick = { if (selecting || section == Section.Trash) viewModel.toggleSelected(id) else onOpenNote(id) },
-                                onLongClick = { viewModel.toggleSelected(id) },
+                                // Sorted by hand, holding a card selects it as always, and moving the finger then drags it.
+                                onLongClick = if (canReorder) null else ({ viewModel.toggleSelected(id) }),
                                 modifier = Modifier
-                                    .animateItem(
-                                        fadeInSpec = glassSpring(), placementSpec = softBounceSpring(), fadeOutSpec = glassSpring(),
+                                    .then(
+                                        if (dragging) Modifier else Modifier.animateItem(
+                                            fadeInSpec = glassSpring(), placementSpec = softBounceSpring(), fadeOutSpec = glassSpring(),
+                                        ),
+                                    )
+                                    .zIndex(if (dragging) 1f else 0f)
+                                    .graphicsLayer {
+                                        val t = reorder.translation(id)
+                                        translationX = t.x
+                                        translationY = t.y
+                                        if (dragging) {
+                                            scaleX = 1.04f
+                                            scaleY = 1.04f
+                                        }
+                                    }
+                                    // TalkBack cannot drag: "Move up" and "Move down" do the same, one place at a time.
+                                    .then(
+                                        if (canReorder) Modifier.semantics {
+                                            val group = shown.filter { it.note.pinned == item.note.pinned }.map { it.note.id }
+                                            val at = group.indexOf(id)
+                                            fun moveTo(other: Long?): Boolean {
+                                                other ?: return false
+                                                val order = shown.map { it.note.id }.toMutableList()
+                                                val to = order.indexOf(other)
+                                                order.remove(id)
+                                                order.add(to, id)
+                                                viewModel.applyOrder(order, shown.map { it.note })
+                                                return true
+                                            }
+                                            customActions = listOfNotNull(
+                                                if (at > 0) CustomAccessibilityAction(moveUpText) { moveTo(group[at - 1]) } else null,
+                                                if (at in 0 until group.lastIndex) CustomAccessibilityAction(moveDownText) { moveTo(group[at + 1]) } else null,
+                                            )
+                                        } else Modifier,
+                                    )
+                                    .then(
+                                        if (canReorder) Modifier.pointerInput(id) {
+                                            detectDragGesturesAfterLongPress(
+                                                onDragStart = {
+                                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                    viewModel.toggleSelected(id)
+                                                    reorder.start(id, latestNotes.orEmpty().map { it.note.id })
+                                                },
+                                                onDrag = { change, amount ->
+                                                    change.consume()
+                                                    reorder.dragBy(amount, sameGroup)
+                                                },
+                                                onDragEnd = {
+                                                    // A real move was meant as a move, not a selection.
+                                                    if (reorder.wasMoved && id in viewModel.selected.value) viewModel.toggleSelected(id)
+                                                    reorder.end()?.let { viewModel.applyOrder(it, latestNotes.orEmpty().map { n -> n.note }) }
+                                                },
+                                                onDragCancel = { reorder.cancel() },
+                                            )
+                                        } else Modifier,
                                     )
                                     .noteSharedBounds(id),
                             )
@@ -399,7 +505,8 @@ fun NotesListScreen(
             if (!selecting && section != Section.Trash) {
                 Box(
                     Modifier
-                        .align(Alignment.BottomEnd)
+                        // Bottom right, or bottom left when the list is on the right (tablets).
+                        .align(com.cenotes.app.ui.glass.floatingCorner())
                         .navigationBarsPadding()
                         .padding(16.dp)
                         .popIn(delayMillis = 220, initialScale = 0.3f)
@@ -438,6 +545,8 @@ fun NotesListScreen(
                 }
             }
         }
+        }
+    }
     }
 
     if (bulkColor) {
@@ -765,7 +874,7 @@ private fun NoteCard(
     maxLines: Int,
     selected: Boolean,
     onClick: () -> Unit,
-    onLongClick: () -> Unit,
+    onLongClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
     /** A protected note while locked: only a padlock and "Protected note", nothing of what it says. */
     hidden: Boolean = false,
@@ -783,7 +892,11 @@ private fun NoteCard(
                 .glass(shape, if (note.pinned) GlassKind.Pinned else GlassKind.Card)
                 .noteTint(note.color)
                 .then(if (selected) Modifier.border(2.5.dp, primary, shape) else Modifier)
-                .combinedClickable(onClick = onClick, onLongClick = onLongClick),
+                .combinedClickable(
+                    onClickLabel = stringResource(R.string.note_open), onClick = onClick,
+                    onLongClickLabel = stringResource(R.string.note_select), onLongClick = onLongClick,
+                )
+                .semantics { this.selected = selected },
         ) {
             if (hidden) {
                 Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {

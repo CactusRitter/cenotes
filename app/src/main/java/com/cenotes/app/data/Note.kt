@@ -26,10 +26,28 @@ data class Note(
     @ColumnInfo(defaultValue = "0") val reminderRepeat: Int = 0,
     /** In "Protected": hidden everywhere else and opened only after the phone's fingerprint, face or PIN. */
     @ColumnInfo(defaultValue = "0") val locked: Boolean = false,
+    /** Place in the list when notes are sorted by hand: higher first. New notes get the time, so they go on top. */
+    @ColumnInfo(defaultValue = "0") val position: Long = System.currentTimeMillis(),
 )
 
 /** Days a note stays in the Trash before it is deleted for good (like Google Keep). */
 const val TrashDays = 7
+
+/** How many earlier versions of a note are kept. */
+const val MaxVersions = 20
+
+/**
+ * An earlier text of a note (⋮ → History): saved each time the note is closed after its text changed, with the time
+ * that text was written. Only the [MaxVersions] latest are kept; they go when the note is deleted for good.
+ */
+@Entity(tableName = "note_versions", indices = [Index("noteId")])
+data class NoteVersion(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val noteId: Long,
+    val title: String,
+    val content: String,
+    val savedAt: Long,
+)
 
 @Entity(tableName = "labels", indices = [Index(value = ["name"], unique = true)])
 data class Label(

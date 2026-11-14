@@ -2,6 +2,7 @@
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -244,6 +245,7 @@ fun ManageLabelsDialog(
 ) {
     var confirmDelete by remember { mutableStateOf<Label?>(null) }
     var colorFor by remember { mutableStateOf<Label?>(null) }
+    val labelColorText = stringResource(R.string.label_color_change)
     AlertDialog(
         onDismissRequest = onDismiss,
         shape = RoundedCornerShape(28.dp),
@@ -271,7 +273,7 @@ fun ManageLabelsDialog(
                                         .size(24.dp)
                                         .clip(CircleShape)
                                         .background(labelColor(label))
-                                        .clickable { colorFor = label },
+                                        .clickable(role = Role.Button, onClickLabel = labelColorText) { colorFor = label },
                                 )
                             },
                             trailingIcon = {

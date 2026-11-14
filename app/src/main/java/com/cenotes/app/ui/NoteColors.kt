@@ -3,6 +3,9 @@ package com.cenotes.app.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -78,7 +81,8 @@ private fun ColorChoice(color: Int, selected: Boolean, label: String?, onClick: 
             .clip(CircleShape)
             .background(fill)
             .border(if (selected) 3.dp else 1.dp, if (selected) c.onSurface.copy(alpha = 0.6f) else c.outline.copy(alpha = 0.4f), CircleShape)
-            .clickable(role = Role.RadioButton, onClickLabel = label, onClick = onClick),
+            .selectable(selected = selected, role = Role.RadioButton, onClick = onClick)
+            .then(if (label != null) Modifier.semantics { contentDescription = label } else Modifier),
         contentAlignment = Alignment.Center,
     ) {
         if (selected) Icon(Icons.Filled.Check, label, Modifier.size(20.dp), tint = c.onSurface)
