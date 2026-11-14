@@ -28,6 +28,8 @@ sealed interface MdBlock {
     data object Rule : MdBlock
     data class Paragraph(val text: String) : MdBlock
     data class Image(val name: String, val small: Boolean) : MdBlock
+    /** The title of a collapsible block (its lines follow it, unless it is closed). */
+    data class Toggle(val text: String, val collapsed: Boolean) : MdBlock
     data object Blank : MdBlock
 }
 
@@ -53,6 +55,7 @@ fun markdownToPlainText(source: String): String =
             is MdBlock.Quote -> stripInline(block.text)
             is MdBlock.Paragraph -> stripInline(block.text)
             is MdBlock.Code -> block.text
+            is MdBlock.Toggle -> (if (block.collapsed) "▸ " else "▾ ") + stripInline(block.text)
             MdBlock.Rule, MdBlock.Blank, is MdBlock.Image -> null
         }
     }.joinToString("\n")
@@ -84,14 +87,48 @@ internal val QuoteRegex = Regex("""^>\s?(.*)$""")
 internal val RuleRegex = Regex("""^\s*([-*_])(\s*\1){2,}\s*$""")
 internal val FenceRegex = Regex("""^\s*```.*$""")
 
+/** A collapsible block, stored the standard way: `<details open>`, `<summary>Title</summary>`, its lines, `</details>`. */
+internal val DetailsOpenRegex = Regex("""^\s*<details(\s+open)?\s*>\s*$""", RegexOption.IGNORE_CASE)
+internal val SummaryRegex = Regex("""^\s*<summary>(.*)</summary>\s*$""", RegexOption.IGNORE_CASE)
+internal val DetailsCloseRegex = Regex("""^\s*</details>\s*$""", RegexOption.IGNORE_CASE)
+
 internal fun indentLevel(spaces: String) = spaces.replace("\t", "    ").length / 2
 
+/** The note's blocks, for showing it outside the editor. Lines inside a closed collapsible block are left out. */
 fun parseMarkdown(source: String): List<MdBlock> {
     val lines = source.split('\n')
     val blocks = mutableListOf<MdBlock>()
+    var depth = 0 // collapsible blocks the line is inside
+    var hiddenFrom = Int.MAX_VALUE // depth from which lines are hidden (inside a closed block)
     var i = 0
     while (i < lines.size) {
         val line = lines[i]
+        val details = DetailsOpenRegex.matchEntire(line)
+        if (details != null) {
+            val summary = lines.getOrNull(i + 1)?.let { SummaryRegex.matchEntire(it) }
+            val collapsed = details.groupValues[1].isBlank()
+            if (depth < hiddenFrom) {
+                blocks += MdBlock.Toggle(summary?.groupValues?.get(1).orEmpty(), collapsed)
+                if (collapsed) hiddenFrom = depth + 1
+            }
+            depth++
+            i += if (summary != null) 2 else 1
+            continue
+        }
+        if (DetailsCloseRegex.matches(line)) {
+            depth = maxOf(0, depth - 1)
+            if (depth < hiddenFrom) hiddenFrom = Int.MAX_VALUE
+            i++
+            continue
+        }
+        if (depth >= hiddenFrom) {
+            if (FenceRegex.matches(line)) { // skip a whole code block, which may contain anything
+                i++
+                while (i < lines.size && !FenceRegex.matches(lines[i])) i++
+            }
+            i++
+            continue
+        }
         if (FenceRegex.matches(line)) {
             val code = StringBuilder()
             i++
@@ -147,7 +184,9 @@ fun taskStats(source: String): TaskStats {
 fun markdownToShareText(source: String): String =
     source.lines()
         .filterNot { ImageRegex.matches(it) } // images are shared as files, not as text
+        .filterNot { DetailsOpenRegex.matches(it) || DetailsCloseRegex.matches(it) } // a collapsible block: just its title
         .joinToString("\n") { line ->
+            SummaryRegex.matchEntire(line)?.let { return@joinToString "▸ " + it.groupValues[1] }
             TaskRegex.matchEntire(line)?.let {
                 it.groupValues[1] + (if (it.groupValues[2] == " ") "☐ " else "☑ ") + it.groupValues[3]
             } ?: line

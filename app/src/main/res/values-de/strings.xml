@@ -36,6 +36,12 @@
     <string name="fmt_strike">Durchgestrichen</string>
     <string name="fmt_code">Code</string>
     <string name="fmt_quote">Zitat</string>
+    <string name="fmt_toggle">Aufklappbarer Block</string>
+    <string name="fmt_code_block">Codeblock</string>
+    <string name="fmt_divider">Trennlinie</string>
+    <string name="toggle_open">Aufklappen</string>
+    <string name="toggle_close">Zuklappen</string>
+    <string name="toggle_hint">Titel</string>
     <string name="fmt_indent">In Unteraufgabe umwandeln</string>
     <string name="fmt_outdent">Eine Ebene höher</string>
     <string name="fmt_link">Link</string>

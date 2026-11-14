@@ -1,3 +1,7 @@
+## 0.15.0
+- Collapsible blocks: the new icon in the formatting bar turns a line into a title with an arrow. What you write under it (Enter) goes inside, and tapping the arrow hides or shows it. Blocks can go inside one another, up to three deep; Enter on an empty line inside takes you out.
+- The formatting bar also has icons for a code block and a dividing line, so every kind of line has its own button.
+
 ## 0.14.0
 - Protected notes: ⋮ → Protect moves a note to Protected (in the menu). It disappears from your notes, search, widgets and shortcuts, and opens only with your phone's fingerprint, face or screen lock: one unlock opens all of them until you leave Cenotes or tap Lock. Their reminders say only "Protected note".
 - Export: ⋮ → Export saves or sends a note as PDF (with its pictures), Markdown or plain text.

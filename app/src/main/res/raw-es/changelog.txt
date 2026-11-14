@@ -1,3 +1,7 @@
+## 0.15.0
+- Bloques desplegables: el nuevo icono de la barra de formato convierte una línea en un título con una flecha. Lo que escribes debajo (Intro) va dentro, y al tocar la flecha se esconde o se enseña. Pueden ir unos dentro de otros, hasta tres; Intro en una línea vacía de dentro te saca.
+- La barra de formato también tiene iconos para bloque de código y línea separadora: cada tipo de línea tiene su botón.
+
 ## 0.14.0
 - Notas protegidas: ⋮ → Proteger lleva una nota a Protegidas (en el menú). Desaparece de tus notas, de la búsqueda, de los widgets y de los atajos, y solo se abre con la huella, la cara o el bloqueo de pantalla del móvil: un solo desbloqueo abre todas hasta que sales de Cenotes o pulsas Bloquear. Sus recordatorios solo dicen «Nota protegida».
 - Exportar: ⋮ → Exportar guarda o envía una nota en PDF (con sus imágenes), Markdown o texto.

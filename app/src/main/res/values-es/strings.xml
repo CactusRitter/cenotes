@@ -36,6 +36,12 @@
     <string name="fmt_strike">Tachado</string>
     <string name="fmt_code">Código</string>
     <string name="fmt_quote">Cita</string>
+    <string name="fmt_toggle">Bloque desplegable</string>
+    <string name="fmt_code_block">Bloque de código</string>
+    <string name="fmt_divider">Línea separadora</string>
+    <string name="toggle_open">Desplegar</string>
+    <string name="toggle_close">Plegar</string>
+    <string name="toggle_hint">Título</string>
     <string name="fmt_indent">Convertir en subtarea</string>
     <string name="fmt_outdent">Subir un nivel</string>
     <string name="fmt_link">Enlace</string>

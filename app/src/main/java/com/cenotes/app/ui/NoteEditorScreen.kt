@@ -138,6 +138,13 @@ import com.cenotes.app.ui.markdown.BlockType
 import com.cenotes.app.ui.markdown.EditorBlock
 import com.cenotes.app.ui.markdown.LiveInlineMarkdown
 import com.cenotes.app.ui.markdown.NestableTypes
+import com.cenotes.app.ui.markdown.MaxToggleDepth
+import com.cenotes.app.ui.theme.ChevronRightIcon
+import com.cenotes.app.ui.theme.CodeBlockIcon
+import com.cenotes.app.ui.theme.DividerIcon
+import com.cenotes.app.ui.theme.ToggleBlockIcon
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
 import com.cenotes.app.ui.markdown.linkAt
 import com.cenotes.app.ui.markdown.markdownToShareText
 import com.cenotes.app.ui.markdown.toggleEmphasis
@@ -705,18 +712,27 @@ private fun BlockList(editor: BlockEditorState, fileFor: (String) -> File, onOpe
         editor.moveItem(dragged, target, after = center > tTop + tHeight / 2f)
     }
 
-    Column {
+    // Lines inside a closed collapsible block are not shown; the others are indented by how deep they sit.
+    val hidden = editor.hiddenIds()
+    Column(Modifier.animateContentSize(glassSpring())) {
         var i = 0
         while (i < blocks.size) {
             val block = blocks[i]
+            if (block.id in hidden) {
+                i++
+                continue
+            }
+            val inset = Modifier.padding(start = (block.depth * 32).dp)
             when {
                 block.type == BlockType.IMAGE && block.small -> {
                     // Consecutive small images form a gallery, three per row.
                     var end = i
-                    while (end + 1 < blocks.size && blocks[end + 1].type == BlockType.IMAGE && blocks[end + 1].small) end++
+                    while (end + 1 < blocks.size && blocks[end + 1].type == BlockType.IMAGE && blocks[end + 1].small &&
+                        blocks[end + 1].depth == block.depth
+                    ) end++
                     val run = blocks.subList(i, end + 1)
                     key(block.id) {
-                        Column(Modifier.padding(vertical = 6.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Column(inset.padding(vertical = 6.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             run.chunked(3).forEach { row ->
                                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                     row.forEach { img -> ImageBlock(img, editor, fileFor, onOpenImage, Modifier.weight(1f)) }
@@ -729,10 +745,10 @@ private fun BlockList(editor: BlockEditorState, fileFor: (String) -> File, onOpe
                     continue
                 }
                 block.type == BlockType.IMAGE -> key(block.id) {
-                    ImageBlock(block, editor, fileFor, onOpenImage, Modifier.fillMaxWidth().padding(vertical = 6.dp))
+                    ImageBlock(block, editor, fileFor, onOpenImage, inset.fillMaxWidth().padding(vertical = 6.dp))
                 }
                 block.type == BlockType.DIVIDER -> key(block.id) {
-                    HorizontalDivider(Modifier.padding(vertical = 14.dp))
+                    HorizontalDivider(inset.padding(vertical = 14.dp))
                 }
                 // key(): each block keeps its own text field (and keyboard focus) when blocks are
                 // inserted or removed around it.
@@ -742,7 +758,7 @@ private fun BlockList(editor: BlockEditorState, fileFor: (String) -> File, onOpe
                     val dragging = dragId == block.id
                     BlockRow(
                         block, numbers[block.id] ?: 0, editor, requester, transformation,
-                        modifier = Modifier
+                        modifier = inset
                             .onGloballyPositioned { rows[block.id] = it.positionInParent().y to it.size.height }
                             .then(
                                 if (dragging) {
@@ -849,6 +865,7 @@ private fun BlockRow(
         } else body
         BlockType.QUOTE -> body.copy(fontStyle = FontStyle.Italic, color = colors.onSurfaceVariant)
         BlockType.CODE -> body.copy(fontFamily = FontFamily.Monospace, fontSize = 15.sp)
+        BlockType.TOGGLE -> body.copy(fontWeight = FontWeight.SemiBold)
         else -> body
     }
     val rowModifier = when (type) {
@@ -907,13 +924,31 @@ private fun BlockRow(
                 )
                 Spacer(Modifier.width(12.dp))
             }
+            // The arrow opens and closes the block; it points down while open.
+            BlockType.TOGGLE -> {
+                val turn by animateFloatAsState(if (block.collapsed) 0f else 90f, glassSpring(), label = "toggle")
+                Icon(
+                    ChevronRightIcon,
+                    stringResource(if (block.collapsed) R.string.toggle_open else R.string.toggle_close),
+                    Modifier
+                        .padding(end = 4.dp)
+                        .size(28.dp)
+                        .clip(CircleShape)
+                        .clickable(role = Role.Button) { editor.toggleCollapsed(block) }
+                        .padding(2.dp)
+                        .graphicsLayer { rotationZ = turn },
+                    tint = colors.primary,
+                )
+            }
             else -> Unit
         }
         BlockField(
             block, editor, requester, transformation, style, Modifier.weight(1f),
-            placeholder = if (editor.blocks.size == 1 && type == BlockType.PARAGRAPH) {
-                stringResource(R.string.content_hint)
-            } else null,
+            placeholder = when {
+                editor.blocks.size == 1 && type == BlockType.PARAGRAPH -> stringResource(R.string.content_hint)
+                type == BlockType.TOGGLE -> stringResource(R.string.toggle_hint)
+                else -> null
+            },
         )
     }
 }
@@ -1009,6 +1044,19 @@ private fun FormatToolbar(editor: BlockEditorState, onLink: () -> Unit, onImage:
         }
         ToolIcon(QuoteIcon, stringResource(R.string.fmt_quote), type == BlockType.QUOTE) {
             editor.toggleType(BlockType.QUOTE)
+        }
+        // Collapsible block: the line becomes a title with an arrow; Enter writes inside it.
+        ToolIcon(
+            ToggleBlockIcon, stringResource(R.string.fmt_toggle), type == BlockType.TOGGLE,
+            enabled = type == BlockType.TOGGLE || (focused?.depth ?: 0) < MaxToggleDepth,
+        ) {
+            editor.toggleType(BlockType.TOGGLE)
+        }
+        ToolIcon(CodeBlockIcon, stringResource(R.string.fmt_code_block), type == BlockType.CODE) {
+            editor.toggleType(BlockType.CODE)
+        }
+        ToolIcon(DividerIcon, stringResource(R.string.fmt_divider), false) {
+            editor.insertDivider()
         }
     }
 }

@@ -2,6 +2,11 @@
 
 Cada versión se guarda en Google Drive (`Mi unidad/Notas app/Cenotes-x.y.z.apk`, sin reemplazar la anterior) y, desde la 0.11.0, también como *release* de GitHub (`vx.y.z`, con el APK), que es de donde la app avisa de versiones nuevas. Lo que ve el usuario en Ajustes → Actualizaciones está en `app/src/main/res/raw*/changelog.txt` (inglés, español y alemán).
 
+## 0.15.0 — 2026-11-14 (fase 4 del plan)
+- Bloques desplegables (`BlockType.TOGGLE`): se guardan como HTML estándar de Markdown (`<details open>` / `<details>`, `<summary>Título</summary>`, sus líneas, `</details>`), así que la nota sigue siendo Markdown legible. En el editor cada bloque tiene `depth` (dentro de cuántos desplegables está, hasta `MaxToggleDepth` = 3) y el título `collapsed`; `normalizeDepths()` mantiene la estructura válida. Intro en el título escribe dentro (o detrás si está cerrado), Intro en una línea vacía de dentro sale un nivel, y borrar al principio del título lo deja como texto normal (sus líneas salen). Las tarjetas y los widgets enseñan ▸/▾ y esconden lo de los cerrados; compartir y exportar enseñan todo.
+- Barra de formato: iconos de bloque desplegable, bloque de código (`{ }`) y línea separadora. Todo se hace con iconos; no hay menú «/» ni comandos escritos.
+- Descartado (decisión de César): menú «/», «[[», enlaces entre notas, plantillas y dibujo a mano.
+
 ## 0.14.0 — 2026-11-14 (fase 3 del plan)
 - Notas protegidas (`Note.locked`, sección `Section.Locked` «Protegidas»): se ocultan de la lista, búsqueda, etiquetas, recordatorios, widgets y atajos; se abren con el bloqueo del móvil (`androidx.biometric`, huella/cara o PIN; `ui/Unlock.kt`). Un desbloqueo abre todas hasta salir de Cenotes (`MainActivity.onStop`) o pulsar «Bloquear». Las notas nuevas creadas dentro de Protegidas nacen protegidas; las que llegan de fuera (compartir, mosaico, atajos) nunca. En la papelera, tapadas mientras estén bloqueadas. Es un bloqueo de privacidad: el contenido no se cifra en el móvil (sigue en la base de datos privada de la app).
 - Exportar a PDF (A4 con imágenes, `PdfDocument`), Markdown (con las imágenes) o texto, por el menú de compartir (`ui/Export.kt`).

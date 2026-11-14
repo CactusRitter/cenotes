@@ -1,3 +1,7 @@
+## 0.15.0
+- Aufklappbare Blöcke: Das neue Symbol in der Formatleiste macht aus einer Zeile einen Titel mit Pfeil. Was du darunter schreibst (Eingabe), steht darin, und ein Tipp auf den Pfeil blendet es aus oder ein. Blöcke können ineinander liegen, bis zu drei tief; Eingabe in einer leeren Zeile darin bringt dich heraus.
+- Die Formatleiste hat auch Symbole für Codeblock und Trennlinie: Jede Zeilenart hat ihren eigenen Knopf.
+
 ## 0.14.0
 - Geschützte Notizen: ⋮ → Schützen verschiebt eine Notiz nach Geschützt (im Menü). Sie verschwindet aus deinen Notizen, der Suche, den Widgets und Verknüpfungen und öffnet sich nur mit Fingerabdruck, Gesicht oder Displaysperre: Ein Entsperren öffnet alle, bis du Cenotes verlässt oder auf Sperren tippst. Ihre Erinnerungen zeigen nur „Geschützte Notiz“.
 - Exportieren: ⋮ → Exportieren speichert oder sendet eine Notiz als PDF (mit Bildern), Markdown oder Text.

@@ -37,6 +37,12 @@
     <string name="fmt_strike">Strikethrough</string>
     <string name="fmt_code">Code</string>
     <string name="fmt_quote">Quote</string>
+    <string name="fmt_toggle">Collapsible block</string>
+    <string name="fmt_code_block">Code block</string>
+    <string name="fmt_divider">Dividing line</string>
+    <string name="toggle_open">Open</string>
+    <string name="toggle_close">Close</string>
+    <string name="toggle_hint">Title</string>
     <string name="tasks_progress" translatable="false">%1$d/%2$d</string>
     <string name="fmt_indent">Make subtask</string>
     <string name="fmt_outdent">Move up one level</string>

@@ -86,6 +86,10 @@ fun MarkdownPreview(source: String, maxBlocks: Int, modifier: Modifier = Modifie
                     maxLines = 3, overflow = TextOverflow.Ellipsis,
                 )
                 MdBlock.Rule -> HorizontalDivider(Modifier.padding(vertical = 4.dp))
+                is MdBlock.Toggle -> Text(
+                    AnnotatedString(if (block.collapsed) "▸  " else "▾  ") + inlineMarkdown(block.text, colors, links = false),
+                    style = style, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis,
+                )
                 is MdBlock.Paragraph -> Text(
                     inlineMarkdown(block.text, colors, links = false),
                     style = style, maxLines = 3, overflow = TextOverflow.Ellipsis,

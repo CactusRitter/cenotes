@@ -19,9 +19,10 @@
 | Bloquear notas con huella o PIN | — | ✅ | — | **Ya está** (0.14, sección Protegidas) |
 | Notas de voz (con texto transcrito) | ✅ | ✅ | — | Dictado **ya está** (0.14); grabar audio, fase 5 |
 | Copiar texto de una foto (OCR) | ✅ | ✅ | — | **Ya está** (0.14) |
-| Dibujo a mano | ✅ | ✅ (S Pen, muy completo) | — | Sencillo (fase 4) |
-| Enlaces entre notas, bloques desplegables, menú «/» | — | — | ✅ | Ligero (fase 4) |
-| Plantillas | — | ✅ | ✅ | Pocas y fijas (fase 4) |
+| Dibujo a mano | ✅ | ✅ (S Pen, muy completo) | — | **No**: en Cenotes se escribe con el teclado |
+| Bloques desplegables | — | — | ✅ | **Ya está** (0.15), con un icono |
+| Enlaces entre notas, menú «/», comandos escritos | — | — | ✅ | **No**: poco intuitivo |
+| Plantillas | — | ✅ | ✅ | **No** |
 | Exportar a PDF / Markdown / texto | Docs | ✅ PDF, Word | ✅ | **Ya está** (0.14) |
 | Historial de versiones de una nota | — | — | ✅ | Más adelante |
 | Tabletas: lista y nota a la vez | ✅ | ✅ | ✅ | Como Cemail (fase 5) |
@@ -53,12 +54,11 @@
 - ✅ **Exportar** una nota a PDF, Markdown o texto.
 - Posible mejora: cifrar el contenido de las notas protegidas con una clave del Android Keystore.
 
-### Fase 4 · 0.15 — Un editor un poco más potente, sin volverse Word
-- **Menú «/»**: escribir «/» al empezar una línea ofrece casilla, lista, título, cita, código, imagen, separador.
-- **Bloque desplegable** (como el «toggle» de Notion) para esconder detalles.
-- **Enlaces entre notas**: escribir «[[» busca una nota y la enlaza.
-- **Plantillas** fijas: lista de la compra, reunión, diario, viaje.
-- **Dibujo a mano** sencillo: un lienzo con 3–4 grosores y los colores del tema, que se guarda como imagen de la nota.
+### Fase 4 · 0.15 — Bloques desplegables ✅
+- **Bloque desplegable** (como el «toggle» de Notion): una línea con una flecha que esconde o enseña lo que hay debajo. Se crea con un **icono** de la barra de formato, nunca escribiendo comandos.
+- **Todo con iconos**: la barra de formato tiene un botón para cada tipo de línea (casilla, viñetas, numerada, título, cita, código, separador, desplegable).
+
+Descartado por decisión de César (2026-11-14): menú «/» y «[[» (comandos escritos: poco intuitivos), enlaces entre notas, plantillas y dibujo a mano. En Cenotes se escribe con el teclado.
 
 ### Fase 5 · 0.16 — Tabletas y pulido
 - Dos paneles desde 840 dp como Cemail (lista a la izquierda y nota a la derecha), Ajustes movibles.

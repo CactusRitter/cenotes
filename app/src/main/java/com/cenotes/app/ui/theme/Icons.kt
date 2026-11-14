@@ -77,6 +77,31 @@ val QuoteIcon: ImageVector by lazy {
     pathIcon("Quote", "M6,17h3l2,-4V7H5v6h3zM14,17h3l2,-4V7h-6v6h3z")
 }
 
+/** A collapsible block: a small arrow over indented lines. */
+val ToggleBlockIcon: ImageVector by lazy {
+    pathIcon("ToggleBlock", "M3,4l5,4 -5,4z M11,7h10v2H11z M7,15h14v2H7z M7,19h14v2H7z")
+}
+
+/** The arrow in front of a collapsible block's title (turned down when open). */
+val ChevronRightIcon: ImageVector by lazy {
+    pathIcon("ChevronRight", "M10,6L8.59,7.41 13.17,12l-4.58,4.59L10,18l6,-6z")
+}
+
+val CodeBlockIcon: ImageVector by lazy {
+    // { } — distinct from the "</>" of inline code.
+    pathIcon(
+        "DataObject",
+        "M4,7v2c0,0.55 -0.45,1 -1,1H2v4h1c0.55,0 1,0.45 1,1v2c0,1.65 1.35,3 3,3h3v-2H7c-0.55,0 -1,-0.45 -1,-1v-2" +
+            "c0,-1.3 -0.84,-2.42 -2,-2.83v-0.34C5.16,11.42 6,10.3 6,9V7c0,-0.55 0.45,-1 1,-1h3V4H7C5.35,4 4,5.35 4,7z" +
+            "M21,10c-0.55,0 -1,-0.45 -1,-1V7c0,-1.65 -1.35,-3 -3,-3h-3v2h3c0.55,0 1,0.45 1,1v2c0,1.3 0.84,2.42 2,2.83" +
+            "v0.34c-1.16,0.41 -2,1.52 -2,2.83v2c0,0.55 -0.45,1 -1,1h-3v2h3c1.65,0 3,-1.35 3,-3v-2c0,-0.55 0.45,-1 1,-1h1v-4H21z",
+    )
+}
+
+val DividerIcon: ImageVector by lazy {
+    pathIcon("HorizontalRule", "M4,11h16v2H4z")
+}
+
 val VisibilityIcon: ImageVector by lazy {
     pathIcon(
         "Visibility",

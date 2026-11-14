@@ -8,7 +8,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 
-enum class BlockType { PARAGRAPH, H1, H2, H3, TASK, BULLET, NUMBERED, QUOTE, CODE, DIVIDER, IMAGE }
+enum class BlockType { PARAGRAPH, H1, H2, H3, TASK, BULLET, NUMBERED, QUOTE, CODE, DIVIDER, IMAGE, TOGGLE }
+
+/** How many collapsible blocks can sit inside one another. */
+const val MaxToggleDepth = 3
 
 /** Blocks that continue on Enter. */
 private val ContinuingTypes = setOf(BlockType.TASK, BlockType.BULLET, BlockType.NUMBERED, BlockType.QUOTE)
@@ -38,6 +41,10 @@ class EditorBlock(
     var imageName by mutableStateOf(imageName)
     /** For IMAGE blocks: thumbnail (true) or wide (false). */
     var small by mutableStateOf(small)
+    /** How many collapsible blocks this one is inside (0 = none). Its lines follow the TOGGLE they belong to. */
+    var depth by mutableStateOf(0)
+    /** For TOGGLE blocks: its lines are hidden. */
+    var collapsed by mutableStateOf(false)
 }
 
 /**
@@ -77,7 +84,40 @@ class BlockEditorState(markdown: String) {
         blocks.clear()
         blocks += parseBlocks(markdown)
         if (blocks.isEmpty()) blocks += block(BlockType.PARAGRAPH)
+        normalizeDepths()
         recomputeParents()
+    }
+
+    /**
+     * Keeps the collapsible structure valid: a line can only be one level deeper than the collapsible block it
+     * follows, never deeper than the line before (so taking a block out of a collapsible takes the rest along).
+     */
+    fun normalizeDepths() {
+        var allowed = 0
+        for (b in blocks) {
+            if (b.depth > allowed) b.depth = allowed
+            if (b.depth < 0) b.depth = 0
+            allowed = if (b.type == BlockType.TOGGLE) minOf(b.depth + 1, MaxToggleDepth) else b.depth
+        }
+    }
+
+    /** Index of the last line inside the collapsible block at [index] (itself when it is empty). */
+    fun toggleEnd(index: Int): Int {
+        val depth = blocks[index].depth
+        var end = index
+        while (end + 1 < blocks.size && blocks[end + 1].depth > depth) end++
+        return end
+    }
+
+    /** Opens or closes a collapsible block. */
+    fun toggleCollapsed(block: EditorBlock) {
+        block.collapsed = !block.collapsed
+        // A closed block hides its lines: the keyboard leaves them for the block's title.
+        if (block.collapsed) {
+            val index = blocks.indexOf(block)
+            val hiddenIds = (index + 1..toggleEnd(index)).map { blocks[it].id }.toSet()
+            if (focusedId in hiddenIds) pendingFocus = block.id
+        }
     }
 
     private fun block(type: BlockType, text: String = "", checked: Boolean = false, indent: Int = 0, cursor: Int = 0) =
@@ -89,14 +129,38 @@ class BlockEditorState(markdown: String) {
         if (markdown.isEmpty()) return emptyList()
         val out = mutableListOf<EditorBlock>()
         val lines = markdown.split('\n')
+        var depth = 0 // how many collapsible blocks the current line is inside
         var i = 0
         while (i < lines.size) {
             val line = lines[i]
+            // A collapsible block: `<details>` (closed) or `<details open>`, then `<summary>Title</summary>`.
+            val details = DetailsOpenRegex.matchEntire(line)
+            if (details != null) {
+                val summary = lines.getOrNull(i + 1)?.let { SummaryRegex.matchEntire(it) }
+                out += block(BlockType.TOGGLE, summary?.groupValues?.get(1).orEmpty()).also {
+                    it.collapsed = details.groupValues[1].isBlank()
+                    it.depth = depth
+                }
+                depth++
+                i += if (summary != null) 2 else 1
+                if (lines.getOrNull(i)?.isEmpty() == true) i++ // the blank line written after the title
+                continue
+            }
+            if (DetailsCloseRegex.matches(line)) {
+                depth = maxOf(0, depth - 1)
+                i++
+                continue
+            }
+            // The blank line written before `</details>`.
+            if (line.isEmpty() && depth > 0 && lines.getOrNull(i + 1)?.let { DetailsCloseRegex.matches(it) } == true) {
+                i++
+                continue
+            }
             if (FenceRegex.matches(line)) {
                 val code = mutableListOf<String>()
                 i++
                 while (i < lines.size && !FenceRegex.matches(lines[i])) code += lines[i++]
-                out += block(BlockType.CODE, code.joinToString("\n"))
+                out += block(BlockType.CODE, code.joinToString("\n")).also { it.depth = depth }
                 i++
                 continue
             }
@@ -129,7 +193,7 @@ class BlockEditorState(markdown: String) {
                 )
                 quote != null -> block(BlockType.QUOTE, quote.groupValues[1])
                 else -> block(BlockType.PARAGRAPH, line)
-            }
+            }.also { it.depth = depth }
             i++
         }
         return out
@@ -138,7 +202,30 @@ class BlockEditorState(markdown: String) {
     fun toMarkdown(): String {
         // Numbering restarts per nesting level, like in any word processor.
         val counters = IntArray(MaxIndent + 1)
-        val lines = blocks.map { b ->
+        val out = mutableListOf<String>()
+        var open = 0 // collapsible blocks written and not closed yet
+        fun close() {
+            out += ""
+            out += "</details>"
+            open--
+        }
+        for (b in blocks) {
+            while (open > b.depth) close()
+            if (b.type == BlockType.TOGGLE) {
+                counters.fill(0)
+                out += if (b.collapsed) "<details>" else "<details open>"
+                out += "<summary>${b.value.text}</summary>"
+                out += ""
+                open++
+                continue
+            }
+            out += line(b, counters)
+        }
+        while (open > 0) close()
+        return out.joinToString("\n").trimEnd('\n').let { if (it.isBlank()) "" else it }
+    }
+
+    private fun line(b: EditorBlock, counters: IntArray): String {
             val text = b.value.text
             val pad = "  ".repeat(b.indent)
             if (b.type == BlockType.NUMBERED) {
@@ -147,7 +234,7 @@ class BlockEditorState(markdown: String) {
             } else if (b.type !in NestableTypes) {
                 counters.fill(0)
             }
-            when (b.type) {
+            return when (b.type) {
                 BlockType.PARAGRAPH -> text
                 BlockType.H1 -> "# $text"
                 BlockType.H2 -> "## $text"
@@ -159,9 +246,8 @@ class BlockEditorState(markdown: String) {
                 BlockType.CODE -> "```\n$text\n```"
                 BlockType.DIVIDER -> "---"
                 BlockType.IMAGE -> "![${if (b.small) "small" else ""}](${b.imageName})"
+                BlockType.TOGGLE -> text // written by toMarkdown itself
             }
-        }
-        return lines.joinToString("\n").trimEnd('\n').let { if (it.isBlank()) "" else it }
     }
 
     /** Number shown in front of each NUMBERED block (per nesting level). */
@@ -190,7 +276,7 @@ class BlockEditorState(markdown: String) {
             // Inside code, Enter is a normal line break; Enter on an empty last line leaves the block.
             if (new.text.endsWith("\n\n") && new.selection.start == new.text.length) {
                 block.value = TextFieldValue(new.text.dropLast(2), TextRange(new.text.length - 2))
-                insertAfter(index, block(BlockType.PARAGRAPH))
+                insertAfter(index, block(BlockType.PARAGRAPH).also { it.depth = block.depth })
             } else {
                 block.value = new
             }
@@ -219,12 +305,35 @@ class BlockEditorState(markdown: String) {
                 recomputeParents()
                 return
             }
+            val empty = parts.size == 2 && parts.all { it.isEmpty() }
+            // Enter on an empty collapsible title: it becomes a normal line (and its lines step out).
+            if (empty && block.type == BlockType.TOGGLE) {
+                block.type = BlockType.PARAGRAPH
+                block.value = TextFieldValue("")
+                recomputeParents()
+                return
+            }
+            // Enter on an empty last line inside a collapsible block: the next lines go after the block.
+            if (empty && block.type == BlockType.PARAGRAPH && block.depth > 0 &&
+                (blocks.getOrNull(index + 1)?.depth ?: 0) < block.depth
+            ) {
+                block.depth--
+                block.value = TextFieldValue("")
+                recomputeParents()
+                return
+            }
             val nextType = if (block.type in ContinuingTypes) block.type else BlockType.PARAGRAPH
-            block.value = TextFieldValue(parts[0], TextRange(parts[0].length))
+            // After an open collapsible title, the new line goes inside it; after a closed one, after all its lines.
             var insertAt = index + 1
+            var depth = block.depth
+            if (block.type == BlockType.TOGGLE) {
+                if (block.collapsed) insertAt = toggleEnd(index) + 1 else depth = block.depth + 1
+            }
+            block.value = TextFieldValue(parts[0], TextRange(parts[0].length))
             var last: EditorBlock? = null
             parts.drop(1).forEach { text ->
                 val nb = block(nextType, text, indent = if (nextType in NestableTypes) block.indent else 0)
+                nb.depth = depth
                 applyShortcut(nb)
                 blocks.add(insertAt++, nb)
                 last = nb
@@ -268,7 +377,7 @@ class BlockEditorState(markdown: String) {
                     block.type = BlockType.DIVIDER
                     block.value = TextFieldValue("")
                     val index = blocks.indexOf(block)
-                    if (index >= 0) insertAfter(index, block(BlockType.PARAGRAPH))
+                    if (index >= 0) insertAfter(index, block(BlockType.PARAGRAPH).also { it.depth = block.depth })
                 }
             }
             // "- " already became a bullet; typing "[ ] " right after makes it a checkbox.
@@ -326,7 +435,9 @@ class BlockEditorState(markdown: String) {
     private fun descendants(index: Int): IntRange {
         val parent = blocks[index]
         var end = index
-        while (end + 1 < blocks.size && blocks[end + 1].type in NestableTypes && blocks[end + 1].indent > parent.indent) end++
+        while (end + 1 < blocks.size && blocks[end + 1].type in NestableTypes && blocks[end + 1].indent > parent.indent &&
+            blocks[end + 1].depth == parent.depth
+        ) end++
         return index + 1..end
     }
 
@@ -368,7 +479,9 @@ class BlockEditorState(markdown: String) {
             val head = list[i]
             var end = i
             if (head.type in NestableTypes && head.indent == base) {
-                while (end + 1 < list.size && list[end + 1].type in NestableTypes && list[end + 1].indent > base) end++
+                while (end + 1 < list.size && list[end + 1].type in NestableTypes && list[end + 1].indent > base &&
+                    list[end + 1].depth == head.depth
+                ) end++
             }
             units += ListItem(head, arrange(list.subList(i + 1, end + 1)))
             i = end + 1
@@ -381,6 +494,8 @@ class BlockEditorState(markdown: String) {
         }
         for (u in units) {
             if (u.head.type == BlockType.TASK && u.head.indent == base) {
+                // A list inside a collapsible block and one outside it are sorted apart.
+                if (run.isNotEmpty() && run.first().head.depth != u.head.depth) flush()
                 run += u
             } else {
                 flush()
@@ -411,13 +526,17 @@ class BlockEditorState(markdown: String) {
         }
         val at = if (after) maxOf(t, descendants(t).last) + 1 else t
         val shift = target.indent - block.indent
-        unit.forEach { it.indent = (it.indent + shift).coerceIn(0, MaxIndent) }
+        unit.forEach {
+            it.indent = (it.indent + shift).coerceIn(0, MaxIndent)
+            it.depth = target.depth
+        }
         blocks.addAll(at, unit)
         recomputeParents()
     }
 
     /** A task with sub-tasks is done exactly when all of its sub-tasks are done. */
     fun recomputeParents() {
+        normalizeDepths()
         for (i in blocks.indices.reversed()) {
             val b = blocks[i]
             if (b.type != BlockType.TASK) continue
@@ -431,7 +550,7 @@ class BlockEditorState(markdown: String) {
         val index = blocks.indexOf(block)
         val prev = blocks.getOrNull(index - 1) ?: return false
         // A sub-item needs an item above it, at most one level shallower.
-        return prev.type in NestableTypes && prev.indent >= block.indent
+        return prev.type in NestableTypes && prev.indent >= block.indent && prev.depth == block.depth
     }
 
     fun indentFocused() {
@@ -453,10 +572,44 @@ class BlockEditorState(markdown: String) {
     /** Switch the focused block to [type], or back to plain text if it already is. */
     fun toggleType(type: BlockType) {
         val b = focused ?: return
+        // Collapsible blocks go at most MaxToggleDepth deep.
+        if (type == BlockType.TOGGLE && b.type != BlockType.TOGGLE && b.depth >= MaxToggleDepth) return
         b.type = if (b.type == type) BlockType.PARAGRAPH else type
         b.checked = false
         if (b.type !in NestableTypes) b.indent = 0
+        if (b.type == BlockType.TOGGLE) {
+            b.collapsed = false
+            // A title is one line.
+            if ('\n' in b.value.text) b.value = TextFieldValue(b.value.text.replace('\n', ' '), b.value.selection)
+        }
         recomputeParents()
+    }
+
+    /** Whether a block is hidden because a collapsible block it is inside is closed. */
+    fun hiddenIds(): Set<Long> {
+        val hidden = HashSet<Long>()
+        var closedAt = Int.MAX_VALUE // depth of the closed collapsible block being skipped
+        for (b in blocks) {
+            if (b.depth > closedAt) {
+                hidden += b.id
+                continue
+            }
+            closedAt = if (b.type == BlockType.TOGGLE && b.collapsed) b.depth else Int.MAX_VALUE
+        }
+        return hidden
+    }
+
+    /** Puts a dividing line under the line being written, and a new line after it. */
+    fun insertDivider() {
+        val b = focused ?: return
+        var index = blocks.indexOf(b)
+        if (index < 0) return
+        var depth = b.depth
+        if (b.type == BlockType.TOGGLE) {
+            if (b.collapsed) index = toggleEnd(index) else depth++
+        }
+        blocks.add(index + 1, block(BlockType.DIVIDER).also { it.depth = depth })
+        insertAfter(index + 1, block(BlockType.PARAGRAPH).also { it.depth = depth })
     }
 
     /** "H": text → H1 → H2 → H3 → text. */
@@ -479,7 +632,7 @@ class BlockEditorState(markdown: String) {
         if (index < 0) return
         val lines = text.lines().map { it.trim() }.filter { it.isNotEmpty() }
         if (lines.isEmpty()) return
-        val added = lines.map { block(BlockType.PARAGRAPH, it, cursor = it.length) }
+        val added = lines.map { block(BlockType.PARAGRAPH, it, cursor = it.length).also { b -> b.depth = block.depth } }
         blocks.addAll(index + 1, added)
         pendingFocus = added.last().id
     }
@@ -527,19 +680,25 @@ class BlockEditorState(markdown: String) {
         if (names.isEmpty()) return
         var index = blocks.indexOfFirst { it.id == lastFocusedId }.takeIf { it >= 0 } ?: blocks.lastIndex
         if (blocks[index].type in ContinuingTypes) {
-            while (index + 1 < blocks.size && blocks[index + 1].type in ContinuingTypes) index++
+            val d = blocks[index].depth
+            while (index + 1 < blocks.size && blocks[index + 1].type in ContinuingTypes && blocks[index + 1].depth == d) index++
+        }
+        var depth = blocks[index].depth
+        // On a collapsible title: inside it when open, after it when closed.
+        if (blocks[index].type == BlockType.TOGGLE) {
+            if (blocks[index].collapsed) index = toggleEnd(index) else depth++
         }
         // Writing in an empty line: the images take its place (the empty line moves below them).
         val anchor = blocks[index]
         val insertAt = if (anchor.type == BlockType.PARAGRAPH && anchor.value.text.isEmpty()) index else index + 1
         val small = names.size > 1 // several at once look best as a gallery row
         names.forEachIndexed { i, name ->
-            blocks.add(insertAt + i, EditorBlock(nextId++, BlockType.IMAGE, imageName = name, small = small))
+            blocks.add(insertAt + i, EditorBlock(nextId++, BlockType.IMAGE, imageName = name, small = small).also { it.depth = depth })
         }
         val after = insertAt + names.size
         val next = blocks.getOrNull(after)
-        if (next == null || next.type != BlockType.PARAGRAPH || next.value.text.isNotEmpty()) {
-            blocks.add(after, block(BlockType.PARAGRAPH))
+        if (next == null || next.type != BlockType.PARAGRAPH || next.value.text.isNotEmpty() || next.depth != depth) {
+            blocks.add(after, block(BlockType.PARAGRAPH).also { it.depth = depth })
         }
         pendingFocus = blocks[after].id
     }
@@ -556,7 +715,7 @@ class BlockEditorState(markdown: String) {
     /** Tap on the empty area under the note: continue writing at the end. */
     fun focusEnd() {
         val last = blocks.lastOrNull()
-        if (last != null && last.type == BlockType.PARAGRAPH) {
+        if (last != null && last.type == BlockType.PARAGRAPH && last.depth == 0) {
             last.value = last.value.copy(selection = TextRange(last.value.text.length))
             pendingFocus = last.id
         } else {
