@@ -11,9 +11,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 
 class CenotesApp : Application() {
+    override fun onCreate() {
+        super.onCreate()
+        com.cenotes.app.notify.Reminders.createChannel(this)
+    }
+
     val database: NotesDatabase by lazy {
         Room.databaseBuilder(this, NotesDatabase::class.java, "notes.db")
-            .addMigrations(NotesDatabase.Migration1To2, NotesDatabase.Migration2To3, NotesDatabase.Migration3To4)
+            .addMigrations(NotesDatabase.Migration1To2, NotesDatabase.Migration2To3, NotesDatabase.Migration3To4, NotesDatabase.Migration4To5)
             .build()
     }
 

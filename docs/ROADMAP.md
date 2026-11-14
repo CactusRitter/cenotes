@@ -14,8 +14,8 @@
 | **Color de fondo de la nota** | ✅ | ✅ | — | **Ya está** (0.12) |
 | Casillas marcadas al final, reordenar arrastrando | ✅ | — | ✅ | **Ya está** (0.12) |
 | Ordenar notas (editada, creada, a mano) | a mano | ✅ | ✅ | **Ya está** salvo a mano (0.12) |
-| **Recordatorios** con notificación | ✅ | ✅ | ✅ | **Sí** (fase 2) |
-| **Compartir hacia Cenotes** desde otras apps | ✅ | ✅ | ✅ | **Sí** (fase 2) |
+| **Recordatorios** con notificación | ✅ | ✅ | ✅ | **Ya está** (0.13) |
+| **Compartir hacia Cenotes** desde otras apps | ✅ | ✅ | ✅ | **Ya está** (0.13) |
 | Bloquear notas con huella o PIN | — | ✅ | — | **Sí** (fase 3) |
 | Notas de voz (con texto transcrito) | ✅ | ✅ | — | **Sí** (fase 3) |
 | Copiar texto de una foto (OCR) | ✅ | ✅ | — | Sí, en el dispositivo (fase 3) |
@@ -40,11 +40,11 @@
 - ✅ **Orden de las notas**: última edición, creación o título. Ajustes → Notas.
 - ⏳ **Orden a mano** (arrastrar tarjetas en la lista, como Keep): pendiente; choca con «mantener pulsado = seleccionar» y con la cuadrícula escalonada, así que necesita su propio diseño. Pasa a la fase 5.
 
-### Fase 2 · 0.13 — Recordatorios y entrada rápida
-- **Recordatorios**: fecha y hora (hoy, mañana, la semana que viene, otra), repetición (diaria, semanal, mensual) y notificación con «Hecho» y «Posponer». Sección «Recordatorios» en el menú.
-- **Compartir a Cenotes**: texto, enlaces e imágenes de cualquier app crean una nota (con su título y su enlace).
-- **Mosaico de Ajustes rápidos** para una nota nueva.
-- **Ecosistema "Ce"**: «Crear evento en Celander» desde una nota con fecha cuando Celander lo permita; y desde Cemail, «Guardar en Cenotes» un correo.
+### Fase 2 · 0.13 — Recordatorios y entrada rápida ✅ hecha en 0.13.0 (salvo los enlaces con Celander y Cemail)
+- ✅ **Recordatorios**: fecha y hora (hoy, mañana, la semana que viene, otra), repetición (diaria, semanal, mensual) y notificación con «Hecho» y «Posponer». Sección «Recordatorios» en el menú.
+- ✅ **Compartir a Cenotes**: texto, enlaces e imágenes de cualquier app crean una nota (con su título y su enlace).
+- ✅ **Mosaico de Ajustes rápidos** para una nota nueva.
+- ⏳ **Ecosistema "Ce"** (pendiente: necesita el repositorio de Celander y un cambio en Cemail; Cenotes ya acepta lo que se le comparta desde cualquier app): «Crear evento en Celander» desde una nota con fecha cuando Celander lo permita; y desde Cemail, «Guardar en Cenotes» un correo.
 
 ### Fase 3 · 0.14 — Privacidad y más formas de capturar
 - **Bloquear notas** con la huella o el bloqueo del móvil (`BiometricPrompt`); la tarjeta muestra solo el título y un candado.

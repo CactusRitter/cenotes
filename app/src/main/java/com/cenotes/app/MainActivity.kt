@@ -84,6 +84,7 @@ class MainActivity : ComponentActivity() {
                 // Each new note gets its own session, so "new note" always opens a blank editor.
                 var newNoteSession by rememberSaveable { mutableIntStateOf(0) }
                 var newNoteTemplate by rememberSaveable { mutableStateOf("") }
+                var newNoteTitle by rememberSaveable { mutableStateOf("") }
                 var searchRequest by rememberSaveable { mutableIntStateOf(0) }
 
                 // Every opening gets its own key: reopening a note while its previous editor is
@@ -96,8 +97,9 @@ class MainActivity : ComponentActivity() {
                     editingId = id
                 }
 
-                fun startNewNote(template: String) {
+                fun startNewNote(template: String, title: String = "") {
                     newNoteTemplate = template
+                    newNoteTitle = title
                     newNoteSession++
                     showSettings = false
                     editingId = 0L
@@ -105,8 +107,16 @@ class MainActivity : ComponentActivity() {
 
                 LaunchedEffect(pendingAction) {
                     when (val action = pendingAction) {
-                        is LaunchAction.NewNote -> startNewNote(action.template)
+                        is LaunchAction.NewNote -> startNewNote(action.template, action.title)
                         is LaunchAction.OpenNote -> openNote(action.id)
+                        // Shared from another app: the pictures are copied into Cenotes first, then the new note
+                        // opens with the text (or link) and the pictures, ready to edit or simply leave.
+                        is LaunchAction.Shared -> {
+                            val names = vm.importImages(action.images)
+                            val small = names.size > 1
+                            val images = names.joinToString("\n\n") { "![${if (small) "small" else ""}]($it)" }
+                            startNewNote(listOf(action.text, images).filter { it.isNotEmpty() }.joinToString("\n\n"), action.title)
+                        }
                         LaunchAction.Search -> {
                             showSettings = false
                             editingId = null
@@ -154,6 +164,7 @@ class MainActivity : ComponentActivity() {
                             target.startsWith("note:") -> NoteEditorScreen(
                                 noteId = target.split(':')[1].toLong(),
                                 template = newNoteTemplate,
+                                initialTitle = newNoteTitle,
                                 viewModel = vm,
                                 onClose = { editingId = null },
                             )

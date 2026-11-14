@@ -1,3 +1,8 @@
+## 0.13.0
+- Recordatorios: ⋮ → Recordarme en cualquier nota. Elige más tarde hoy, mañana por la mañana, este fin de semana, la semana que viene o tu propia fecha y hora, una vez o cada día, semana o mes. La notificación trae Hecho y, en los de una vez, Dentro de una hora. El chip de la campana sale en la nota y en su tarjeta, y el menú tiene una sección Recordatorios con el siguiente primero. Siguen funcionando tras reiniciar el móvil.
+- Compartir a Cenotes: comparte texto, un enlace o fotos desde cualquier app y se convierten en una nota nueva.
+- Mosaico de Ajustes rápidos: añade Nota nueva al panel de Ajustes rápidos para empezar una nota desde cualquier sitio.
+
 ## 0.12.1
 - Actualizaciones: Instalar abre el instalador de Android aunque el gestor de descargas no entregue el archivo descargado (visto en el emulador, donde Instalar no hacía nada).
 

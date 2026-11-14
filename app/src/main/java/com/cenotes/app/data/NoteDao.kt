@@ -35,6 +35,19 @@ abstract class NoteDao {
     @Query("UPDATE notes SET color = :color WHERE id IN (:ids)")
     abstract suspend fun setColor(ids: Collection<Long>, color: Int)
 
+    // ---- Reminders ----
+
+    @Query("UPDATE notes SET reminderAt = :at, reminderRepeat = :repeat WHERE id = :id")
+    abstract suspend fun setReminder(id: Long, at: Long?, repeat: Int)
+
+    /** Reminders whose time has come (notes in the Trash never remind). */
+    @Query("SELECT * FROM notes WHERE reminderAt IS NOT NULL AND reminderAt <= :now AND trashedAt IS NULL")
+    abstract suspend fun dueReminders(now: Long): List<Note>
+
+    /** The earliest reminder still to come, to wake up for it. */
+    @Query("SELECT MIN(reminderAt) FROM notes WHERE reminderAt IS NOT NULL AND trashedAt IS NULL")
+    abstract suspend fun nextReminder(): Long?
+
     /** Contents of every note, Trash included (its images are kept until the note is gone for good). */
     @Query("SELECT content FROM notes")
     abstract suspend fun allContents(): List<String>

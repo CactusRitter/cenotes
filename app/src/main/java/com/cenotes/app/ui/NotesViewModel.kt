@@ -15,6 +15,7 @@ import com.cenotes.app.data.Label
 import com.cenotes.app.data.Note
 import com.cenotes.app.data.NoteDao
 import com.cenotes.app.data.NoteSort
+import com.cenotes.app.data.Reminder
 import com.cenotes.app.data.TrashDays
 import com.cenotes.app.ui.markdown.imageNames
 import com.cenotes.app.ui.markdown.markdownToPlainText
@@ -33,6 +34,7 @@ sealed interface Section {
     data object All : Section
     data object Archive : Section
     data object Trash : Section
+    data object Reminders : Section
     data class ByLabel(val labelId: Long) : Section
 }
 
@@ -73,6 +75,8 @@ class NotesViewModel(private val app: CenotesApp) : ViewModel() {
         app.appScope.launch {
             block()
             ExternalViews.refresh(app)
+            // A reminder may have been set, changed, removed, trashed or restored: the alarm follows.
+            com.cenotes.app.notify.Reminders.schedule(app)
         }
     }
 
@@ -101,7 +105,9 @@ class NotesViewModel(private val app: CenotesApp) : ViewModel() {
         }
         val term = f.query.trim()
         // The Trash keeps its own order (last deleted first); elsewhere pinned notes go first, then the chosen order.
-        val ordered = if (f.section == Section.Trash) trash else all.sortedWith(
+        val ordered = if (f.section == Section.Trash) trash else if (f.section == Section.Reminders) {
+            all.sortedBy { it.reminderAt ?: Long.MAX_VALUE } // the next one first
+        } else all.sortedWith(
             compareByDescending<Note> { it.pinned }.then(
                 when (sort) {
                     NoteSort.EDITED -> compareByDescending { it.updatedAt }
@@ -118,6 +124,7 @@ class NotesViewModel(private val app: CenotesApp) : ViewModel() {
                     Section.All -> !n.archived
                     Section.Archive -> n.archived
                     Section.Trash -> true
+                    Section.Reminders -> n.reminderAt != null
                     is Section.ByLabel -> !n.archived && labelsOf[n.id].orEmpty().any { it.id == s.labelId }
                 }
             }
@@ -195,7 +202,8 @@ class NotesViewModel(private val app: CenotesApp) : ViewModel() {
         labelIds: List<Long>,
         archived: Boolean,
         color: Int,
-    ) = write { persist(original, title, content, pinned, labelIds, archived, color) }
+        reminder: Reminder,
+    ) = write { persist(original, title, content, pinned, labelIds, archived, color, reminder) }
 
     /**
      * "Delete" in the editor: what is on screen is saved first and then the note goes to the Trash, in one go (so
@@ -209,9 +217,10 @@ class NotesViewModel(private val app: CenotesApp) : ViewModel() {
         labelIds: List<Long>,
         archived: Boolean,
         color: Int,
+        reminder: Reminder,
     ) {
         write {
-            val id = persist(original, title, content, pinned, labelIds, archived, color) ?: return@write
+            val id = persist(original, title, content, pinned, labelIds, archived, color, reminder) ?: return@write
             dao.setTrashed(listOf(id), System.currentTimeMillis())
             offerUndo(R.string.note_trashed, R.string.notes_trashed, 1) { dao.setTrashed(listOf(id), null) }
         }
@@ -226,18 +235,26 @@ class NotesViewModel(private val app: CenotesApp) : ViewModel() {
         labelIds: List<Long>,
         archived: Boolean,
         color: Int,
+        reminder: Reminder,
     ): Long? {
         if (title.isBlank() && content.isBlank()) {
             original?.let { dao.deleteNotes(listOf(it.id)) }
             return null
         }
         if (original == null) {
-            val id = dao.insert(Note(title = title, content = content, pinned = pinned, archived = archived, color = color))
+            val id = dao.insert(
+                Note(
+                    title = title, content = content, pinned = pinned, archived = archived, color = color,
+                    reminderAt = reminder.at, reminderRepeat = reminder.repeat.ordinal,
+                ),
+            )
             dao.setLabels(id, labelIds)
             return id
         }
         val textChanged = original.title != title || original.content != content
-        if (textChanged || original.pinned != pinned || original.archived != archived || original.color != color) {
+        if (textChanged || original.pinned != pinned || original.archived != archived || original.color != color ||
+            original.reminderAt != reminder.at || original.reminderRepeat != reminder.repeat.ordinal
+        ) {
             dao.update(
                 original.copy(
                     title = title,
@@ -245,6 +262,8 @@ class NotesViewModel(private val app: CenotesApp) : ViewModel() {
                     pinned = pinned,
                     archived = archived,
                     color = color,
+                    reminderAt = reminder.at,
+                    reminderRepeat = reminder.repeat.ordinal,
                     updatedAt = if (textChanged) System.currentTimeMillis() else original.updatedAt,
                 ),
             )

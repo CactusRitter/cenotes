@@ -5,11 +5,19 @@ import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-@Database(entities = [Note::class, Label::class, NoteLabel::class], version = 4, exportSchema = false)
+@Database(entities = [Note::class, Label::class, NoteLabel::class], version = 5, exportSchema = false)
 abstract class NotesDatabase : RoomDatabase() {
     abstract fun noteDao(): NoteDao
 
     companion object {
+        /** 0.12 → 0.13: reminders. */
+        val Migration4To5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `notes` ADD COLUMN `reminderAt` INTEGER")
+                db.execSQL("ALTER TABLE `notes` ADD COLUMN `reminderRepeat` INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
         /** 0.11 → 0.12: Trash, note colours and the creation date (existing notes take their last edit as it). */
         val Migration3To4 = object : Migration(3, 4) {
             override fun migrate(db: SupportSQLiteDatabase) {

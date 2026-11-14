@@ -223,4 +223,25 @@
     <string name="sort_title_az">Title (A–Z)</string>
     <string name="checked_bottom_title">Ticked items to the bottom</string>
     <string name="checked_bottom_body">In a checklist, what you tick moves to the end, and comes back up if you untick it.</string>
+
+    <!-- 0.13: reminders, sharing to Cenotes, Quick Settings tile -->
+    <string name="section_reminders">Reminders</string>
+    <string name="empty_reminders">No reminders.\nOpen a note and choose ⋮ → Remind me.</string>
+    <string name="reminder_title">Remind me</string>
+    <string name="reminder_current">Now: %1$s</string>
+    <string name="reminder_later">Later today</string>
+    <string name="reminder_tomorrow">Tomorrow morning</string>
+    <string name="reminder_weekend">This weekend</string>
+    <string name="reminder_next_week">Next week</string>
+    <string name="reminder_pick">Pick date and time</string>
+    <string name="reminder_remove">Remove reminder</string>
+    <string name="repeat_none">Once</string>
+    <string name="repeat_daily">Every day</string>
+    <string name="repeat_weekly">Every week</string>
+    <string name="repeat_monthly">Every month</string>
+    <string name="reminder_channel">Reminders</string>
+    <string name="reminder_channel_body">The reminders you set on your notes.</string>
+    <string name="reminder_done">Done</string>
+    <string name="reminder_snooze">In an hour</string>
+    <string name="tile_new_note">New note</string>
 </resources>

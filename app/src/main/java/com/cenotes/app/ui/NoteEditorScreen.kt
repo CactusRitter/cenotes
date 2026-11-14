@@ -1,5 +1,8 @@
 package com.cenotes.app.ui
 
+import androidx.compose.material.icons.filled.Notifications
+import com.cenotes.app.data.Repeat
+import com.cenotes.app.data.Reminder
 import com.cenotes.app.ui.theme.DragHandleIcon
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.mutableFloatStateOf
@@ -165,16 +168,22 @@ fun NoteEditorScreen(
     onClose: () -> Unit,
     /** Initial Markdown for a new note (e.g. an empty checkbox for "Nueva lista"). */
     template: String = "",
+    /** Title of a new note (e.g. the subject of something shared with Cenotes). */
+    initialTitle: String = "",
 ) {
     // All state is keyed by the note id so nothing can leak from one note into another.
     var original by remember(noteId) { mutableStateOf<Note?>(null) }
     var loaded by rememberSaveable(noteId) { mutableStateOf(noteId == 0L) }
-    var title by rememberSaveable(noteId) { mutableStateOf("") }
+    var title by rememberSaveable(noteId) { mutableStateOf(if (noteId == 0L) initialTitle else "") }
     var savedContent by rememberSaveable(noteId) { mutableStateOf(if (noteId == 0L) template else "") }
     var pinned by rememberSaveable(noteId) { mutableStateOf(false) }
     var archived by rememberSaveable(noteId) { mutableStateOf(false) }
     var color by rememberSaveable(noteId) { mutableStateOf(0) }
     var pickingColor by remember { mutableStateOf(false) }
+    var reminderAt by rememberSaveable(noteId) { mutableStateOf<Long?>(null) }
+    var reminderRepeat by rememberSaveable(noteId) { mutableStateOf(0) }
+    var pickingReminder by remember { mutableStateOf(false) }
+    val askNotifications = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
     // A new note created while looking at a label starts with that label.
     var labelIds by rememberSaveable(noteId) {
         mutableStateOf(if (noteId == 0L) listOfNotNull(viewModel.labelForNewNote()) else emptyList())
@@ -206,6 +215,8 @@ fun NoteEditorScreen(
             pinned = note.pinned
             archived = note.archived
             color = note.color
+            reminderAt = note.reminderAt
+            reminderRepeat = note.reminderRepeat
             labelIds = viewModel.labelIdsOf(noteId)
         }
         loaded = true
@@ -247,7 +258,7 @@ fun NoteEditorScreen(
 
     // Guarded so a double back press (or a tap during the exit animation) can't save twice.
     fun saveNow() {
-        if (loaded) viewModel.save(original, title, editor.toMarkdown(), pinned, labelIds, archived, color)
+        if (loaded) viewModel.save(original, title, editor.toMarkdown(), pinned, labelIds, archived, color, Reminder(reminderAt, Repeat.of(reminderRepeat)))
     }
 
     fun close() {
@@ -354,6 +365,11 @@ fun NoteEditorScreen(
                                 onClick = { moreMenuOpen = false; toggleArchived() },
                             )
                             DropdownMenuItem(
+                                text = { Text(stringResource(R.string.reminder_title)) },
+                                leadingIcon = { Icon(Icons.Filled.Notifications, null) },
+                                onClick = { moreMenuOpen = false; pickingReminder = true },
+                            )
+                            DropdownMenuItem(
                                 text = { Text(stringResource(R.string.note_color)) },
                                 leadingIcon = { Icon(PaletteIcon, null) },
                                 onClick = { moreMenuOpen = false; pickingColor = true },
@@ -371,7 +387,7 @@ fun NoteEditorScreen(
                                     moreMenuOpen = false
                                     if (!closed) {
                                         closed = true
-                                        if (loaded) viewModel.saveAndTrash(original, title, editor.toMarkdown(), pinned, labelIds, archived, color)
+                                        if (loaded) viewModel.saveAndTrash(original, title, editor.toMarkdown(), pinned, labelIds, archived, color, Reminder(reminderAt, Repeat.of(reminderRepeat)))
                                         onClose()
                                     }
                                 },
@@ -397,6 +413,14 @@ fun NoteEditorScreen(
                         .padding(horizontal = 24.dp, vertical = 20.dp),
                 ) {
                     TitleField(title, { title = it }, onNext = editor::focusFirst)
+                    reminderAt?.let { at ->
+                        Spacer(Modifier.height(10.dp))
+                        ReminderChip(
+                            at, Repeat.of(reminderRepeat),
+                            Modifier.clickable(role = androidx.compose.ui.semantics.Role.Button) { pickingReminder = true },
+                            iconSize = 16.dp,
+                        )
+                    }
                     val noteLabels = allLabels.filter { it.id in labelIds }
                     if (noteLabels.isNotEmpty()) {
                         Spacer(Modifier.height(10.dp))
@@ -487,6 +511,23 @@ fun NoteEditorScreen(
 
     if (pickingColor) {
         NoteColorDialog(color, onPick = { color = it }, onDismiss = { pickingColor = false })
+    }
+    if (pickingReminder) {
+        ReminderDialog(
+            Reminder(reminderAt, Repeat.of(reminderRepeat)),
+            onSet = { r ->
+                reminderAt = r.at
+                reminderRepeat = r.repeat.ordinal
+                pickingReminder = false
+                // From Android 13 notifications need the user's yes: asked the first time a reminder is set.
+                if (r.at != null && !com.cenotes.app.notify.Reminders.allowed(context) &&
+                    android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU
+                ) {
+                    askNotifications.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                }
+            },
+            onDismiss = { pickingReminder = false },
+        )
     }
 }
 

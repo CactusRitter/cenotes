@@ -2,6 +2,12 @@
 
 Cada versión se guarda en Google Drive (`Mi unidad/Notas app/Cenotes-x.y.z.apk`, sin reemplazar la anterior) y, desde la 0.11.0, también como *release* de GitHub (`vx.y.z`, con el APK), que es de donde la app avisa de versiones nuevas. Lo que ve el usuario en Ajustes → Actualizaciones está en `app/src/main/res/raw*/changelog.txt` (inglés, español y alemán).
 
+## 0.13.0 — 2026-11-14 (fase 2 del plan)
+- Recordatorios (`Note.reminderAt`, `Note.reminderRepeat` con `Repeat`): una alarma exacta (`AlarmManager.setExactAndAllowWhileIdle`, permiso `USE_EXACT_ALARM`) para el más próximo; al saltar se muestran todos los vencidos y los que se repiten pasan a la siguiente vez (`notify/Reminders.kt`). Notificación con «Hecho» y «Dentro de una hora» (solo los de una vez); se reprograman tras reiniciar, actualizar la app o cambiar la hora. Diálogo con las mismas opciones rápidas que «Posponer» de Cemail (`ReminderDialog`); chip en la nota y en la tarjeta (corto, con ↻); sección Recordatorios en el menú. Permiso de notificaciones al poner el primero (Android 13+).
+- Compartir a Cenotes (texto, enlaces e imágenes, `LaunchAction.Shared`): crea una nota con el asunto como título.
+- Mosaico de Ajustes rápidos «Nota nueva» (`NewNoteTile`).
+- Base de datos v5 y copia formato 5 (recordatorios). Cemail usa WorkManager para posponer; aquí se usa AlarmManager porque un recordatorio tiene que sonar a su hora.
+
 ## 0.12.1 — 2026-11-14
 - Actualizaciones: «Instalar» usa el APK descargado en la carpeta de la app (por el FileProvider, `external-files-path` Download/) cuando el gestor de descargas no da su URI, y registra cada fallo en el log (`CenotesUpdates`). Probado en el emulador: de 0.11.x a 0.12.0 desde el aviso, con el instalador de Android, y las notas se mantienen. Cemail tiene el mismo código en `update/Updates.kt`.
 

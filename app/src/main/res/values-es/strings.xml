@@ -219,4 +219,25 @@
     <string name="sort_title_az">Título (A–Z)</string>
     <string name="checked_bottom_title">Marcadas al final</string>
     <string name="checked_bottom_body">En una lista, lo que marcas baja al final, y vuelve a subir si lo desmarcas.</string>
+
+    <!-- 0.13: recordatorios, compartir a Cenotes, mosaico de Ajustes rápidos -->
+    <string name="section_reminders">Recordatorios</string>
+    <string name="empty_reminders">No hay recordatorios.\nAbre una nota y elige ⋮ → Recordarme.</string>
+    <string name="reminder_title">Recordarme</string>
+    <string name="reminder_current">Ahora: %1$s</string>
+    <string name="reminder_later">Más tarde hoy</string>
+    <string name="reminder_tomorrow">Mañana por la mañana</string>
+    <string name="reminder_weekend">Este fin de semana</string>
+    <string name="reminder_next_week">La semana que viene</string>
+    <string name="reminder_pick">Elegir fecha y hora</string>
+    <string name="reminder_remove">Quitar recordatorio</string>
+    <string name="repeat_none">Una vez</string>
+    <string name="repeat_daily">Cada día</string>
+    <string name="repeat_weekly">Cada semana</string>
+    <string name="repeat_monthly">Cada mes</string>
+    <string name="reminder_channel">Recordatorios</string>
+    <string name="reminder_channel_body">Los recordatorios que pones en tus notas.</string>
+    <string name="reminder_done">Hecho</string>
+    <string name="reminder_snooze">Dentro de una hora</string>
+    <string name="tile_new_note">Nota nueva</string>
 </resources>

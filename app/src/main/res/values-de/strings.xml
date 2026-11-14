@@ -217,4 +217,25 @@
     <string name="sort_title_az">Titel (A–Z)</string>
     <string name="checked_bottom_title">Abgehakte nach unten</string>
     <string name="checked_bottom_body">In einer Liste rutscht Abgehaktes ans Ende und kommt wieder nach oben, wenn du den Haken entfernst.</string>
+
+    <!-- 0.13: Erinnerungen, an Cenotes teilen, Schnelleinstellungen-Kachel -->
+    <string name="section_reminders">Erinnerungen</string>
+    <string name="empty_reminders">Keine Erinnerungen.\nÖffne eine Notiz und wähle ⋮ → Erinnern.</string>
+    <string name="reminder_title">Erinnern</string>
+    <string name="reminder_current">Jetzt: %1$s</string>
+    <string name="reminder_later">Später heute</string>
+    <string name="reminder_tomorrow">Morgen früh</string>
+    <string name="reminder_weekend">Dieses Wochenende</string>
+    <string name="reminder_next_week">Nächste Woche</string>
+    <string name="reminder_pick">Datum und Uhrzeit wählen</string>
+    <string name="reminder_remove">Erinnerung entfernen</string>
+    <string name="repeat_none">Einmal</string>
+    <string name="repeat_daily">Jeden Tag</string>
+    <string name="repeat_weekly">Jede Woche</string>
+    <string name="repeat_monthly">Jeden Monat</string>
+    <string name="reminder_channel">Erinnerungen</string>
+    <string name="reminder_channel_body">Die Erinnerungen, die du an deine Notizen hängst.</string>
+    <string name="reminder_done">Erledigt</string>
+    <string name="reminder_snooze">In einer Stunde</string>
+    <string name="tile_new_note">Neue Notiz</string>
 </resources>

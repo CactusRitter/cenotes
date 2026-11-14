@@ -1,3 +1,8 @@
+## 0.13.0
+- Erinnerungen: ⋮ → Erinnern bei jeder Notiz. Wähle später heute, morgen früh, dieses Wochenende, nächste Woche oder ein eigenes Datum mit Uhrzeit, einmal oder jeden Tag, jede Woche oder jeden Monat. Die Benachrichtigung hat Erledigt und, bei einmaligen Erinnerungen, In einer Stunde. Das Glocken-Chip erscheint an der Notiz und ihrer Karte, und im Menü gibt es Erinnerungen, die nächste zuerst. Sie funktionieren auch nach einem Neustart.
+- An Cenotes teilen: Teile Text, einen Link oder Fotos aus jeder App, und daraus wird eine neue Notiz.
+- Schnelleinstellungen-Kachel: Füge Neue Notiz zu den Schnelleinstellungen hinzu, um überall eine Notiz zu beginnen.
+
 ## 0.12.1
 - Updates: Installieren öffnet das Android-Installationsprogramm jetzt auch dann, wenn der Download-Manager die heruntergeladene Datei nicht herausgibt (im Emulator gesehen, wo Installieren nichts tat).
 

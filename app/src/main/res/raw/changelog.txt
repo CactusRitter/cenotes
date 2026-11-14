@@ -1,3 +1,8 @@
+## 0.13.0
+- Reminders: ⋮ → Remind me on any note. Pick later today, tomorrow morning, this weekend, next week or your own date and time, once or every day, week or month. The notification has Done and, for one-off reminders, In an hour. The bell chip shows on the note and its card, and the menu has a Reminders section, the next one first. They come back after the phone restarts.
+- Share to Cenotes: share text, a link or pictures from any app and they become a new note.
+- Quick Settings tile: add New note to the Quick Settings panel to start a note from anywhere.
+
 ## 0.12.1
 - Updates: Install now opens Android's installer even when the download manager does not hand over the downloaded file (seen on the emulator, where Install did nothing).
 

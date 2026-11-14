@@ -1,5 +1,7 @@
 ﻿package com.cenotes.app.ui
 
+import com.cenotes.app.data.Repeat
+import androidx.compose.material.icons.filled.Notifications
 import com.cenotes.app.data.TrashDays
 import com.cenotes.app.ui.theme.DeleteForeverIcon
 import com.cenotes.app.ui.theme.RestoreFromTrashIcon
@@ -199,6 +201,7 @@ fun NotesListScreen(
         Section.All -> stringResource(R.string.app_name)
         Section.Archive -> stringResource(R.string.section_archive)
         Section.Trash -> stringResource(R.string.section_trash)
+        Section.Reminders -> stringResource(R.string.section_reminders)
         is Section.ByLabel -> labels.firstOrNull { it.id == s.labelId }?.name ?: stringResource(R.string.app_name)
     }
 
@@ -245,6 +248,7 @@ fun NotesListScreen(
                                 pinnedOnly -> R.string.empty_pinned
                                 section == Section.Archive -> R.string.empty_archive
                                 section == Section.Trash -> R.string.empty_trash_list
+                                section == Section.Reminders -> R.string.empty_reminders
                                 else -> R.string.empty_label
                             },
                         ),
@@ -574,6 +578,10 @@ private fun SideMenu(
             MenuItem(NotesIcon, stringResource(R.string.section_notes), section == Section.All, colors) {
                 onSection(Section.All)
             }
+            // Like Keep: the notes that will remind you, the next one first.
+            MenuItem(Icons.Filled.Notifications, stringResource(R.string.section_reminders), section == Section.Reminders, colors) {
+                onSection(Section.Reminders)
+            }
             if (labels.isNotEmpty()) {
                 Text(
                     stringResource(R.string.labels),
@@ -718,6 +726,10 @@ private fun NoteCard(
                 if (note.content.isNotBlank()) {
                     Spacer(Modifier.height(8.dp))
                     MarkdownPreview(note.content, maxBlocks = maxLines)
+                }
+                note.reminderAt?.let { at ->
+                    Spacer(Modifier.height(10.dp))
+                    ReminderChip(at, Repeat.of(note.reminderRepeat), compact = true)
                 }
                 if (item.labels.isNotEmpty()) {
                     Spacer(Modifier.height(10.dp))
