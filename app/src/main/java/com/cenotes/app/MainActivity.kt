@@ -3,6 +3,7 @@ package com.cenotes.app
 import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.FragmentActivity
+import kotlinx.coroutines.launch
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedContent
@@ -229,6 +230,14 @@ class MainActivity : FragmentActivity() {
                 }
             }
         }
+    }
+
+    // Coming back to Cenotes (from the location settings, say): the places of reminders are watched again, now that
+    // Android may allow it.
+    override fun onStart() {
+        super.onStart()
+        val app = application as CenotesApp
+        app.appScope.launch { com.cenotes.app.notify.Places.sync(app) }
     }
 
     // Leaving Cenotes (home, another app, the screen going off) locks the protected notes again.

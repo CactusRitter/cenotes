@@ -13,6 +13,7 @@ coil = "3.6.3"
 glance = "1.2.0"
 biometric = "1.1.0"
 mlkitText = "19.0.1"
+playLocation = "21.3.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -35,6 +36,7 @@ coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref 
 glance-appwidget = { group = "androidx.glance", name = "glance-appwidget", version.ref = "glance" }
 androidx-biometric = { group = "androidx.biometric", name = "biometric", version.ref = "biometric" }
 mlkit-text-recognition = { group = "com.google.android.gms", name = "play-services-mlkit-text-recognition", version.ref = "mlkitText" }
+play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playLocation" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -1,3 +1,9 @@
+## 0.17.0
+- Reminders at a place: Remind me → At a place. Choose when you arrive or when you leave, then a place you saved, I'm here, or an address you look up. Places are saved with a name to use again. Cenotes asks once for location "all the time", so it can remind you while it is closed; your location stays on this device.
+- Choosing a date and time is now a Cenotes card that follows your design, instead of Android's grey dialog.
+- Tablets: the list and the open note share one background, without a seam between them.
+- Texts speak of your device instead of your phone, and a repeating reminder shows its dot correctly.
+
 ## 0.16.0
 - Order by hand: Settings → Notes → By hand. Hold a note and drag it where you want it; the others make room as you move it.
 - History: ⋮ → History in a note shows how it was before each change (the last 20), and Restore brings any of them back. What was on screen is kept too.

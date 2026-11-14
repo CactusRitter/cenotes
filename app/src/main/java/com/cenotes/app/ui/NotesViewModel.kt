@@ -80,6 +80,7 @@ class NotesViewModel(private val app: CenotesApp) : ViewModel() {
             ExternalViews.refresh(app)
             // A reminder may have been set, changed, removed, trashed or restored: the alarm follows.
             com.cenotes.app.notify.Reminders.schedule(app)
+            com.cenotes.app.notify.Places.sync(app)
         }
     }
 
@@ -109,7 +110,7 @@ class NotesViewModel(private val app: CenotesApp) : ViewModel() {
         val term = f.query.trim()
         // The Trash keeps its own order (last deleted first); elsewhere pinned notes go first, then the chosen order.
         val ordered = if (f.section == Section.Trash) trash else if (f.section == Section.Reminders) {
-            all.sortedBy { it.reminderAt ?: Long.MAX_VALUE } // the next one first
+            all.sortedBy { it.reminderAt ?: Long.MAX_VALUE } // the next one first (places after the times)
         } else all.sortedWith(
             compareByDescending<Note> { it.pinned }.then(
                 when (sort) {
@@ -128,7 +129,7 @@ class NotesViewModel(private val app: CenotesApp) : ViewModel() {
                     Section.All -> !n.archived && !n.locked
                     Section.Archive -> n.archived && !n.locked
                     Section.Trash -> true
-                    Section.Reminders -> n.reminderAt != null && !n.locked
+                    Section.Reminders -> (n.reminderAt != null || n.placeId != null) && !n.locked
                     Section.Locked -> n.locked
                     is Section.ByLabel -> !n.archived && !n.locked && labelsOf[n.id].orEmpty().any { it.id == s.labelId }
                 }
@@ -258,6 +259,7 @@ class NotesViewModel(private val app: CenotesApp) : ViewModel() {
                 Note(
                     title = title, content = content, pinned = pinned, archived = archived, color = color,
                     reminderAt = reminder.at, reminderRepeat = reminder.repeat.ordinal,
+                    placeId = reminder.placeId, placeLeave = reminder.placeLeave,
                 ),
             )
             dao.setLabels(id, labelIds)
@@ -267,7 +269,8 @@ class NotesViewModel(private val app: CenotesApp) : ViewModel() {
         // History: the text as it was before this edit, with the time it was written.
         if (textChanged) dao.addVersion(NoteVersion(noteId = original.id, title = original.title, content = original.content, savedAt = original.updatedAt))
         if (textChanged ||original.pinned != pinned || original.archived != archived || original.color != color ||
-            original.reminderAt != reminder.at || original.reminderRepeat != reminder.repeat.ordinal
+            original.reminderAt != reminder.at || original.reminderRepeat != reminder.repeat.ordinal ||
+            original.placeId != reminder.placeId || original.placeLeave != reminder.placeLeave
         ) {
             dao.update(
                 original.copy(
@@ -278,6 +281,8 @@ class NotesViewModel(private val app: CenotesApp) : ViewModel() {
                     color = color,
                     reminderAt = reminder.at,
                     reminderRepeat = reminder.repeat.ordinal,
+                    placeId = reminder.placeId,
+                    placeLeave = reminder.placeLeave,
                     updatedAt = if (textChanged) System.currentTimeMillis() else original.updatedAt,
                 ),
             )
@@ -285,6 +290,24 @@ class NotesViewModel(private val app: CenotesApp) : ViewModel() {
         if (dao.labelIdsOf(original.id).toSet() != labelIds.toSet()) dao.setLabels(original.id, labelIds)
         return original.id
     }
+
+    // ---- Places ----
+
+    /** The places saved for reminders, by name. */
+    val places: StateFlow<List<com.cenotes.app.data.Place>> =
+        dao.observePlaces().stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    /** Saves a place to remind at (or reuses the one with the same name, moved to the new spot); returns its id. */
+    suspend fun savePlace(name: String, latitude: Double, longitude: Double): Long {
+        val clean = name.trim().ifEmpty { "%.4f, %.4f".format(latitude, longitude) }
+        dao.placeByName(clean)?.let { old ->
+            dao.movePlace(old.id, latitude, longitude)
+            return old.id
+        }
+        return dao.insertPlace(com.cenotes.app.data.Place(name = clean, latitude = latitude, longitude = longitude))
+    }
+
+    fun deletePlace(id: Long) = write { dao.deletePlace(id) }
 
     /** Earlier versions of a note, the latest first (⋮ → History). */
     suspend fun versionsOf(noteId: Long): List<NoteVersion> = dao.versionsOf(noteId)

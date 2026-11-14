@@ -1,7 +1,5 @@
 package com.cenotes.app.ui
 
-import android.app.DatePickerDialog
-import android.app.TimePickerDialog
 import android.text.format.DateUtils
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
@@ -72,26 +70,43 @@ private val RepeatLabels = listOf(
 )
 
 /**
- * "Remind me": how often first (once, every day, week or month), then when â the quick times or a date and time of
- * one's own â which sets it at once. With a reminder already set it can also be removed. Same look as Cemail's
+ * "Remind me": how often first (once, every day, week or month), then when — the quick times or a date and time of
+ * one's own — which sets it at once. With a reminder already set it can also be removed. Same look as Cemail's
  * "Send later" (glass menu card with rows that pop in).
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun ReminderDialog(current: Reminder, onSet: (Reminder) -> Unit, onDismiss: () -> Unit) {
-    val context = LocalContext.current
+fun ReminderDialog(
+    current: Reminder,
+    places: List<com.cenotes.app.data.Place>,
+    onSavePlace: suspend (String, Double, Double) -> Long,
+    onDeletePlace: (Long) -> Unit,
+    onSet: (Reminder) -> Unit,
+    onDismiss: () -> Unit,
+) {
     var repeat by remember { mutableStateOf(current.repeat) }
-    fun pickOwn() {
-        val start = Calendar.getInstance().apply { current.at?.let { timeInMillis = it } }
-        DatePickerDialog(context, { _, year, month, day ->
-            TimePickerDialog(context, { _, hour, minute ->
-                val at = Calendar.getInstance().apply { set(year, month, day, hour, minute, 0); set(Calendar.MILLISECOND, 0) }.timeInMillis
-                // A time that has already gone by would remind at once: it becomes a minute from now instead.
-                onSet(Reminder(maxOf(at, System.currentTimeMillis() + 60_000), repeat))
-            }, start.get(Calendar.HOUR_OF_DAY), start.get(Calendar.MINUTE), android.text.format.DateFormat.is24HourFormat(context)).show()
-        }, start.get(Calendar.YEAR), start.get(Calendar.MONTH), start.get(Calendar.DAY_OF_MONTH)).apply {
-            datePicker.minDate = System.currentTimeMillis() - 1000
-        }.show()
+    var pickingOwn by remember { mutableStateOf(false) }
+    var pickingPlace by remember { mutableStateOf(false) }
+    if (pickingPlace) {
+        PlaceDialog(
+            placeId = current.placeId,
+            leave = current.placeLeave,
+            places = places,
+            onSave = onSavePlace,
+            onDelete = onDeletePlace,
+            onSet = { id, leave -> onSet(current.copy(placeId = id, placeLeave = leave)) },
+            onDismiss = { pickingPlace = false },
+        )
+        return
+    }
+    if (pickingOwn) {
+        DateTimeDialog(
+            initial = current.at,
+            // A time that has already gone by would remind at once: it becomes a minute from now instead.
+            onPick = { at -> onSet(current.copy(at = maxOf(at, System.currentTimeMillis() + 60_000), repeat = repeat)) },
+            onDismiss = { pickingOwn = false },
+        )
+        return
     }
     Dialog(onDismissRequest = onDismiss) {
         Column(
@@ -118,27 +133,34 @@ fun ReminderDialog(current: Reminder, onSet: (Reminder) -> Unit, onDismiss: () -
                 RepeatLabels.forEach { (r, label) -> ChoiceChip(stringResource(label), repeat == r) { repeat = r } }
             }
             ReminderTime.entries.forEach { option ->
-                ReminderRow(stringResource(option.label)) { onSet(Reminder(option.at(System.currentTimeMillis()), repeat)) }
+                ReminderRow(stringResource(option.label)) { onSet(current.copy(at = option.at(System.currentTimeMillis()), repeat = repeat)) }
             }
-            ReminderRow(stringResource(R.string.reminder_pick)) { pickOwn() }
-            if (current.at != null) ReminderRow(stringResource(R.string.reminder_remove), danger = true) { onSet(Reminder()) }
+            ReminderRow(stringResource(R.string.reminder_pick)) { pickingOwn = true }
+            if (current.at != null) ReminderRow(stringResource(R.string.reminder_remove), danger = true) { onSet(current.copy(at = null, repeat = Repeat.NONE)) }
+            // At a place instead of (or as well as) a time: on arriving at the supermarket, on leaving home…
+            ReminderRow(stringResource(R.string.place_row), icon = com.cenotes.app.ui.theme.PlaceIcon) { pickingPlace = true }
         }
     }
 }
 
 @Composable
-private fun ReminderRow(label: String, danger: Boolean = false, onClick: () -> Unit) {
+private fun ReminderRow(
+    label: String,
+    danger: Boolean = false,
+    icon: androidx.compose.ui.graphics.vector.ImageVector = Icons.Filled.Notifications,
+    onClick: () -> Unit,
+) {
     Row(
         Modifier.fillMaxWidth().clickable(role = Role.Button, onClick = onClick).padding(horizontal = 24.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Icon(Icons.Filled.Notifications, null, tint = if (danger) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary)
+        Icon(icon, null, tint = if (danger) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary)
         Text(label, style = MaterialTheme.typography.bodyLarge, color = if (danger) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface)
     }
 }
 
-/** "Tomorrow, 8:00 Â· Every week" in the phone's language and time format. */
+/** "Tomorrow, 8:00 · Every week" in the phone's language and time format. */
 @Composable
 fun reminderText(at: Long, repeat: Repeat, compact: Boolean = false): String {
     val context = LocalContext.current
@@ -150,7 +172,7 @@ fun reminderText(at: Long, repeat: Repeat, compact: Boolean = false): String {
     // On a card there is little room: a repeating reminder just gets the "repeat" sign.
     if (compact) return if (repeat == Repeat.NONE) time else "$time  ↻"
     val every = RepeatLabels.firstOrNull { it.first == repeat && repeat != Repeat.NONE }?.let { stringResource(it.second) }
-    return if (every == null) time else "$time Â· $every"
+    return if (every == null) time else "$time · $every"
 }
 
 /** The small chip of a note's reminder (on its card and in the editor); crossed out once the time has passed. */

@@ -142,7 +142,7 @@ fun SettingsScreen(
         else -> stringResource(R.string.settings)
     }
 
-    GlassBackground {
+    ScreenBackground {
         Column(
             Modifier
                 .fillMaxSize()

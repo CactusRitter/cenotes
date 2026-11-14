@@ -9,6 +9,10 @@
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Reminders at a place: where the device is, also while Cenotes is closed (asked for only when one is set). -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
 
     <application
         android:name=".CenotesApp"
@@ -54,6 +58,11 @@
                 <action android:name="android.intent.action.TIMEZONE_CHANGED" />
             </intent-filter>
         </receiver>
+
+        <!-- Arriving at or leaving a place a note reminds at (Google Play's geofences, on the device). -->
+        <receiver
+            android:name=".notify.PlaceReceiver"
+            android:exported="false" />
 
         <!-- "Copy text from picture": Google Play services fetches the text reader (on the phone, no pictures sent)
              when Cenotes is installed, instead of on first use. -->

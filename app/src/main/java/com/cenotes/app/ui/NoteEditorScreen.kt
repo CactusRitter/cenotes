@@ -195,6 +195,9 @@ fun NoteEditorScreen(
     var pickingColor by remember { mutableStateOf(false) }
     var reminderAt by rememberSaveable(noteId) { mutableStateOf<Long?>(null) }
     var reminderRepeat by rememberSaveable(noteId) { mutableStateOf(0) }
+    var placeId by rememberSaveable(noteId) { mutableStateOf<Long?>(null) }
+    var placeLeave by rememberSaveable(noteId) { mutableStateOf(false) }
+    val places by viewModel.places.collectAsStateWithLifecycle()
     var locked by rememberSaveable(noteId) { mutableStateOf(false) }
     var pickingReminder by remember { mutableStateOf(false) }
     var exporting by remember { mutableStateOf(false) }
@@ -236,6 +239,8 @@ fun NoteEditorScreen(
             color = note.color
             reminderAt = note.reminderAt
             reminderRepeat = note.reminderRepeat
+            placeId = note.placeId
+            placeLeave = note.placeLeave
             locked = note.locked
             labelIds = viewModel.labelIdsOf(noteId)
         }
@@ -298,7 +303,7 @@ fun NoteEditorScreen(
 
     // Guarded so a double back press (or a tap during the exit animation) can't save twice.
     fun saveNow() {
-        if (loaded) viewModel.save(original, title, editor.toMarkdown(), pinned, labelIds, archived, color, Reminder(reminderAt, Repeat.of(reminderRepeat)))
+        if (loaded) viewModel.save(original, title, editor.toMarkdown(), pinned, labelIds, archived, color, Reminder(reminderAt, Repeat.of(reminderRepeat), placeId, placeLeave))
     }
 
     fun close() {
@@ -349,7 +354,7 @@ fun NoteEditorScreen(
         }
     }
 
-    GlassBackground(Modifier.noteSharedBounds(noteId, zIndex = 1f)) {
+    ScreenBackground(Modifier.noteSharedBounds(noteId, zIndex = 1f)) {
         Column(
             Modifier
                 .fillMaxSize()
@@ -419,7 +424,7 @@ fun NoteEditorScreen(
                                         Toast.makeText(context, noLockText, Toast.LENGTH_LONG).show()
                                     } else if (!closed) {
                                         closed = true
-                                        if (loaded) viewModel.saveAndLock(original, title, editor.toMarkdown(), pinned, labelIds, archived, color, Reminder(reminderAt, Repeat.of(reminderRepeat)), !locked)
+                                        if (loaded) viewModel.saveAndLock(original, title, editor.toMarkdown(), pinned, labelIds, archived, color, Reminder(reminderAt, Repeat.of(reminderRepeat), placeId, placeLeave), !locked)
                                         onClose()
                                     }
                                 },
@@ -460,7 +465,7 @@ fun NoteEditorScreen(
                                     moreMenuOpen = false
                                     if (!closed) {
                                         closed = true
-                                        if (loaded) viewModel.saveAndTrash(original, title, editor.toMarkdown(), pinned, labelIds, archived, color, Reminder(reminderAt, Repeat.of(reminderRepeat)))
+                                        if (loaded) viewModel.saveAndTrash(original, title, editor.toMarkdown(), pinned, labelIds, archived, color, Reminder(reminderAt, Repeat.of(reminderRepeat), placeId, placeLeave))
                                         onClose()
                                     }
                                 },
@@ -490,6 +495,14 @@ fun NoteEditorScreen(
                         Spacer(Modifier.height(10.dp))
                         ReminderChip(
                             at, Repeat.of(reminderRepeat),
+                            Modifier.clickable(role = androidx.compose.ui.semantics.Role.Button) { pickingReminder = true },
+                            iconSize = 16.dp,
+                        )
+                    }
+                    places.firstOrNull { it.id == placeId }?.let { place ->
+                        Spacer(Modifier.height(10.dp))
+                        PlaceChip(
+                            place.name, placeLeave,
                             Modifier.clickable(role = androidx.compose.ui.semantics.Role.Button) { pickingReminder = true },
                             iconSize = 16.dp,
                         )
@@ -615,13 +628,18 @@ fun NoteEditorScreen(
     }
     if (pickingReminder) {
         ReminderDialog(
-            Reminder(reminderAt, Repeat.of(reminderRepeat)),
+            Reminder(reminderAt, Repeat.of(reminderRepeat), placeId, placeLeave),
+            places = places,
+            onSavePlace = viewModel::savePlace,
+            onDeletePlace = viewModel::deletePlace,
             onSet = { r ->
                 reminderAt = r.at
                 reminderRepeat = r.repeat.ordinal
+                placeId = r.placeId
+                placeLeave = r.placeLeave
                 pickingReminder = false
                 // From Android 13 notifications need the user's yes: asked the first time a reminder is set.
-                if (r.at != null && !com.cenotes.app.notify.Reminders.allowed(context) &&
+                if ((r.at != null || r.placeId != null) && !com.cenotes.app.notify.Reminders.allowed(context) &&
                     android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU
                 ) {
                     askNotifications.launch(android.Manifest.permission.POST_NOTIFICATIONS)

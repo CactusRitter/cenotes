@@ -84,6 +84,43 @@ abstract class NoteDao {
         deleteNotesOnly(ids)
     }
 
+    // ---- Places ----
+
+    @Query("SELECT * FROM places ORDER BY name COLLATE NOCASE")
+    abstract fun observePlaces(): Flow<List<Place>>
+
+    @Query("SELECT * FROM places")
+    abstract suspend fun places(): List<Place>
+
+    @Insert
+    abstract suspend fun insertPlace(place: Place): Long
+
+    @Query("SELECT * FROM places WHERE name = :name COLLATE NOCASE LIMIT 1")
+    abstract suspend fun placeByName(name: String): Place?
+
+    @Query("UPDATE places SET latitude = :latitude, longitude = :longitude WHERE id = :id")
+    abstract suspend fun movePlace(id: Long, latitude: Double, longitude: Double)
+
+    @Query("DELETE FROM places WHERE id = :id")
+    protected abstract suspend fun deletePlaceOnly(id: Long)
+
+    @Query("UPDATE notes SET placeId = NULL WHERE placeId = :id")
+    protected abstract suspend fun clearPlace(id: Long)
+
+    /** Forgets a saved place; the notes that reminded there just stop doing so. */
+    @Transaction
+    open suspend fun deletePlace(id: Long) {
+        clearPlace(id)
+        deletePlaceOnly(id)
+    }
+
+    /** Notes that remind at a place (not those in the Trash). */
+    @Query("SELECT * FROM notes WHERE placeId IS NOT NULL AND trashedAt IS NULL")
+    abstract suspend fun placeReminders(): List<Note>
+
+    @Query("UPDATE notes SET placeId = :placeId, placeLeave = :leave WHERE id = :id")
+    abstract suspend fun setPlace(id: Long, placeId: Long?, leave: Boolean)
+
     // ---- Order by hand ----
 
     @Query("UPDATE notes SET position = :position WHERE id = :id")

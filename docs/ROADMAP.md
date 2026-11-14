@@ -68,6 +68,10 @@ Descartado por decisión de César (2026-11-14): menú «/» y «[[» (comandos 
 - ✅ Las animaciones de abrir y cerrar una nota respetan las esquinas de cada diseño.
 - ❌ Notas de voz grabadas: descartadas por decisión de César (2026-11-14); basta con dictar.
 
+### 0.17 — Lo que salió al probar en la tableta ✅ hecha en 0.17.0
+- ✅ **Recordatorios en un lugar** (como Keep): al llegar o al salir; el lugar se busca por dirección o «Estoy aquí», sin mapa, todo en el dispositivo.
+- ✅ Selector de fecha y hora con el diseño Ce (Cemail hará lo mismo).
+
 ## Futuro (no se hace todavía)
 - **Enlaces entre las apps "Ce"**: «Crear evento en Celander» desde una nota con fecha, y «Guardar en Cenotes» un correo desde Cemail. Se hará cuando las tres apps estén claras y se decida junto con Cemail y Celander; hoy ninguna enlaza con otra.
 

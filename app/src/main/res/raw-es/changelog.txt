@@ -1,3 +1,9 @@
+## 0.17.0
+- Recordatorios en un lugar: Recordarme → En un lugar. Elige al llegar o al salir y luego un lugar guardado, Estoy aquí o una dirección que buscas. Los lugares se guardan con nombre para volver a usarlos. Cenotes pide una vez la ubicación «todo el tiempo» para avisarte aunque esté cerrado; tu ubicación no sale del dispositivo.
+- Elegir fecha y hora es ahora una tarjeta de Cenotes que sigue tu diseño, en vez del diálogo gris de Android.
+- Tabletas: la lista y la nota abierta comparten el mismo fondo, sin corte entre ellas.
+- Los textos hablan de tu dispositivo en vez de tu teléfono, y un recordatorio que se repite muestra bien su punto.
+
 ## 0.16.0
 - Orden a mano: Ajustes → Notas → A mano. Mantén pulsada una nota y arrástrala a donde quieras; las demás le hacen sitio mientras la mueves.
 - Historial: ⋮ → Historial en una nota enseña cómo estaba antes de cada cambio (las 20 últimas), y Restaurar recupera cualquiera. Lo que había en pantalla también se guarda.

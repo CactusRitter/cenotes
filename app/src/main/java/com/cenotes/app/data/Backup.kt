@@ -25,6 +25,7 @@ class Backup(private val context: Context, private val dao: NoteDao, private val
 
     suspend fun export(uri: Uri, includeImages: Boolean): ExportResult = withContext(Dispatchers.IO) {
         val notes = dao.all()
+        val placeById = dao.places().associateBy { it.id }
         val labels = dao.labels()
         val labelName = labels.associate { it.id to it.name }
         val labelsOf = dao.links().groupBy({ it.noteId }, { labelName[it.labelId] })
@@ -46,6 +47,12 @@ class Backup(private val context: Context, private val dao: NoteDao, private val
                         .put("reminderRepeat", n.reminderRepeat)
                         .put("locked", n.locked)
                         .put("position", n.position)
+                        .also { o ->
+                            // A reminder at a place goes along with the place itself (by name, as labels do).
+                            n.placeId?.let(placeById::get)?.let { p ->
+                                o.put("place", JSONObject().put("name", p.name).put("latitude", p.latitude).put("longitude", p.longitude).put("leave", n.placeLeave))
+                            }
+                        }
                         .put("labels", JSONArray(labelsOf[n.id].orEmpty().filterNotNull())),
                 )
             }
@@ -151,6 +158,14 @@ class Backup(private val context: Context, private val dao: NoteDao, private val
                     .map { dao.labelIdFor(it) }
                 dao.setLabels(id, ids)
             }
+            o.optJSONObject("place")?.let { p ->
+                val name = p.optString("name").trim()
+                if (name.isNotEmpty() && p.has("latitude") && p.has("longitude")) {
+                    val placeId = dao.placeByName(name)?.id
+                        ?: dao.insertPlace(Place(name = name, latitude = p.getDouble("latitude"), longitude = p.getDouble("longitude")))
+                    dao.setPlace(id, placeId, p.optBoolean("leave"))
+                }
+            }
             added++
         }
         ImportResult(added, skipped, imageCount)
@@ -158,8 +173,8 @@ class Backup(private val context: Context, private val dao: NoteDao, private val
 
     private companion object {
         const val AppId = "Cenotes"
-        /** 1 = notes only (0.7); 2 = + labels and archive (0.8); 3 = + label colours (0.9); 4 = + note colour and creation date (0.12); 5 = + reminders (0.13); 6 = + protected notes (0.14); 7 = + order by hand (0.16). All can be imported. The Trash and the history of each note are not exported. */
-        const val Format = 7
+        /** 1 = notes only (0.7); 2 = + labels and archive (0.8); 3 = + label colours (0.9); 4 = + note colour and creation date (0.12); 5 = + reminders (0.13); 6 = + protected notes (0.14); 7 = + order by hand (0.16); 8 = + reminders at a place (0.17). All can be imported. The Trash and the history of each note are not exported. */
+        const val Format = 8
         val SafeName = Regex("""^[\w.-]+$""")
     }
 }

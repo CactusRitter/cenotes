@@ -1,3 +1,9 @@
+## 0.17.0
+- Erinnerungen an einem Ort: Erinnern → An einem Ort. Wähle beim Ankommen oder beim Verlassen, dann einen gespeicherten Ort, Ich bin hier oder eine gesuchte Adresse. Orte werden mit Namen gespeichert, um sie wieder zu verwenden. Cenotes fragt einmal nach dem Standort „immer“, damit es dich auch erinnern kann, wenn es geschlossen ist; dein Standort bleibt auf dem Gerät.
+- Datum und Uhrzeit wählst du jetzt in einer Cenotes-Karte, die deinem Design folgt, statt im grauen Android-Dialog.
+- Tablets: Liste und geöffnete Notiz teilen sich einen Hintergrund, ohne Kante dazwischen.
+- Die Texte sprechen von deinem Gerät statt von deinem Handy, und eine wiederholte Erinnerung zeigt ihren Punkt richtig.
+
 ## 0.16.0
 - Von Hand sortieren: Einstellungen → Notizen → Von Hand. Halte eine Notiz gedrückt und zieh sie an ihren Platz; die anderen machen ihr beim Ziehen Platz.
 - Verlauf: ⋮ → Verlauf in einer Notiz zeigt, wie sie vor jeder Änderung war (die letzten 20), und Wiederherstellen holt jede davon zurück. Was gerade zu sehen war, bleibt auch erhalten.

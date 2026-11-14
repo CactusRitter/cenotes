@@ -89,7 +89,7 @@ object Reminders {
     }
 
     @SuppressLint("MissingPermission") // checked by allowed()
-    private fun show(context: Context, note: Note) {
+    fun show(context: Context, note: Note, snooze: Boolean = Repeat.of(note.reminderRepeat) == Repeat.NONE) {
         if (!allowed(context)) return
         val id = note.id.toInt()
         val text = markdownToPlainText(note.content).trim()
@@ -120,7 +120,7 @@ object Reminders {
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .addAction(0, context.getString(R.string.reminder_done), action(context, ACTION_DONE, note.id, 1))
         // "In an hour" only for reminders that happen once: a repeating one already comes back by itself.
-        if (Repeat.of(note.reminderRepeat) == Repeat.NONE) {
+        if (snooze) {
             builder.addAction(0, context.getString(R.string.reminder_snooze), action(context, ACTION_SNOOZE, note.id, 2))
         }
         NotificationManagerCompat.from(context).notify(id, builder.build())
@@ -154,7 +154,10 @@ class ReminderReceiver : BroadcastReceiver() {
                     Reminders.ACTION_SNOOZE -> Reminders.snooze(context, intent.getLongExtra(Reminders.EXTRA_NOTE, 0))
                     // After a restart, an update of Cenotes or a change of the clock: reminders that went by meanwhile
                     // are shown now, and the alarm is set again.
-                    else -> Reminders.fire(context)
+                    else -> {
+                        Reminders.fire(context)
+                        Places.sync(context) // geofences do not survive a restart either
+                    }
                 }
             } finally {
                 result.finish()

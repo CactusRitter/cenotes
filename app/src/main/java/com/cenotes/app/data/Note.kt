@@ -28,7 +28,25 @@ data class Note(
     @ColumnInfo(defaultValue = "0") val locked: Boolean = false,
     /** Place in the list when notes are sorted by hand: higher first. New notes get the time, so they go on top. */
     @ColumnInfo(defaultValue = "0") val position: Long = System.currentTimeMillis(),
+    /** Reminds on arriving at (or leaving, with [placeLeave]) this saved [Place]; null = no place reminder. */
+    val placeId: Long? = null,
+    @ColumnInfo(defaultValue = "0") val placeLeave: Boolean = false,
 )
+
+/**
+ * A place a note can remind you at (the supermarket, home…), saved with a name to use again. It is found on the device
+ * itself (an address typed in, or "I'm here"); Cenotes never sends it anywhere.
+ */
+@Entity(tableName = "places")
+data class Place(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val name: String,
+    val latitude: Double,
+    val longitude: Double,
+)
+
+/** How near a place counts as being there, in metres (Android's geofences work well from about 100 m). */
+const val PlaceRadius = 150f
 
 /** Days a note stays in the Trash before it is deleted for good (like Google Keep). */
 const val TrashDays = 7
@@ -85,9 +103,17 @@ enum class Repeat {
     }
 }
 
-/** A note's reminder as the editor holds it: when ([at], null = none) and how it repeats. */
-data class Reminder(val at: Long? = null, val repeat: Repeat = Repeat.NONE) {
+/**
+ * A note's reminders as the editor holds them: when ([at], null = none) and how it repeats, and the place ([placeId],
+ * null = none) with whether it reminds on leaving it ([placeLeave]) rather than arriving.
+ */
+data class Reminder(
+    val at: Long? = null,
+    val repeat: Repeat = Repeat.NONE,
+    val placeId: Long? = null,
+    val placeLeave: Boolean = false,
+) {
     companion object {
-        fun of(note: Note) = Reminder(note.reminderAt, Repeat.of(note.reminderRepeat))
+        fun of(note: Note) = Reminder(note.reminderAt, Repeat.of(note.reminderRepeat), note.placeId, note.placeLeave)
     }
 }

@@ -174,6 +174,7 @@ fun NotesListScreen(
 ) {
     val notes by viewModel.notes.collectAsStateWithLifecycle()
     val labels by viewModel.labels.collectAsStateWithLifecycle()
+    val places by viewModel.places.collectAsStateWithLifecycle()
     val customColors by viewModel.customColors.collectAsStateWithLifecycle()
     val labelCounts by viewModel.labelCounts.collectAsStateWithLifecycle()
     val section by viewModel.section.collectAsStateWithLifecycle()
@@ -290,7 +291,7 @@ fun NotesListScreen(
         androidx.compose.runtime.CompositionLocalProvider(androidx.compose.ui.platform.LocalLayoutDirection provides direction) {
         Box(Modifier.fillMaxSize()) {
             // Everything in here is what the floating glass blurs.
-            GlassBackground(Modifier.hazeSource(hazeState)) {
+            ScreenBackground(Modifier.hazeSource(hazeState)) {
                 val list = notes
                 when {
                     list == null -> Unit // Still loading; avoid flashing an empty state.
@@ -354,6 +355,7 @@ fun NotesListScreen(
                                 selected = id in selected,
                                 // A protected note in the Trash shows nothing of itself until the notes are unlocked.
                                 hidden = item.note.locked && !unlocked,
+                                placeName = item.note.placeId?.let { pid -> places.firstOrNull { it.id == pid }?.name },
                                 // While selecting, a tap adds/removes; otherwise it opens the note.
                                 // In the Trash a note is not opened: a tap picks it, to restore it or delete it for good.
                                 onClick = { if (selecting || section == Section.Trash) viewModel.toggleSelected(id) else onOpenNote(id) },
@@ -876,6 +878,8 @@ private fun NoteCard(
     onClick: () -> Unit,
     onLongClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
+    /** Name of the place the note reminds at, if any. */
+    placeName: String? = null,
     /** A protected note while locked: only a padlock and "Protected note", nothing of what it says. */
     hidden: Boolean = false,
 ) {
@@ -943,6 +947,10 @@ private fun NoteCard(
                 note.reminderAt?.let { at ->
                     Spacer(Modifier.height(10.dp))
                     ReminderChip(at, Repeat.of(note.reminderRepeat), compact = true)
+                }
+                placeName?.let { name ->
+                    Spacer(Modifier.height(if (note.reminderAt != null) 6.dp else 10.dp))
+                    PlaceChip(name, note.placeLeave)
                 }
                 if (item.labels.isNotEmpty()) {
                     Spacer(Modifier.height(10.dp))

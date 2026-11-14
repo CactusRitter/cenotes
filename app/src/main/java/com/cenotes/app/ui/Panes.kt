@@ -62,6 +62,19 @@ import kotlinx.coroutines.launch
 // Tablets and open foldables, the same way as in Cemail (ui/mail/MailApp.kt): the list and the open note side by side,
 // single screens centred, and Settings in a column that can be moved to either side.
 
+/**
+ * true where a screen sits on the one background drawn behind everything (the panes of a tablet, the Settings
+ * column): it then paints no background of its own, so there is no seam where two screens meet.
+ */
+val LocalSharedBackdrop = androidx.compose.runtime.compositionLocalOf { false }
+
+/** A screen's background: the glass background, or nothing on the shared one (see [LocalSharedBackdrop]). */
+@Composable
+fun ScreenBackground(modifier: Modifier = Modifier, content: @Composable BoxScope.() -> Unit) {
+    if (LocalSharedBackdrop.current) Box(modifier.fillMaxSize(), content = content)
+    else com.cenotes.app.ui.glass.GlassBackground(modifier, content)
+}
+
 /** From this window width (dp) the list and the open note are shown side by side: tablets, open foldables. */
 const val TWO_PANE_MIN_WIDTH = 840
 
@@ -87,6 +100,7 @@ fun TwoPane(list: @Composable () -> Unit, openKey: String?, note: @Composable (S
         val listWidth = (maxWidth * 0.36f).coerceIn(360.dp, 480.dp)
         val listOnRight = LocalListOnRight.current
         Row(Modifier.fillMaxSize()) {
+          CompositionLocalProvider(LocalSharedBackdrop provides true) {
             if (!listOnRight) Box(Modifier.width(listWidth).fillMaxHeight()) { list() }
             Box(Modifier.weight(1f).fillMaxHeight()) {
                 AnimatedContent(
@@ -117,6 +131,7 @@ fun TwoPane(list: @Composable () -> Unit, openKey: String?, note: @Composable (S
                 }
             }
             if (listOnRight) Box(Modifier.width(listWidth).fillMaxHeight()) { list() }
+          }
         }
     }
 }
@@ -130,6 +145,12 @@ fun TwoPane(list: @Composable () -> Unit, openKey: String?, note: @Composable (S
  */
 @Composable
 fun Dockable(dock: Int, onDock: (Int) -> Unit, content: @Composable () -> Unit) {
+    // Settings always sits on the background drawn behind every screen.
+    CompositionLocalProvider(LocalSharedBackdrop provides true) { DockableColumn(dock, onDock, content) }
+}
+
+@Composable
+private fun DockableColumn(dock: Int, onDock: (Int) -> Unit, content: @Composable () -> Unit) {
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val column = minOf(maxWidth, MAX_CONTENT_WIDTH)
         val free = maxWidth - column
