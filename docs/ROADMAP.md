@@ -40,11 +40,10 @@
 - ✅ **Orden de las notas**: última edición, creación o título. Ajustes → Notas.
 - ⏳ **Orden a mano** (arrastrar tarjetas en la lista, como Keep): pendiente; choca con «mantener pulsado = seleccionar» y con la cuadrícula escalonada, así que necesita su propio diseño. Pasa a la fase 5.
 
-### Fase 2 · 0.13 — Recordatorios y entrada rápida ✅ hecha en 0.13.0 (salvo los enlaces con Celander y Cemail)
-- ✅ **Recordatorios**: fecha y hora (hoy, mañana, la semana que viene, otra), repetición (diaria, semanal, mensual) y notificación con «Hecho» y «Posponer». Sección «Recordatorios» en el menú.
+### Fase 2 · 0.13 — Recordatorios y entrada rápida ✅ hecha en 0.13.0
+- ✅ **Recordatorios**: fecha y hora (hoy, mañana, la semana que viene, otra), repetición (diaria, semanal, mensual) y notificación con «Hecho» y «Dentro de una hora». Sección «Recordatorios» en el menú.
 - ✅ **Compartir a Cenotes**: texto, enlaces e imágenes de cualquier app crean una nota (con su título y su enlace).
 - ✅ **Mosaico de Ajustes rápidos** para una nota nueva.
-- ⏳ **Ecosistema "Ce"** (pendiente: necesita el repositorio de Celander y un cambio en Cemail; Cenotes ya acepta lo que se le comparta desde cualquier app): «Crear evento en Celander» desde una nota con fecha cuando Celander lo permita; y desde Cemail, «Guardar en Cenotes» un correo.
 
 ### Fase 3 · 0.14 — Privacidad y más formas de capturar
 - **Bloquear notas** con la huella o el bloqueo del móvil (`BiometricPrompt`); la tarjeta muestra solo el título y un candado.
@@ -64,6 +63,9 @@
 - Accesibilidad con TalkBack revisada en todas las pantallas.
 - Historial de versiones de una nota (las últimas 20 ediciones, para deshacer un borrado grande).
 - Orden a mano de las notas arrastrando las tarjetas (viene de la fase 1).
+
+## Futuro (no se hace todavía)
+- **Enlaces entre las apps "Ce"**: «Crear evento en Celander» desde una nota con fecha, y «Guardar en Cenotes» un correo desde Cemail. Se hará cuando las tres apps estén claras y se decida junto con Cemail y Celander; hoy ninguna enlaza con otra.
 
 ## Cómo se decide qué entra
 1. ¿Lo usaría alguien cada semana? Si no, no entra o va escondido en «⋮».
