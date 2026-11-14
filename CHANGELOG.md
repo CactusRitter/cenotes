@@ -8,6 +8,7 @@ Cada versión se guarda en Google Drive (`Mi unidad/Notas app/Cenotes-x.y.z.apk`
 - Tabletas: un único fondo detrás de todo y `ScreenBackground`/`LocalSharedBackdrop` para que los paneles y Ajustes no pinten el suyo (había un corte visible entre lista y nota).
 - Textos «teléfono/móvil/Handy/phone» → «dispositivo/Gerät/device». Arreglados caracteres estropeados en `ReminderViews.kt` (`Â·` en los recordatorios que se repiten).
 - Base de datos v8, copia formato 8 (el lugar va con la nota, por nombre).
+- Compartido con Cemail: `DateTimeDialog` (Cemail 2.2.5) y los textos «dispositivo» en vez de «teléfono». Registro en `Cemail/docs/ECOSYSTEM.md`.
 
 ## 0.16.0 — 2026-11-14 (fase 5 del plan)
 - Orden a mano (`NoteSort.MANUAL`, `Note.position`; los mayores primero, las notas nuevas arriba): mantener pulsada una tarjeta la selecciona como siempre y, si se mueve el dedo, se arrastra (`ui/CardReorder.kt`); las demás se apartan en vivo, la lista se desplaza sola en los bordes y al soltar se guarda (`NotesViewModel.applyOrder`: las notas visibles se reparten sus posiciones, así que las de otras secciones no cambian). Fijadas y no fijadas se ordenan por separado. TalkBack: acciones «Subir» y «Bajar».

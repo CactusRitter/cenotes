@@ -521,19 +521,18 @@ private fun UpdatesPage(settings: AppSettings, repo: SettingsRepository) {
     SettingsCard {
         Text(stringResource(R.string.settings_version, BuildConfig.VERSION_NAME), style = MaterialTheme.typography.titleSmall)
         result?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-        Row {
-            ChoiceChip(stringResource(if (checking) R.string.update_checking else R.string.settings_updates_now), false, enabled = !checking) {
-                checking = true
-                scope.launch {
-                    result = try {
-                        if (updates.check(force = true) != null) foundText else upToDate
-                    } catch (e: kotlinx.coroutines.CancellationException) {
-                        throw e
-                    } catch (e: Exception) {
-                        failed
-                    }
-                    checking = false
+        ChoiceChip(stringResource(if (checking) R.string.update_checking else R.string.settings_updates_now), false, enabled = !checking) {
+            if (checking) return@ChoiceChip
+            checking = true
+            scope.launch {
+                result = try {
+                    if (updates.check(force = true) != null) foundText else upToDate
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    failed
                 }
+                checking = false
             }
         }
     }
