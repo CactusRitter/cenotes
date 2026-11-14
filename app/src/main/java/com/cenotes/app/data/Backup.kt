@@ -44,6 +44,7 @@ class Backup(private val context: Context, private val dao: NoteDao, private val
                         .put("color", n.color)
                         .put("reminderAt", n.reminderAt ?: 0L)
                         .put("reminderRepeat", n.reminderRepeat)
+                        .put("locked", n.locked)
                         .put("labels", JSONArray(labelsOf[n.id].orEmpty().filterNotNull())),
                 )
             }
@@ -140,6 +141,7 @@ class Backup(private val context: Context, private val dao: NoteDao, private val
                     color = o.optInt("color", 0),
                     reminderAt = o.optLong("reminderAt", 0L).takeIf { it > 0L },
                     reminderRepeat = o.optInt("reminderRepeat", 0),
+                    locked = o.optBoolean("locked"),
                 ),
             )
             o.optJSONArray("labels")?.let { names ->
@@ -154,8 +156,8 @@ class Backup(private val context: Context, private val dao: NoteDao, private val
 
     private companion object {
         const val AppId = "Cenotes"
-        /** 1 = notes only (0.7); 2 = + labels and archive (0.8); 3 = + label colours (0.9); 4 = + note colour and creation date (0.12); 5 = + reminders (0.13). All can be imported. The Trash is not exported. */
-        const val Format = 5
+        /** 1 = notes only (0.7); 2 = + labels and archive (0.8); 3 = + label colours (0.9); 4 = + note colour and creation date (0.12); 5 = + reminders (0.13); 6 = + protected notes (0.14). All can be imported. The Trash is not exported. */
+        const val Format = 6
         val SafeName = Regex("""^[\w.-]+$""")
     }
 }

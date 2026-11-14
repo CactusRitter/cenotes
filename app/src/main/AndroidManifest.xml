@@ -55,6 +55,12 @@
             </intent-filter>
         </receiver>
 
+        <!-- "Copy text from picture": Google Play services fetches the text reader (on the phone, no pictures sent)
+             when Cenotes is installed, instead of on first use. -->
+        <meta-data
+            android:name="com.google.mlkit.vision.DEPENDENCIES"
+            android:value="ocr" />
+
         <!-- Quick Settings tile: a new note from anywhere. -->
         <service
             android:name=".NewNoteTile"

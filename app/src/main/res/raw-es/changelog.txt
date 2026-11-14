@@ -1,3 +1,9 @@
+## 0.14.0
+- Notas protegidas: ⋮ → Proteger lleva una nota a Protegidas (en el menú). Desaparece de tus notas, de la búsqueda, de los widgets y de los atajos, y solo se abre con la huella, la cara o el bloqueo de pantalla del móvil: un solo desbloqueo abre todas hasta que sales de Cenotes o pulsas Bloquear. Sus recordatorios solo dicen «Nota protegida».
+- Exportar: ⋮ → Exportar guarda o envía una nota en PDF (con sus imágenes), Markdown o texto.
+- Dictar: el micrófono de la barra de formato escribe lo que dices donde está el cursor.
+- Texto de las imágenes: en el menú de una imagen, Copiar el texto de la imagen lo lee en el móvil y lo añade debajo.
+
 ## 0.13.0
 - Recordatorios: ⋮ → Recordarme en cualquier nota. Elige más tarde hoy, mañana por la mañana, este fin de semana, la semana que viene o tu propia fecha y hora, una vez o cada día, semana o mes. La notificación trae Hecho y, en los de una vez, Dentro de una hora. El chip de la campana sale en la nota y en su tarjeta, y el menú tiene una sección Recordatorios con el siguiente primero. Siguen funcionando tras reiniciar el móvil.
 - Compartir a Cenotes: comparte texto, un enlace o fotos desde cualquier app y se convierten en una nota nueva.

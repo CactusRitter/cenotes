@@ -1,3 +1,9 @@
+## 0.14.0
+- Geschützte Notizen: ⋮ → Schützen verschiebt eine Notiz nach Geschützt (im Menü). Sie verschwindet aus deinen Notizen, der Suche, den Widgets und Verknüpfungen und öffnet sich nur mit Fingerabdruck, Gesicht oder Displaysperre: Ein Entsperren öffnet alle, bis du Cenotes verlässt oder auf Sperren tippst. Ihre Erinnerungen zeigen nur „Geschützte Notiz“.
+- Exportieren: ⋮ → Exportieren speichert oder sendet eine Notiz als PDF (mit Bildern), Markdown oder Text.
+- Diktieren: Das Mikrofon in der Formatleiste schreibt, was du sagst, an die Stelle des Cursors.
+- Text aus Bildern: Im Menü eines Bildes liest Text aus dem Bild kopieren den Text auf dem Handy und fügt ihn darunter ein.
+
 ## 0.13.0
 - Erinnerungen: ⋮ → Erinnern bei jeder Notiz. Wähle später heute, morgen früh, dieses Wochenende, nächste Woche oder ein eigenes Datum mit Uhrzeit, einmal oder jeden Tag, jede Woche oder jeden Monat. Die Benachrichtigung hat Erledigt und, bei einmaligen Erinnerungen, In einer Stunde. Das Glocken-Chip erscheint an der Notiz und ihrer Karte, und im Menü gibt es Erinnerungen, die nächste zuerst. Sie funktionieren auch nach einem Neustart.
 - An Cenotes teilen: Teile Text, einen Link oder Fotos aus jeder App, und daraus wird eine neue Notiz.

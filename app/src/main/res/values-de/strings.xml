@@ -238,4 +238,36 @@
     <string name="reminder_done">Erledigt</string>
     <string name="reminder_snooze">In einer Stunde</string>
     <string name="tile_new_note">Neue Notiz</string>
+
+    <!-- 0.14: geschützte Notizen, Exportieren, Diktieren, Text aus Bildern -->
+    <string name="section_locked">Geschützt</string>
+    <string name="locked_note">Geschützte Notiz</string>
+    <string name="locked_note_body">Öffne sie in Cenotes, um sie zu sehen.</string>
+    <string name="locked_one">Notiz geschützt</string>
+    <string name="locked_many">%1$d Notizen geschützt</string>
+    <string name="unlocked_one">Notiz nicht mehr geschützt</string>
+    <string name="unlocked_many">%1$d Notizen nicht mehr geschützt</string>
+    <string name="unlock_title">Geschützte Notizen</string>
+    <string name="unlock_body">Nutze Fingerabdruck, Gesicht oder Displaysperre</string>
+    <string name="locked_info">Öffne sie mit Fingerabdruck, Gesicht oder der Displaysperre deines Handys. Sie werden wieder gesperrt, wenn du Cenotes verlässt.</string>
+    <string name="locked_no_lock">Um Notizen zu schützen, richte zuerst in den Einstellungen des Handys eine Displaysperre ein (PIN, Muster, Passwort oder Fingerabdruck).</string>
+    <string name="locked_open_info">Entsperrt. Sie werden wieder gesperrt, wenn du Cenotes verlässt.</string>
+    <string name="lock">Sperren</string>
+    <string name="unlock">Entsperren</string>
+    <string name="lock_note">Schützen</string>
+    <string name="unlock_note">Nicht mehr schützen</string>
+    <string name="empty_locked">Keine geschützten Notizen.\nÖffne eine Notiz und wähle ⋮ → Schützen.</string>
+    <string name="export">Exportieren</string>
+    <string name="export_pdf_body">Zum Drucken oder Senden, mit Bildern</string>
+    <string name="export_markdown_body">Die Notiz so, wie sie gespeichert ist, für andere Notiz-Apps</string>
+    <string name="export_text">Text</string>
+    <string name="export_text_body">Reiner Text ohne Formatierung</string>
+    <string name="export_failed">Die Notiz konnte nicht exportiert werden.</string>
+    <string name="dictate">Diktieren</string>
+    <string name="dictate_prompt">Sag, was du schreiben möchtest</string>
+    <string name="dictate_unavailable">Dieses Handy hat keine Spracherkennung.</string>
+    <string name="image_text">Text aus dem Bild kopieren</string>
+    <string name="image_text_none">Im Bild wurde kein Text gefunden.</string>
+    <string name="image_text_failed">Das Bild konnte nicht gelesen werden.</string>
+    <string name="image_text_preparing">Der Textleser wird auf dem Handy vorbereitet… Versuche es gleich noch einmal.</string>
 </resources>

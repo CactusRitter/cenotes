@@ -16,13 +16,13 @@
 | Ordenar notas (editada, creada, a mano) | a mano | ✅ | ✅ | **Ya está** salvo a mano (0.12) |
 | **Recordatorios** con notificación | ✅ | ✅ | ✅ | **Ya está** (0.13) |
 | **Compartir hacia Cenotes** desde otras apps | ✅ | ✅ | ✅ | **Ya está** (0.13) |
-| Bloquear notas con huella o PIN | — | ✅ | — | **Sí** (fase 3) |
-| Notas de voz (con texto transcrito) | ✅ | ✅ | — | **Sí** (fase 3) |
-| Copiar texto de una foto (OCR) | ✅ | ✅ | — | Sí, en el dispositivo (fase 3) |
+| Bloquear notas con huella o PIN | — | ✅ | — | **Ya está** (0.14, sección Protegidas) |
+| Notas de voz (con texto transcrito) | ✅ | ✅ | — | Dictado **ya está** (0.14); grabar audio, fase 5 |
+| Copiar texto de una foto (OCR) | ✅ | ✅ | — | **Ya está** (0.14) |
 | Dibujo a mano | ✅ | ✅ (S Pen, muy completo) | — | Sencillo (fase 4) |
 | Enlaces entre notas, bloques desplegables, menú «/» | — | — | ✅ | Ligero (fase 4) |
 | Plantillas | — | ✅ | ✅ | Pocas y fijas (fase 4) |
-| Exportar a PDF / Markdown / texto | Docs | ✅ PDF, Word | ✅ | **Sí** (fase 3) |
+| Exportar a PDF / Markdown / texto | Docs | ✅ PDF, Word | ✅ | **Ya está** (0.14) |
 | Historial de versiones de una nota | — | — | ✅ | Más adelante |
 | Tabletas: lista y nota a la vez | ✅ | ✅ | ✅ | Como Cemail (fase 5) |
 | Fuentes, tamaños y colores de texto, páginas, maquetación | — | ✅ (como Word) | — | **No**: lo hace difícil |
@@ -45,11 +45,13 @@
 - ✅ **Compartir a Cenotes**: texto, enlaces e imágenes de cualquier app crean una nota (con su título y su enlace).
 - ✅ **Mosaico de Ajustes rápidos** para una nota nueva.
 
-### Fase 3 · 0.14 — Privacidad y más formas de capturar
-- **Bloquear notas** con la huella o el bloqueo del móvil (`BiometricPrompt`); la tarjeta muestra solo el título y un candado.
-- **Notas de voz**: grabar dentro de la nota; el texto se transcribe en el móvil y se puede buscar.
-- **Texto de una imagen** (OCR en el dispositivo, sin enviar la foto a ningún sitio).
-- **Exportar** una nota a PDF, Markdown o texto, y compartirla así.
+### Fase 3 · 0.14 — Privacidad y más formas de capturar ✅ hecha en 0.14.0 (salvo grabar audio)
+- ✅ **Notas protegidas**: sección «Protegidas» que se abre entera con la huella, la cara o el bloqueo del móvil y se cierra al salir de Cenotes.
+- ✅ **Dictar**: el texto dicho se escribe en la nota (reconocimiento de voz de Android).
+- ⏳ **Notas de voz grabadas** (guardar el audio en la nota para escucharlo): pasa a la fase 5.
+- ✅ **Texto de una imagen** (OCR en el móvil con ML Kit de Google Play, sin enviar la foto).
+- ✅ **Exportar** una nota a PDF, Markdown o texto.
+- Posible mejora: cifrar el contenido de las notas protegidas con una clave del Android Keystore.
 
 ### Fase 4 · 0.15 — Un editor un poco más potente, sin volverse Word
 - **Menú «/»**: escribir «/» al empezar una línea ofrece casilla, lista, título, cita, código, imagen, separador.
@@ -63,6 +65,7 @@
 - Accesibilidad con TalkBack revisada en todas las pantallas.
 - Historial de versiones de una nota (las últimas 20 ediciones, para deshacer un borrado grande).
 - Orden a mano de las notas arrastrando las tarjetas (viene de la fase 1).
+- Notas de voz grabadas, con reproductor en la nota (viene de la fase 3).
 
 ## Futuro (no se hace todavía)
 - **Enlaces entre las apps "Ce"**: «Crear evento en Celander» desde una nota con fecha, y «Guardar en Cenotes» un correo desde Cemail. Se hará cuando las tres apps estén claras y se decida junto con Cemail y Celander; hoy ninguna enlaza con otra.

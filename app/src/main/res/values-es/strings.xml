@@ -240,4 +240,36 @@
     <string name="reminder_done">Hecho</string>
     <string name="reminder_snooze">Dentro de una hora</string>
     <string name="tile_new_note">Nota nueva</string>
+
+    <!-- 0.14: notas protegidas, exportar, dictado, texto de imágenes -->
+    <string name="section_locked">Protegidas</string>
+    <string name="locked_note">Nota protegida</string>
+    <string name="locked_note_body">Ábrela en Cenotes para verla.</string>
+    <string name="locked_one">Nota protegida</string>
+    <string name="locked_many">%1$d notas protegidas</string>
+    <string name="unlocked_one">La nota ya no está protegida</string>
+    <string name="unlocked_many">%1$d notas ya no están protegidas</string>
+    <string name="unlock_title">Notas protegidas</string>
+    <string name="unlock_body">Usa la huella, la cara o el bloqueo de pantalla</string>
+    <string name="locked_info">Ábrelas con la huella, la cara o el bloqueo de pantalla del móvil. Se vuelven a bloquear al salir de Cenotes.</string>
+    <string name="locked_no_lock">Para proteger notas, primero pon un bloqueo de pantalla (PIN, patrón, contraseña o huella) en los ajustes del móvil.</string>
+    <string name="locked_open_info">Desbloqueadas. Se vuelven a bloquear al salir de Cenotes.</string>
+    <string name="lock">Bloquear</string>
+    <string name="unlock">Desbloquear</string>
+    <string name="lock_note">Proteger</string>
+    <string name="unlock_note">Dejar de proteger</string>
+    <string name="empty_locked">No hay notas protegidas.\nAbre una nota y elige ⋮ → Proteger.</string>
+    <string name="export">Exportar</string>
+    <string name="export_pdf_body">Para imprimir o enviar, con sus imágenes</string>
+    <string name="export_markdown_body">La nota tal como se guarda, para otras apps de notas</string>
+    <string name="export_text">Texto</string>
+    <string name="export_text_body">Texto sin formato</string>
+    <string name="export_failed">No se pudo exportar la nota.</string>
+    <string name="dictate">Dictar</string>
+    <string name="dictate_prompt">Di lo que quieres escribir</string>
+    <string name="dictate_unavailable">Este móvil no tiene reconocimiento de voz.</string>
+    <string name="image_text">Copiar el texto de la imagen</string>
+    <string name="image_text_none">No hay texto en la imagen.</string>
+    <string name="image_text_failed">No se pudo leer la imagen.</string>
+    <string name="image_text_preparing">Preparando el lector de texto en el móvil… Inténtalo de nuevo en un momento.</string>
 </resources>

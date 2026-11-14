@@ -244,4 +244,38 @@
     <string name="reminder_done">Done</string>
     <string name="reminder_snooze">In an hour</string>
     <string name="tile_new_note">New note</string>
+
+    <!-- 0.14: protected notes, export, dictation, text from pictures -->
+    <string name="section_locked">Protected</string>
+    <string name="locked_note">Protected note</string>
+    <string name="locked_note_body">Open it in Cenotes to see it.</string>
+    <string name="locked_one">Note protected</string>
+    <string name="locked_many">%1$d notes protected</string>
+    <string name="unlocked_one">Note no longer protected</string>
+    <string name="unlocked_many">%1$d notes no longer protected</string>
+    <string name="unlock_title">Protected notes</string>
+    <string name="unlock_body">Use your fingerprint, face or screen lock</string>
+    <string name="locked_info">Open them with your phone\'s fingerprint, face or screen lock. They lock again when you leave Cenotes.</string>
+    <string name="locked_no_lock">To protect notes, first set a screen lock (PIN, pattern, password or fingerprint) in your phone\'s settings.</string>
+    <string name="locked_open_info">Unlocked. They lock again when you leave Cenotes.</string>
+    <string name="lock">Lock</string>
+    <string name="unlock">Unlock</string>
+    <string name="lock_note">Protect</string>
+    <string name="unlock_note">Stop protecting</string>
+    <string name="empty_locked">No protected notes.\nOpen a note and choose ⋮ → Protect.</string>
+    <string name="export">Export</string>
+    <string name="export_pdf" translatable="false">PDF</string>
+    <string name="export_pdf_body">To print or send, with its pictures</string>
+    <string name="export_markdown" translatable="false">Markdown</string>
+    <string name="export_markdown_body">The note as it is stored, for other notes apps</string>
+    <string name="export_text">Text</string>
+    <string name="export_text_body">Plain text, without formatting</string>
+    <string name="export_failed">The note could not be exported.</string>
+    <string name="dictate">Dictate</string>
+    <string name="dictate_prompt">Say what to write</string>
+    <string name="dictate_unavailable">This phone has no speech recognition.</string>
+    <string name="image_text">Copy text from picture</string>
+    <string name="image_text_none">No text found in the picture.</string>
+    <string name="image_text_failed">The picture could not be read.</string>
+    <string name="image_text_preparing">Preparing the text reader on your phone… Try again in a moment.</string>
 </resources>

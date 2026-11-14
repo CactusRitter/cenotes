@@ -2,6 +2,13 @@
 
 Cada versión se guarda en Google Drive (`Mi unidad/Notas app/Cenotes-x.y.z.apk`, sin reemplazar la anterior) y, desde la 0.11.0, también como *release* de GitHub (`vx.y.z`, con el APK), que es de donde la app avisa de versiones nuevas. Lo que ve el usuario en Ajustes → Actualizaciones está en `app/src/main/res/raw*/changelog.txt` (inglés, español y alemán).
 
+## 0.14.0 — 2026-11-14 (fase 3 del plan)
+- Notas protegidas (`Note.locked`, sección `Section.Locked` «Protegidas»): se ocultan de la lista, búsqueda, etiquetas, recordatorios, widgets y atajos; se abren con el bloqueo del móvil (`androidx.biometric`, huella/cara o PIN; `ui/Unlock.kt`). Un desbloqueo abre todas hasta salir de Cenotes (`MainActivity.onStop`) o pulsar «Bloquear». Las notas nuevas creadas dentro de Protegidas nacen protegidas; las que llegan de fuera (compartir, mosaico, atajos) nunca. En la papelera, tapadas mientras estén bloqueadas. Es un bloqueo de privacidad: el contenido no se cifra en el móvil (sigue en la base de datos privada de la app).
+- Exportar a PDF (A4 con imágenes, `PdfDocument`), Markdown (con las imágenes) o texto, por el menú de compartir (`ui/Export.kt`).
+- Dictar en la barra de formato (`RecognizerIntent`).
+- Copiar el texto de una imagen con ML Kit de Google Play services (`play-services-mlkit-text-recognition`, modelo descargado por Android; el incluido en la app hacía el APK de 17 a 60 MB).
+- `MainActivity` es ahora `FragmentActivity` (lo pide la ventana de huella). Base de datos v6, copia formato 6.
+
 ## 0.13.0 — 2026-11-14 (fase 2 del plan)
 - Recordatorios (`Note.reminderAt`, `Note.reminderRepeat` con `Repeat`): una alarma exacta (`AlarmManager.setExactAndAllowWhileIdle`, permiso `USE_EXACT_ALARM`) para el más próximo; al saltar se muestran todos los vencidos y los que se repiten pasan a la siguiente vez (`notify/Reminders.kt`). Notificación con «Hecho» y «Dentro de una hora» (solo los de una vez); se reprograman tras reiniciar, actualizar la app o cambiar la hora. Diálogo con las mismas opciones rápidas que «Posponer» de Cemail (`ReminderDialog`); chip en la nota y en la tarjeta (corto, con ↻); sección Recordatorios en el menú. Permiso de notificaciones al poner el primero (Android 13+).
 - Compartir a Cenotes (texto, enlaces e imágenes, `LaunchAction.Shared`): crea una nota con el asunto como título.

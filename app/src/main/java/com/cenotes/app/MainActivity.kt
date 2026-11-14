@@ -2,7 +2,7 @@ package com.cenotes.app
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.activity.ComponentActivity
+import androidx.fragment.app.FragmentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedContent
@@ -47,7 +47,8 @@ private suspend fun PointerInputScope.blockAllTouches() {
     }
 }
 
-class MainActivity : ComponentActivity() {
+// A FragmentActivity (still a ComponentActivity) so the phone's fingerprint/PIN prompt can be shown for protected notes.
+class MainActivity : FragmentActivity() {
     /** Request from a launcher shortcut or widget, consumed by the UI. */
     private var pendingAction by mutableStateOf<LaunchAction?>(null)
 
@@ -106,9 +107,21 @@ class MainActivity : ComponentActivity() {
                 }
 
                 LaunchedEffect(pendingAction) {
+                    // Notes started from outside (shortcuts, the tile, a widget, "Share") never go to "Protected" by themselves.
+                    if ((pendingAction is LaunchAction.NewNote || pendingAction is LaunchAction.Shared) && vm.section.value == com.cenotes.app.ui.Section.Locked) {
+                        vm.showSection(com.cenotes.app.ui.Section.All)
+                    }
                     when (val action = pendingAction) {
                         is LaunchAction.NewNote -> startNewNote(action.template, action.title)
-                        is LaunchAction.OpenNote -> openNote(action.id)
+                        // A protected note (from a reminder, say) opens only once unlocked: until then, its section,
+                        // which asks for the phone's lock.
+                        is LaunchAction.OpenNote -> if (vm.load(action.id)?.locked == true && !vm.unlocked.value) {
+                            showSettings = false
+                            editingId = null
+                            vm.showSection(com.cenotes.app.ui.Section.Locked)
+                        } else {
+                            openNote(action.id)
+                        }
                         // Shared from another app: the pictures are copied into Cenotes first, then the new note
                         // opens with the text (or link) and the pictures, ready to edit or simply leave.
                         is LaunchAction.Shared -> {
@@ -194,6 +207,14 @@ class MainActivity : ComponentActivity() {
                 }
                 }
             }
+        }
+    }
+
+    // Leaving Cenotes (home, another app, the screen going off) locks the protected notes again.
+    override fun onStop() {
+        super.onStop()
+        if (!isChangingConfigurations) {
+            androidx.lifecycle.ViewModelProvider(this, NotesViewModel.Factory)[NotesViewModel::class.java].lock()
         }
     }
 

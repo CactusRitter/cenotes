@@ -71,6 +71,8 @@ fun NoteImage(
     onToggleSize: () -> Unit,
     onDelete: () -> Unit,
     modifier: Modifier = Modifier,
+    /** Reads the text in the picture (on the phone) and adds it to the note; null = not offered. */
+    onExtractText: (() -> Unit)? = null,
 ) {
     var menuOpen by remember { mutableStateOf(false) }
     val shape = RoundedCornerShape(if (small) 16.dp else 20.dp)
@@ -105,6 +107,9 @@ fun NoteImage(
                     text = { Text(stringResource(if (small) R.string.image_make_large else R.string.image_make_small)) },
                     onClick = { menuOpen = false; onToggleSize() },
                 )
+                if (onExtractText != null) {
+                    DropdownMenuItem(text = { Text(stringResource(R.string.image_text)) }, onClick = { menuOpen = false; onExtractText() })
+                }
                 DropdownMenuItem(
                     text = { Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error) },
                     onClick = { menuOpen = false; onDelete() },

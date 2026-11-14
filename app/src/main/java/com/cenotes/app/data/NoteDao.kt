@@ -32,6 +32,9 @@ abstract class NoteDao {
     @Query("SELECT id FROM notes WHERE trashedAt IS NOT NULL")
     abstract suspend fun trashIds(): List<Long>
 
+    @Query("UPDATE notes SET locked = :locked WHERE id IN (:ids)")
+    abstract suspend fun setLocked(ids: Collection<Long>, locked: Boolean)
+
     @Query("UPDATE notes SET color = :color WHERE id IN (:ids)")
     abstract suspend fun setColor(ids: Collection<Long>, color: Int)
 

@@ -1,5 +1,8 @@
 package com.cenotes.app.ui
 
+import com.cenotes.app.ui.theme.MicIcon
+import com.cenotes.app.ui.theme.LockOpenIcon
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Notifications
 import com.cenotes.app.data.Repeat
 import com.cenotes.app.data.Reminder
@@ -182,7 +185,11 @@ fun NoteEditorScreen(
     var pickingColor by remember { mutableStateOf(false) }
     var reminderAt by rememberSaveable(noteId) { mutableStateOf<Long?>(null) }
     var reminderRepeat by rememberSaveable(noteId) { mutableStateOf(0) }
+    var locked by rememberSaveable(noteId) { mutableStateOf(false) }
     var pickingReminder by remember { mutableStateOf(false) }
+    var exporting by remember { mutableStateOf(false) }
+    val noLockText = stringResource(R.string.locked_no_lock)
+    val exportFailedText = stringResource(R.string.export_failed)
     val askNotifications = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
     // A new note created while looking at a label starts with that label.
     var labelIds by rememberSaveable(noteId) {
@@ -217,6 +224,7 @@ fun NoteEditorScreen(
             color = note.color
             reminderAt = note.reminderAt
             reminderRepeat = note.reminderRepeat
+            locked = note.locked
             labelIds = viewModel.labelIdsOf(noteId)
         }
         loaded = true
@@ -249,6 +257,26 @@ fun NoteEditorScreen(
             }
         }
     }
+    // ---- Dictation: Android's speech recognition (on the phone where it can), into the line being edited ----
+    var dictateTarget by remember { mutableStateOf<Long?>(null) }
+    val dictation = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        val text = result.data?.getStringArrayListExtra(android.speech.RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()
+        if (text != null) editor.insertText(dictateTarget, text)
+    }
+    val dictatePrompt = stringResource(R.string.dictate_prompt)
+    val dictateMissing = stringResource(R.string.dictate_unavailable)
+    fun dictate() {
+        dictateTarget = editor.focusedId ?: editor.lastFocusedId
+        val intent = Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+            .putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            .putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, dictatePrompt)
+        try {
+            dictation.launch(intent)
+        } catch (e: android.content.ActivityNotFoundException) {
+            Toast.makeText(context, dictateMissing, Toast.LENGTH_LONG).show()
+        }
+    }
+
     fun openGallery() = pickImages.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
     fun openCamera() {
         val target = images.newCameraTarget()
@@ -369,10 +397,30 @@ fun NoteEditorScreen(
                                 leadingIcon = { Icon(Icons.Filled.Notifications, null) },
                                 onClick = { moreMenuOpen = false; pickingReminder = true },
                             )
+                            // Protect: the note leaves the list for "Protected" (it opens with the phone's lock), with undo.
+                            DropdownMenuItem(
+                                text = { Text(stringResource(if (locked) R.string.unlock_note else R.string.lock_note)) },
+                                leadingIcon = { Icon(if (locked) LockOpenIcon else Icons.Filled.Lock, null) },
+                                onClick = {
+                                    moreMenuOpen = false
+                                    if (!locked && !Unlock.available(context)) {
+                                        Toast.makeText(context, noLockText, Toast.LENGTH_LONG).show()
+                                    } else if (!closed) {
+                                        closed = true
+                                        if (loaded) viewModel.saveAndLock(original, title, editor.toMarkdown(), pinned, labelIds, archived, color, Reminder(reminderAt, Repeat.of(reminderRepeat)), !locked)
+                                        onClose()
+                                    }
+                                },
+                            )
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.note_color)) },
                                 leadingIcon = { Icon(PaletteIcon, null) },
                                 onClick = { moreMenuOpen = false; pickingColor = true },
+                            )
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.export)) },
+                                leadingIcon = { Icon(OpenInNewIcon, null) },
+                                onClick = { moreMenuOpen = false; exporting = true },
                             )
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.share)) },
@@ -475,6 +523,7 @@ fun NoteEditorScreen(
                         editor.focused?.let { linkTarget = it.id to it.value.selection }
                     },
                     onImage = ::openGallery,
+                    onDictate = ::dictate,
                 )
             }
         }
@@ -511,6 +560,18 @@ fun NoteEditorScreen(
 
     if (pickingColor) {
         NoteColorDialog(color, onPick = { color = it }, onDismiss = { pickingColor = false })
+    }
+    if (exporting) {
+        ExportDialog(
+            onPick = { format ->
+                exporting = false
+                scope.launch {
+                    runCatching { context.startActivity(exportNote(context, title, editor.toMarkdown(), images, format)) }
+                        .onFailure { Toast.makeText(context, exportFailedText, Toast.LENGTH_SHORT).show() }
+                }
+            },
+            onDismiss = { exporting = false },
+        )
     }
     if (pickingReminder) {
         ReminderDialog(
@@ -728,6 +789,11 @@ private fun ImageBlock(
     modifier: Modifier,
 ) {
     val file = fileFor(block.imageName)
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val noText = stringResource(R.string.image_text_none)
+    val failed = stringResource(R.string.image_text_failed)
+    val preparing = stringResource(R.string.image_text_preparing)
     NoteImage(
         file = file,
         small = block.small,
@@ -735,6 +801,22 @@ private fun ImageBlock(
         onToggleSize = { block.small = !block.small },
         onDelete = { editor.removeImage(block) },
         modifier = modifier,
+        // The text in the picture, read on the phone, goes under it (under the whole row of a gallery of small ones).
+        onExtractText = {
+            scope.launch {
+                val text = runCatching { textFromImage(context, file) }.getOrElse { e ->
+                    Toast.makeText(context, if (e is TextReaderNotReady) preparing else failed, Toast.LENGTH_LONG).show()
+                    return@launch
+                }
+                if (text.isEmpty()) {
+                    Toast.makeText(context, noText, Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
+                var after = editor.blocks.indexOf(block)
+                while (after + 1 < editor.blocks.size && editor.blocks[after + 1].type == BlockType.IMAGE) after++
+                editor.blocks.getOrNull(after)?.let { editor.insertTextAfter(it, text) }
+            }
+        },
     )
 }
 
@@ -872,7 +954,7 @@ private fun BlockField(
 
 /** Glass formatting bar that sits above the keyboard while a line is being edited. */
 @Composable
-private fun FormatToolbar(editor: BlockEditorState, onLink: () -> Unit, onImage: () -> Unit) {
+private fun FormatToolbar(editor: BlockEditorState, onLink: () -> Unit, onImage: () -> Unit, onDictate: () -> Unit) {
     val focused = editor.focused
     val type = focused?.type
     Row(
@@ -885,6 +967,8 @@ private fun FormatToolbar(editor: BlockEditorState, onLink: () -> Unit, onImage:
             .padding(horizontal = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        // Speak instead of typing: Android's own speech recognition writes it where the cursor is.
+        ToolIcon(MicIcon, stringResource(R.string.dictate), false, onClick = onDictate)
         ToolIcon(CheckBoxIcon, stringResource(R.string.fmt_checklist), type == BlockType.TASK) {
             editor.toggleType(BlockType.TASK)
         }

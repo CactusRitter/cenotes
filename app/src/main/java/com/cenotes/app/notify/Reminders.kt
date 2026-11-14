@@ -93,8 +93,14 @@ object Reminders {
         if (!allowed(context)) return
         val id = note.id.toInt()
         val text = markdownToPlainText(note.content).trim()
-        val title = note.title.ifBlank { text.lineSequence().firstOrNull().orEmpty() }.ifBlank { context.getString(R.string.untitled) }
-        val body = if (note.title.isBlank()) text.lineSequence().drop(1).joinToString("\n").trim() else text
+        // A protected note never shows what it says outside the app (the lock screen included).
+        val title = if (note.locked) context.getString(R.string.locked_note)
+        else note.title.ifBlank { text.lineSequence().firstOrNull().orEmpty() }.ifBlank { context.getString(R.string.untitled) }
+        val body = when {
+            note.locked -> context.getString(R.string.locked_note_body)
+            note.title.isBlank() -> text.lineSequence().drop(1).joinToString("\n").trim()
+            else -> text
+        }
         val open = PendingIntent.getActivity(
             context, id,
             Intent(context, MainActivity::class.java)

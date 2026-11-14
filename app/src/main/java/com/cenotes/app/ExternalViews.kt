@@ -25,7 +25,7 @@ object ExternalViews {
 
     private suspend fun updatePinnedShortcuts(context: Context) {
         val app = context.applicationContext as CenotesApp
-        val pinned = app.database.noteDao().all().filter { it.pinned && !it.archived }.take(MaxPinnedShortcuts)
+        val pinned = app.database.noteDao().all().filter { it.pinned && !it.archived && !it.locked }.take(MaxPinnedShortcuts)
         val shortcuts = pinned.mapIndexed { i, note ->
             val label = note.title.ifBlank {
                 markdownToPlainText(note.content).lineSequence().firstOrNull { it.isNotBlank() }?.trim()

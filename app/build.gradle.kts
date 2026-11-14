@@ -12,8 +12,8 @@ android {
         applicationId = "com.cenotes.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 22
-        versionName = "0.13.0"
+        versionCode = 23
+        versionName = "0.14.0"
     }
 
     buildTypes {
@@ -56,5 +56,7 @@ dependencies {
     implementation(libs.haze)
     implementation(libs.coil.compose)
     implementation(libs.glance.appwidget)
+    implementation(libs.androidx.biometric)
+    implementation(libs.mlkit.text.recognition)
     debugImplementation(libs.androidx.ui.tooling)
 }

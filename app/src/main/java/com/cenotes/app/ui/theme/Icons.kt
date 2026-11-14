@@ -227,3 +227,22 @@ val DeleteForeverIcon: ImageVector by lazy {
             "l2.12,2.12 -1.41,1.41L12,15.41l-2.12,2.12 -1.41,-1.41L10.59,14l-2.13,-2.12zM15.5,4l-1,-1h-5l-1,1H5v2h14V4z",
     )
 }
+
+/** An open padlock: take a note out of "Protected". */
+val LockOpenIcon: ImageVector by lazy {
+    pathIcon(
+        "LockOpen",
+        "M12,17c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM18,8h-1V6c0,-2.76 -2.24,-5 -5,-5S7,3.24 7,6h1.9" +
+            "c0,-1.71 1.39,-3.1 3.1,-3.1 1.71,0 3.1,1.39 3.1,3.1v2H6c-1.1,0 -2,0.9 -2,2v10c0,1.1 0.9,2 2,2h12c1.1,0 2,-0.9 2,-2V10" +
+            "c0,-1.1 -0.9,-2 -2,-2zM18,20H6V10h12v10z",
+    )
+}
+
+/** A microphone: dictate into the note. */
+val MicIcon: ImageVector by lazy {
+    pathIcon(
+        "Mic",
+        "M12,14c1.66,0 2.99,-1.34 2.99,-3L15,5c0,-1.66 -1.34,-3 -3,-3S9,3.34 9,5v6c0,1.66 1.34,3 3,3zM17.3,11" +
+            "c0,3 -2.54,5.1 -5.3,5.1S6.7,14 6.7,11L5,11c0,3.41 2.72,6.23 6,6.72L11,21h2v-3.28c3.28,-0.48 6,-3.3 6,-6.72h-1.7z",
+    )
+}

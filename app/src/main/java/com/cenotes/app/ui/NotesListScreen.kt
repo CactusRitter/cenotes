@@ -1,5 +1,7 @@
 ﻿package com.cenotes.app.ui
 
+import com.cenotes.app.ui.theme.LockOpenIcon
+import androidx.compose.material.icons.filled.Lock
 import com.cenotes.app.data.Repeat
 import androidx.compose.material.icons.filled.Notifications
 import com.cenotes.app.data.TrashDays
@@ -168,6 +170,7 @@ fun NotesListScreen(
     val query by viewModel.query.collectAsStateWithLifecycle()
     val pinnedOnly by viewModel.pinnedOnly.collectAsStateWithLifecycle()
     val selected by viewModel.selected.collectAsStateWithLifecycle()
+    val unlocked by viewModel.unlocked.collectAsStateWithLifecycle()
     val undo by viewModel.undo.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val hazeState = rememberHazeState()
@@ -180,6 +183,16 @@ fun NotesListScreen(
     var confirmForever by remember { mutableStateOf<ForeverTarget?>(null) }
     var manageLabels by remember { mutableStateOf(false) }
     LaunchedEffect(searchRequest) { if (searchRequest > 0) searchOpen = true }
+
+    // Opening "Protected" asks for the phone's lock straight away (and again from its button, if cancelled).
+    val activity = androidx.activity.compose.LocalActivity.current as? androidx.fragment.app.FragmentActivity
+    val unlockTitle = stringResource(R.string.unlock_title)
+    val unlockBody = stringResource(R.string.unlock_body)
+    val askUnlock: () -> Unit = {
+        val a = activity
+        if (a != null && Unlock.available(a)) Unlock.ask(a, unlockTitle, unlockBody) { viewModel.unlock() }
+    }
+    LaunchedEffect(section) { if (section == Section.Locked && !unlocked) askUnlock() }
 
     val selecting = selected.isNotEmpty()
     BackHandler(enabled = selecting) { viewModel.clearSelection() }
@@ -202,6 +215,7 @@ fun NotesListScreen(
         Section.Archive -> stringResource(R.string.section_archive)
         Section.Trash -> stringResource(R.string.section_trash)
         Section.Reminders -> stringResource(R.string.section_reminders)
+        Section.Locked -> stringResource(R.string.section_locked)
         is Section.ByLabel -> labels.firstOrNull { it.id == s.labelId }?.name ?: stringResource(R.string.app_name)
     }
 
@@ -235,6 +249,8 @@ fun NotesListScreen(
                 val list = notes
                 when {
                     list == null -> Unit // Still loading; avoid flashing an empty state.
+                    // Protected notes stay out of sight until the phone's lock is given.
+                    section == Section.Locked && !unlocked -> LockedScreen(onUnlock = askUnlock)
                     list.isEmpty() && query.isBlank() && !pinnedOnly && section == Section.All -> WelcomeCard(
                         onCreate = onNewNote,
                         modifier = Modifier
@@ -249,6 +265,7 @@ fun NotesListScreen(
                                 section == Section.Archive -> R.string.empty_archive
                                 section == Section.Trash -> R.string.empty_trash_list
                                 section == Section.Reminders -> R.string.empty_reminders
+                                section == Section.Locked -> R.string.empty_locked
                                 else -> R.string.empty_label
                             },
                         ),
@@ -267,6 +284,10 @@ fun NotesListScreen(
                         if (section == Section.All && query.isBlank()) {
                             item(key = "update", span = StaggeredGridItemSpan.FullLine) { UpdateBanner() }
                         }
+                        // Protected notes, open: a reminder of it and a button to lock them again at once.
+                        if (section == Section.Locked) {
+                            item(key = "locked", span = StaggeredGridItemSpan.FullLine) { LockedHeader(onLock = viewModel::lock) }
+                        }
                         // The Trash says how long notes stay in it, and can be emptied at once.
                         if (section == Section.Trash) {
                             item(key = "trash", span = StaggeredGridItemSpan.FullLine) {
@@ -279,6 +300,8 @@ fun NotesListScreen(
                                 item = item,
                                 maxLines = if (layout == NoteLayout.GRID) 8 else 4,
                                 selected = id in selected,
+                                // A protected note in the Trash shows nothing of itself until the notes are unlocked.
+                                hidden = item.note.locked && !unlocked,
                                 // While selecting, a tap adds/removes; otherwise it opens the note.
                                 // In the Trash a note is not opened: a tap picks it, to restore it or delete it for good.
                                 onClick = { if (selecting || section == Section.Trash) viewModel.toggleSelected(id) else onOpenNote(id) },
@@ -305,6 +328,7 @@ fun NotesListScreen(
                         count = selected.size,
                         archiveSection = section == Section.Archive,
                         trash = section == Section.Trash,
+                        lockedSection = section == Section.Locked,
                         hazeState = hazeState,
                         onClose = viewModel::clearSelection,
                         onPin = viewModel::pinSelected,
@@ -313,6 +337,7 @@ fun NotesListScreen(
                         onArchive = { viewModel.archiveSelected(section != Section.Archive) },
                         onDelete = viewModel::deleteSelected,
                         onRestore = viewModel::restoreSelected,
+                        onUnprotect = { viewModel.setLockedOnSelected(false) },
                         onDeleteForever = { confirmForever = ForeverTarget.Selection },
                     )
                 } else {
@@ -478,6 +503,7 @@ private fun SelectionBar(
     count: Int,
     archiveSection: Boolean,
     trash: Boolean,
+    lockedSection: Boolean,
     hazeState: HazeState,
     onClose: () -> Unit,
     onPin: () -> Unit,
@@ -487,6 +513,7 @@ private fun SelectionBar(
     onDelete: () -> Unit,
     onRestore: () -> Unit,
     onDeleteForever: () -> Unit,
+    onUnprotect: () -> Unit,
 ) {
     if (trash) {
         Row(Modifier.fillMaxWidth().height(HeaderHeight), verticalAlignment = Alignment.CenterVertically) {
@@ -521,14 +548,74 @@ private fun SelectionBar(
             PillIcon(Icons.Filled.Star, stringResource(R.string.pin_selected), onPin, width = 46.dp)
             PillIcon(PaletteIcon, stringResource(R.string.note_color), onColor, width = 46.dp)
             PillIcon(LabelIcon, stringResource(R.string.labels), onLabel, width = 46.dp)
-            PillIcon(
-                if (archiveSection) UnarchiveIcon else ArchiveIcon,
-                stringResource(if (archiveSection) R.string.unarchive else R.string.archive),
-                onArchive,
-                width = 46.dp,
-            )
+            // In "Protected", the archive place is taken by "take out of Protected".
+            if (lockedSection) {
+                PillIcon(LockOpenIcon, stringResource(R.string.unlock_note), onUnprotect, width = 46.dp)
+            } else {
+                PillIcon(
+                    if (archiveSection) UnarchiveIcon else ArchiveIcon,
+                    stringResource(if (archiveSection) R.string.unarchive else R.string.archive),
+                    onArchive,
+                    width = 46.dp,
+                )
+            }
             PillIcon(Icons.Filled.Delete, stringResource(R.string.delete), onDelete, width = 46.dp)
         }
+    }
+}
+
+/** "Protected" while it is locked: a padlock, a line saying how to open it, and the button that asks for the lock. */
+@Composable
+private fun LockedScreen(onUnlock: () -> Unit) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val available = remember { Unlock.available(context) }
+    Box(Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
+        Column(
+            Modifier
+                .popIn(initialScale = 0.9f)
+                .fillMaxWidth()
+                .glass(RoundedCornerShape(32.dp), GlassKind.Chrome, elevation = 10.dp)
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            IconBubble(56.dp) { Icon(Icons.Filled.Lock, null, tint = MaterialTheme.colorScheme.primary) }
+            Text(stringResource(R.string.section_locked), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Text(
+                stringResource(if (available) R.string.locked_info else R.string.locked_no_lock),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            )
+            if (available) {
+                Button(onClick = onUnlock, shape = LocalSkin.current.shape(CircleShape)) {
+                    Icon(LockOpenIcon, null)
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.unlock), fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    }
+}
+
+/** First row of "Protected" while it is open: they lock again when Cenotes is left, or now with the button. */
+@Composable
+private fun LockedHeader(onLock: () -> Unit) {
+    Row(
+        Modifier
+            .popIn(initialScale = 0.9f)
+            .fillMaxWidth()
+            .glass(RoundedCornerShape(24.dp), GlassKind.Card)
+            .padding(start = 18.dp, end = 8.dp, top = 10.dp, bottom = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            stringResource(R.string.locked_open_info),
+            Modifier.weight(1f),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        TextButton(onClick = onLock) { Text(stringResource(R.string.lock), fontWeight = FontWeight.Bold) }
     }
 }
 
@@ -607,6 +694,9 @@ private fun SideMenu(
             MenuItem(ArchiveIcon, stringResource(R.string.section_archive), section == Section.Archive, colors) {
                 onSection(Section.Archive)
             }
+            MenuItem(Icons.Filled.Lock, stringResource(R.string.section_locked), section == Section.Locked, colors) {
+                onSection(Section.Locked)
+            }
             MenuItem(Icons.Filled.Delete, stringResource(R.string.section_trash), section == Section.Trash, colors) {
                 onSection(Section.Trash)
             }
@@ -677,6 +767,8 @@ private fun NoteCard(
     onClick: () -> Unit,
     onLongClick: () -> Unit,
     modifier: Modifier = Modifier,
+    /** A protected note while locked: only a padlock and "Protected note", nothing of what it says. */
+    hidden: Boolean = false,
 ) {
     val note = item.note
     val shape = LocalSkin.current.shape(RoundedCornerShape(24.dp))
@@ -693,6 +785,14 @@ private fun NoteCard(
                 .then(if (selected) Modifier.border(2.5.dp, primary, shape) else Modifier)
                 .combinedClickable(onClick = onClick, onLongClick = onLongClick),
         ) {
+            if (hidden) {
+                Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Filled.Lock, null, Modifier.size(18.dp), tint = primary)
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.locked_note), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                }
+                return@Column
+            }
             // The note's first image works as its cover, like in Keep.
             if (cover != null) {
                 AsyncImage(

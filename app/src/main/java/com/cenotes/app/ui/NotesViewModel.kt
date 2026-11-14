@@ -35,6 +35,8 @@ sealed interface Section {
     data object Archive : Section
     data object Trash : Section
     data object Reminders : Section
+    /** Protected notes: hidden everywhere else, shown only once unlocked with the phone's fingerprint, face or PIN. */
+    data object Locked : Section
     data class ByLabel(val labelId: Long) : Section
 }
 
@@ -121,11 +123,12 @@ class NotesViewModel(private val app: CenotesApp) : ViewModel() {
         ordered.asSequence()
             .filter { n ->
                 when (val s = f.section) {
-                    Section.All -> !n.archived
-                    Section.Archive -> n.archived
+                    Section.All -> !n.archived && !n.locked
+                    Section.Archive -> n.archived && !n.locked
                     Section.Trash -> true
-                    Section.Reminders -> n.reminderAt != null
-                    is Section.ByLabel -> !n.archived && labelsOf[n.id].orEmpty().any { it.id == s.labelId }
+                    Section.Reminders -> n.reminderAt != null && !n.locked
+                    Section.Locked -> n.locked
+                    is Section.ByLabel -> !n.archived && !n.locked && labelsOf[n.id].orEmpty().any { it.id == s.labelId }
                 }
             }
             .filter { !f.pinnedOnly || it.pinned }
@@ -136,7 +139,7 @@ class NotesViewModel(private val app: CenotesApp) : ViewModel() {
 
     /** Number of active (not archived) notes per label, for the side menu. */
     val labelCounts: StateFlow<Map<Long, Int>> = combine(dao.observeAll(), links) { all, links ->
-        val active = all.filterNot { it.archived }.map { it.id }.toHashSet()
+        val active = all.filterNot { it.archived || it.locked }.map { it.id }.toHashSet()
         links.filter { it.noteId in active }.groupingBy { it.labelId }.eachCount()
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
@@ -203,7 +206,14 @@ class NotesViewModel(private val app: CenotesApp) : ViewModel() {
         archived: Boolean,
         color: Int,
         reminder: Reminder,
-    ) = write { persist(original, title, content, pinned, labelIds, archived, color, reminder) }
+    ) {
+        // A note written while looking at "Protected" is protected from the start.
+        val lockNew = original == null && filter.value.section == Section.Locked
+        write {
+            val id = persist(original, title, content, pinned, labelIds, archived, color, reminder)
+            if (lockNew && id != null) dao.setLocked(listOf(id), true)
+        }
+    }
 
     /**
      * "Delete" in the editor: what is on screen is saved first and then the note goes to the Trash, in one go (so
@@ -298,6 +308,52 @@ class NotesViewModel(private val app: CenotesApp) : ViewModel() {
         if (ids.isEmpty()) return
         write { dao.setTrashed(ids, System.currentTimeMillis()) }
         offerUndo(R.string.note_trashed, R.string.notes_trashed, ids.size) { dao.setTrashed(ids, null) }
+    }
+
+    // ---- Protected notes ----
+
+    private val _unlocked = MutableStateFlow(false)
+
+    /**
+     * Whether the protected notes are open: after the phone's fingerprint, face or PIN, all of them at once, until
+     * Cenotes leaves the screen (or "Lock" is tapped).
+     */
+    val unlocked: StateFlow<Boolean> = _unlocked.asStateFlow()
+
+    fun unlock() { _unlocked.value = true }
+
+    fun lock() {
+        _unlocked.value = false
+        if (filter.value.section == Section.Locked) clearSelection()
+    }
+
+    /** Protects the selected notes, or takes them out of "Protected" ([locked] false), with undo. */
+    fun setLockedOnSelected(locked: Boolean) {
+        val ids = takeSelection()
+        if (ids.isEmpty()) return
+        write { dao.setLocked(ids, locked) }
+        val (one, many) = if (locked) R.string.locked_one to R.string.locked_many else R.string.unlocked_one to R.string.unlocked_many
+        offerUndo(one, many, ids.size) { dao.setLocked(ids, !locked) }
+    }
+
+    /** "Protect" in the editor: what is on screen is saved first and then the note is protected (or not), with undo. */
+    fun saveAndLock(
+        original: Note?,
+        title: String,
+        content: String,
+        pinned: Boolean,
+        labelIds: List<Long>,
+        archived: Boolean,
+        color: Int,
+        reminder: Reminder,
+        locked: Boolean,
+    ) {
+        write {
+            val id = persist(original, title, content, pinned, labelIds, archived, color, reminder) ?: return@write
+            dao.setLocked(listOf(id), locked)
+            val (one, many) = if (locked) R.string.locked_one to R.string.locked_many else R.string.unlocked_one to R.string.unlocked_many
+            offerUndo(one, many, 1) { dao.setLocked(listOf(id), !locked) }
+        }
     }
 
     // ---- Trash ----

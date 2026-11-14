@@ -24,6 +24,8 @@ data class Note(
     val reminderAt: Long? = null,
     /** How the reminder repeats: [Repeat] ordinal (0 = once). */
     @ColumnInfo(defaultValue = "0") val reminderRepeat: Int = 0,
+    /** In "Protected": hidden everywhere else and opened only after the phone's fingerprint, face or PIN. */
+    @ColumnInfo(defaultValue = "0") val locked: Boolean = false,
 )
 
 /** Days a note stays in the Trash before it is deleted for good (like Google Keep). */

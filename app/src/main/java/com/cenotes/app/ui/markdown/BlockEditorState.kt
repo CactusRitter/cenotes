@@ -473,6 +473,34 @@ class BlockEditorState(markdown: String) {
         recomputeParents()
     }
 
+    /** Adds [text] as lines of their own right after [block] (the text read in a picture goes under it). */
+    fun insertTextAfter(block: EditorBlock, text: String) {
+        val index = blocks.indexOf(block)
+        if (index < 0) return
+        val lines = text.lines().map { it.trim() }.filter { it.isNotEmpty() }
+        if (lines.isEmpty()) return
+        val added = lines.map { block(BlockType.PARAGRAPH, it, cursor = it.length) }
+        blocks.addAll(index + 1, added)
+        pendingFocus = added.last().id
+    }
+
+    /**
+     * Puts dictated [text] where the cursor was in block [id] (or at the end of the last line of text), with a space
+     * before it when needed, and gives that line the keyboard again.
+     */
+    fun insertText(id: Long?, text: String) {
+        if (text.isBlank()) return
+        val b = blocks.firstOrNull { it.id == id }
+            ?: blocks.lastOrNull { it.type != BlockType.IMAGE && it.type != BlockType.DIVIDER } ?: return
+        val v = b.value
+        val s = minOf(v.selection.start, v.selection.end).coerceIn(0, v.text.length)
+        val e = maxOf(v.selection.start, v.selection.end).coerceIn(0, v.text.length)
+        val before = v.text.substring(0, s)
+        val insert = (if (before.isNotEmpty() && !before.endsWith(" ")) " " else "") + text.trim()
+        b.value = TextFieldValue(before + insert + v.text.substring(e), TextRange(s + insert.length))
+        pendingFocus = b.id
+    }
+
     fun editFocused(transform: (TextFieldValue) -> TextFieldValue) {
         val b = focused ?: return
         b.value = transform(b.value)

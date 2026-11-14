@@ -1,3 +1,9 @@
+## 0.14.0
+- Protected notes: ⋮ → Protect moves a note to Protected (in the menu). It disappears from your notes, search, widgets and shortcuts, and opens only with your phone's fingerprint, face or screen lock: one unlock opens all of them until you leave Cenotes or tap Lock. Their reminders say only "Protected note".
+- Export: ⋮ → Export saves or sends a note as PDF (with its pictures), Markdown or plain text.
+- Dictate: the microphone in the formatting bar writes what you say where the cursor is.
+- Text from pictures: in a picture's menu, Copy text from picture reads the text on the phone and adds it under the picture.
+
 ## 0.13.0
 - Reminders: ⋮ → Remind me on any note. Pick later today, tomorrow morning, this weekend, next week or your own date and time, once or every day, week or month. The notification has Done and, for one-off reminders, In an hour. The bell chip shows on the note and its card, and the menu has a Reminders section, the next one first. They come back after the phone restarts.
 - Share to Cenotes: share text, a link or pictures from any app and they become a new note.

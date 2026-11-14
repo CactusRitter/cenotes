@@ -2,6 +2,8 @@
 <paths>
     <!-- Camera writes its photo here before it is imported. -->
     <cache-path name="camera" path="camera/" />
+    <!-- A note exported as PDF, Markdown or text, handed to the share sheet. -->
+    <cache-path name="exports" path="exports/" />
     <!-- Note images, shared together with the note text. -->
     <files-path name="images" path="images/" />
     <!-- A downloaded update, handed to Android's installer (Settings → Updates). -->
