@@ -24,7 +24,7 @@ En Windows, `gradlew.bat`. El emulador es `Pixel_API_36`; [scripts/emulator.ps1]
 **Solo cuando César lo diga** (o la sesión líder Ce, si lo dice ella). Mientras tanto, los cambios se acumulan: commit y push a `main`, y cada cambio anotado en la sección «Sin publicar» de arriba de `CHANGELOG.md` (sin subir la versión ni tocar `res/raw*/changelog.txt`). Un fallo grave (la app no arranca, se pierden datos, seguridad) sí se publica al momento, avisando. Al publicar, esa sección pasa a ser la entrada de la versión:
 
 1. Subir `versionCode` y `versionName` en `app/build.gradle.kts`, añadir la entrada en `CHANGELOG.md` y en `res/raw*/changelog.txt` (inglés, español y alemán: es lo que muestra Ajustes → Actualizaciones).
-2. Compilar y copiar el APK a `G:\Mi unidad\Notas app\Cenotes-x.y.z.apk` (nunca borrar ni sustituir los anteriores).
+2. Compilar y copiar el APK a `G:\Mi unidad\Cenotes\Cenotes-x.y.z.apk` (nunca borrar ni sustituir los anteriores).
 3. Commit y push a `main`.
 4. Publicar la *release* en GitHub con el APK y notas con secciones `## en`, `## es`, `## de`: la app avisa de versiones nuevas leyendo la última *release* del repositorio (`update/Updates.kt`). Para que funcione, el repositorio tiene que ser público, como el de Cemail.
 
