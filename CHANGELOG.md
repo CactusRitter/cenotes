@@ -2,6 +2,9 @@
 
 Cada versión se guarda en Google Drive (`Mi unidad/Notas app/Cenotes-x.y.z.apk`, sin reemplazar la anterior) y, desde la 0.11.0, también como *release* de GitHub (`vx.y.z`, con el APK), que es de donde la app avisa de versiones nuevas. Lo que ve el usuario en Ajustes → Actualizaciones está en `app/src/main/res/raw*/changelog.txt` (inglés, español y alemán).
 
+## Sin publicar
+(Nada todavía. Los cambios se apuntan aquí hasta que César, o la sesión Ce, diga que se publique.)
+
 ## 0.18.2 — 2026-11-15
 - Barra de selección: se sigue viendo solo el número (como Cemail 2.2.9, para que no se parta en Retro 98 con cinco botones; comprobado en el emulador), y TalkBack lee «N seleccionadas» (`selected_count_spoken`, en/es/de).
 - Compartido con Cemail: misma regla que su barra de selección en 2.2.9.
