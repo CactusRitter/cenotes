@@ -3,7 +3,11 @@
 Cada versión se guarda en Google Drive (`Mi unidad/Notas app/Cenotes-x.y.z.apk`, sin reemplazar la anterior) y, desde la 0.11.0, también como *release* de GitHub (`vx.y.z`, con el APK), que es de donde la app avisa de versiones nuevas. Lo que ve el usuario en Ajustes → Actualizaciones está en `app/src/main/res/raw*/changelog.txt` (inglés, español y alemán).
 
 ## Sin publicar
+(Nada todavía.)
+
+## 1.0.0 — 2026-11-16 (primera versión completa, publicada por indicación de César a través de la sesión Ce)
 - Retro 98: el botón de nueva nota tiene el mismo color que los demás botones (plateado), no el resaltado blanco (`fabKind()`/`fabTint()`, `SkinLook.fabPinned`). Compartido con Cemail.
+- Pasa a 1.0.0: Cenotes ya tiene todo lo del plan (fases 1 a 5 y recordatorios en un lugar).
 
 ## 0.18.2 — 2026-11-15
 - Barra de selección: se sigue viendo solo el número (como Cemail 2.2.9, para que no se parta en Retro 98 con cinco botones; comprobado en el emulador), y TalkBack lee «N seleccionadas» (`selected_count_spoken`, en/es/de).

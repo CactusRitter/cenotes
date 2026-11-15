@@ -1,3 +1,7 @@
+## 1.0.0
+- Cenotes 1.0: the first complete version. Notes, checklists and collapsible blocks; labels and note colours; reminders at a time or at a place; protected notes; history of each note; export, dictation and text from pictures; trash, archive and your own order; widgets, tablets and the six Ce designs, in English, Spanish and German.
+- Retro 98: the new-note button has the same colour as the other buttons.
+
 ## 0.18.2
 - TalkBack: when you select notes, it says how many are selected, not just the number.
 
