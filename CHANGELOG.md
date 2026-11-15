@@ -2,6 +2,11 @@
 
 Cada versión se guarda en Google Drive (`Mi unidad/Notas app/Cenotes-x.y.z.apk`, sin reemplazar la anterior) y, desde la 0.11.0, también como *release* de GitHub (`vx.y.z`, con el APK), que es de donde la app avisa de versiones nuevas. Lo que ve el usuario en Ajustes → Actualizaciones está en `app/src/main/res/raw*/changelog.txt` (inglés, español y alemán).
 
+## 0.17.1 — 2026-11-15
+- Sombra 3D del cristal suave, copiada de Cemail 2.2.6 (`ui/glass/Glass.kt`, `ui/theme/Skin.kt`, `ui/theme/Theme.kt` iguales que en Cemail salvo el paquete): `SkinLook.lift`/`liftColor`, `liftShadow`, `liftSegment`, `glassDepthColor` nuevo; `glassSegment` gana `wall`/`fillOverride` (Cenotes no los usa). Texto `depth_body` nuevo en en/es/de.
+- Ajustes → Actualizaciones: mismo freno que Cemail para no pulsar dos veces «Buscar ahora».
+- Compartido con Cemail: todo lo anterior viene de Cemail 2.2.6. Registro en `Cemail/docs/ECOSYSTEM.md`.
+
 ## 0.17.0 — 2026-11-14 (tras probar en la tableta de César)
 - Recordatorios en un lugar (`Place`, tabla `places`; `Note.placeId`, `Note.placeLeave`; `Reminder` lleva el lugar): al llegar o al salir de un lugar guardado. El lugar se busca en el dispositivo con el `Geocoder` de Android o con «Estoy aquí» (`FusedLocationProviderClient`), sin mapa ni claves (`ui/PlaceViews.kt`). Las geocercas de Google Play (`play-services-location`, `notify/Places.kt`, radio 150 m, `PlaceReceiver`) avisan aunque Cenotes esté cerrado, con la misma notificación que los de hora; al saltar, el recordatorio de lugar se quita (como Keep). Se vuelven a registrar al reiniciar, al actualizar y al volver a la app (`MainActivity.onStart`). Permiso de ubicación «todo el tiempo» pedido solo al poner el primero, con una explicación antes. Probado en la tableta: búsqueda, permisos y geocerca registrada; el aviso al llegar no se pudo probar sin ir al sitio.
 - Selector de fecha y hora propio (`ui/DateTimeDialog.kt`): tarjeta de cristal con el `DatePicker` y el `TimePicker` de Material 3 en los colores del tema, en vez de los diálogos de Android. Se avisó a la sesión de Cemail para que haga lo mismo en `ScheduleDialog`.

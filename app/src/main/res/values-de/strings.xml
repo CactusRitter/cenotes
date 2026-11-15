@@ -134,7 +134,7 @@
     <string name="skin_body">Das Aussehen der ganzen App. Glas ist das gemeinsame Design mit Celander und Cemail; die anderen werden noch ausprobiert.</string>
     <string name="skin_always_dark">Dieses Design ist immer dunkel.</string>
     <string name="depth_title">3D-Schatten</string>
-    <string name="depth_body">Ein fester Schatten unter Karten und Schaltflächen, wie bei Brutalist.</string>
+    <string name="depth_body">Ein weicher Schatten, der Karten und Schaltflächen vom Hintergrund abhebt, wie Glas darüber.</string>
     <string name="skin_glass">Glas</string>
     <string name="skin_modern">Modern</string>
     <string name="skin_paper">Papier</string>

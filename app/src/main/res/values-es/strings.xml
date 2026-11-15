@@ -134,7 +134,7 @@
     <string name="skin_body">El aspecto de toda la app. Cristal es el que comparte con Celander y Cemail; los demás están en pruebas.</string>
     <string name="skin_always_dark">Este diseño siempre es oscuro.</string>
     <string name="depth_title">Sombra 3D</string>
-    <string name="depth_body">Una sombra sólida bajo tarjetas y botones, como la de Brutalista.</string>
+    <string name="depth_body">Una sombra suave que eleva tarjetas y botones sobre el fondo, como un cristal por encima.</string>
     <string name="skin_glass">Cristal</string>
     <string name="skin_modern">Moderno</string>
     <string name="skin_paper">Papel</string>

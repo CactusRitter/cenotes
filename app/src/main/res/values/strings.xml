@@ -138,7 +138,7 @@
     <string name="skin_body">The look of the whole app. Glass is the one shared with Celander and Cemail; the others are being tried out.</string>
     <string name="skin_always_dark">This design is always dark.</string>
     <string name="depth_title">3D shadow</string>
-    <string name="depth_body">A solid shadow under cards and buttons, like the one in Brutalist.</string>
+    <string name="depth_body">A soft shadow that lifts cards and buttons off the background, like glass standing above it.</string>
     <string name="skin_glass">Glass</string>
     <string name="skin_modern">Modern</string>
     <string name="skin_amoled" translatable="false">AMOLED</string>

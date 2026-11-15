@@ -1,3 +1,6 @@
+## 0.17.1
+- 3D shadow (Settings → Appearance) is now a soft shadow that lifts the glass off the background, the same as in Cemail.
+
 ## 0.17.0
 - Reminders at a place: Remind me → At a place. Choose when you arrive or when you leave, then a place you saved, I'm here, or an address you look up. Places are saved with a name to use again. Cenotes asks once for location "all the time", so it can remind you while it is closed; your location stays on this device.
 - Choosing a date and time is now a Cenotes card that follows your design, instead of Android's grey dialog.

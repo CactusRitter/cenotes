@@ -1,3 +1,6 @@
+## 0.17.1
+- Der 3D-Schatten (Einstellungen → Aussehen) ist jetzt ein weicher Schatten, der das Glas vom Hintergrund abhebt, wie in Cemail.
+
 ## 0.17.0
 - Erinnerungen an einem Ort: Erinnern → An einem Ort. Wähle beim Ankommen oder beim Verlassen, dann einen gespeicherten Ort, Ich bin hier oder eine gesuchte Adresse. Orte werden mit Namen gespeichert, um sie wieder zu verwenden. Cenotes fragt einmal nach dem Standort „immer“, damit es dich auch erinnern kann, wenn es geschlossen ist; dein Standort bleibt auf dem Gerät.
 - Datum und Uhrzeit wählst du jetzt in einer Cenotes-Karte, die deinem Design folgt, statt im grauen Android-Dialog.

@@ -1,3 +1,6 @@
+## 0.17.1
+- La sombra 3D (Ajustes → Apariencia) es ahora una sombra suave que eleva el cristal sobre el fondo, igual que en Cemail.
+
 ## 0.17.0
 - Recordatorios en un lugar: Recordarme → En un lugar. Elige al llegar o al salir y luego un lugar guardado, Estoy aquí o una dirección que buscas. Los lugares se guardan con nombre para volver a usarlos. Cenotes pide una vez la ubicación «todo el tiempo» para avisarte aunque esté cerrado; tu ubicación no sale del dispositivo.
 - Elegir fecha y hora es ahora una tarjeta de Cenotes que sigue tu diseño, en vez del diálogo gris de Android.
