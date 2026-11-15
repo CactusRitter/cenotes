@@ -516,12 +516,12 @@ fun NotesListScreen(
                         .size(60.dp)
                         .glass(
                             LocalSkin.current.fabCorner?.let { RoundedCornerShape(it) } ?: CircleShape,
-                            GlassKind.Pinned, elevation = 10.dp, hazeState = hazeState,
+                            com.cenotes.app.ui.glass.fabKind(), elevation = 10.dp, hazeState = hazeState,
                         )
                         .clickable(role = Role.Button, onClickLabel = stringResource(R.string.new_note), onClick = onNewNote),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Icon(Icons.Filled.Add, stringResource(R.string.new_note), tint = MaterialTheme.colorScheme.primary)
+                    Icon(Icons.Filled.Add, stringResource(R.string.new_note), tint = com.cenotes.app.ui.glass.fabTint())
                 }
             }
 
