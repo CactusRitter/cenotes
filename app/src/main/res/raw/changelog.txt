@@ -1,3 +1,6 @@
+## 0.18.1
+- Settings: the cards keep their shadow on the sides too, instead of it being cut at the edge.
+
 ## 0.18.0
 - The side menu looks like Cemail's: a floating card with Settings in its top corner, Notes, Reminders, Archive, Protected and Trash as buttons, and your labels below with their colour and count. Tap around it to close it.
 
