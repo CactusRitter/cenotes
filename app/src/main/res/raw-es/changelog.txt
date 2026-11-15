@@ -1,3 +1,6 @@
+## 0.18.2
+- TalkBack: al seleccionar notas dice cuántas hay seleccionadas, no solo el número.
+
 ## 0.18.1
 - Ajustes: las tarjetas conservan también la sombra de los lados, que antes se cortaba en el borde.
 

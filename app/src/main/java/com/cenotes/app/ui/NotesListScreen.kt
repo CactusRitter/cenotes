@@ -130,6 +130,7 @@ import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 import com.cenotes.app.ui.glass.pressScale
 import com.cenotes.app.ui.glass.softBounceSpring
 import com.cenotes.app.ui.markdown.MarkdownPreview
@@ -625,12 +626,15 @@ private fun SelectionBar(
     onDeleteForever: () -> Unit,
     onUnprotect: () -> Unit,
 ) {
+    val spoken = stringResource(R.string.selected_count_spoken, count)
     if (trash) {
         Row(Modifier.fillMaxWidth().height(HeaderHeight), verticalAlignment = Alignment.CenterVertically) {
             GlassIconButton(Icons.Filled.Close, stringResource(R.string.cancel_selection), onClose, hazeState = hazeState)
             Spacer(Modifier.width(14.dp))
             Text(
                 stringResource(R.string.selected_count, count),
+                // Only the number is shown (as in Cemail, so it never wraps); TalkBack says what it counts.
+                Modifier.semantics { contentDescription = spoken },
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = onBackdrop(MaterialTheme.colorScheme.onSurface),
@@ -648,6 +652,8 @@ private fun SelectionBar(
         Spacer(Modifier.width(14.dp))
         Text(
             stringResource(R.string.selected_count, count),
+            // Only the number is shown (as in Cemail, so it never wraps); TalkBack says what it counts.
+            Modifier.semantics { contentDescription = spoken },
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
             color = onBackdrop(MaterialTheme.colorScheme.onSurface),

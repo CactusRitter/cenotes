@@ -1,3 +1,6 @@
+## 0.18.2
+- TalkBack: when you select notes, it says how many are selected, not just the number.
+
 ## 0.18.1
 - Settings: the cards keep their shadow on the sides too, instead of it being cut at the edge.
 

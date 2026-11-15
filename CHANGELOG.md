@@ -2,6 +2,10 @@
 
 Cada versión se guarda en Google Drive (`Mi unidad/Notas app/Cenotes-x.y.z.apk`, sin reemplazar la anterior) y, desde la 0.11.0, también como *release* de GitHub (`vx.y.z`, con el APK), que es de donde la app avisa de versiones nuevas. Lo que ve el usuario en Ajustes → Actualizaciones está en `app/src/main/res/raw*/changelog.txt` (inglés, español y alemán).
 
+## 0.18.2 — 2026-11-15
+- Barra de selección: se sigue viendo solo el número (como Cemail 2.2.9, para que no se parta en Retro 98 con cinco botones; comprobado en el emulador), y TalkBack lee «N seleccionadas» (`selected_count_spoken`, en/es/de).
+- Compartido con Cemail: misma regla que su barra de selección en 2.2.9.
+
 ## 0.18.1 — 2026-11-15
 - Ajustes: el margen lateral va dentro del `verticalScroll` (`padding(start = 12.dp, end = 12.dp, bottom = 24.dp)`) y la barra superior lleva su propio `padding(horizontal = 12.dp)`; el scroll recortaba la sombra lateral de las tarjetas en su borde. Revisados los demás scrolls (editor, historial, diálogos de etiquetas y lugares, lista con `contentPadding`): no tienen el problema.
 - Compartido con Cemail: mismo arreglo que Cemail 2.2.8.

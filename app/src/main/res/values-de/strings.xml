@@ -114,6 +114,7 @@
     <string name="unarchived_one">Notiz aus dem Archiv geholt</string>
     <string name="unarchived_many">%1$d Notizen aus dem Archiv geholt</string>
     <string name="cancel_selection">Auswahl abbrechen</string>
+    <string name="selected_count_spoken">%1$d ausgewählt</string>
     <string name="pin_selected">Anheften oder lösen</string>
     <string name="empty_label">Keine Notizen mit diesem Label.\nTippe auf +, um eine zu erstellen.</string>
     <string name="empty_archive">Das Archiv ist leer.\nHalte eine Notiz gedrückt und archiviere sie, um sie hier aufzubewahren.</string>

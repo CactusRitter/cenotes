@@ -114,6 +114,7 @@
     <string name="unarchived_one">Nota sacada del archivo</string>
     <string name="unarchived_many">%1$d notas sacadas del archivo</string>
     <string name="cancel_selection">Cancelar selección</string>
+    <string name="selected_count_spoken">%1$d seleccionadas</string>
     <string name="pin_selected">Fijar o dejar de fijar</string>
     <string name="empty_label">No hay notas con esta etiqueta.\nPulsa + para crear una.</string>
     <string name="empty_archive">El archivo está vacío.\nMantén pulsada una nota y archívala para guardarla aquí.</string>

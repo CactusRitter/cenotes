@@ -117,6 +117,7 @@
     <string name="unarchived_one">Note moved out of archive</string>
     <string name="unarchived_many">%1$d notes moved out of archive</string>
     <string name="selected_count" translatable="false">%1$d</string>
+    <string name="selected_count_spoken">%1$d selected</string>
     <string name="cancel_selection">Cancel selection</string>
     <string name="pin_selected">Pin or unpin</string>
     <string name="empty_label">No notes with this label.\nTap + to create one.</string>
