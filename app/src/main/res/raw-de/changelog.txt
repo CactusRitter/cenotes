@@ -1,3 +1,6 @@
+## 0.18.0
+- Das Seitenmenü sieht aus wie das von Cemail: eine schwebende Karte mit den Einstellungen oben in der Ecke, Notizen, Erinnerungen, Archiv, Geschützt und Papierkorb als Schaltflächen und darunter deine Labels mit Farbe und Anzahl. Tippe daneben, um es zu schließen.
+
 ## 0.17.2
 - Schaltflächen, Karten in den Einstellungen und Dialoge zeigen ihren 3D-Schatten schon beim Erscheinen, nicht erst am Ende.
 

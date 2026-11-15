@@ -1,3 +1,6 @@
+## 0.18.0
+- El menú lateral es como el de Cemail: una tarjeta flotante con Ajustes en la esquina de arriba, Notas, Recordatorios, Archivo, Protegidas y Papelera como botones, y debajo tus etiquetas con su color y su número. Se cierra tocando fuera.
+
 ## 0.17.2
 - Los botones, las tarjetas de Ajustes y los diálogos muestran su sombra 3D mientras aparecen, no solo al final.
 

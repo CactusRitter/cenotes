@@ -31,7 +31,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -53,6 +52,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
@@ -66,15 +67,11 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
-import androidx.compose.material3.NavigationDrawerItem
-import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -268,10 +265,11 @@ fun NotesListScreen(
         drawerContent = {
             androidx.compose.runtime.CompositionLocalProvider(androidx.compose.ui.platform.LocalLayoutDirection provides direction) {
             SideMenu(
-                hazeState = hazeState,
                 section = section,
                 labels = labels,
                 counts = labelCounts,
+                revealed = drawerState.targetValue == DrawerValue.Open,
+                onDismiss = { scope.launch { drawerState.close() } },
                 onSection = {
                     viewModel.showSection(it)
                     scope.launch { drawerState.close() }
@@ -287,6 +285,7 @@ fun NotesListScreen(
             )
             }
         },
+        scrimColor = MaterialTheme.colorScheme.scrim.copy(alpha = 0.3f),
     ) {
         androidx.compose.runtime.CompositionLocalProvider(androidx.compose.ui.platform.LocalLayoutDirection provides direction) {
         Box(Modifier.fillMaxSize()) {
@@ -730,113 +729,124 @@ private fun LockedHeader(onLock: () -> Unit) {
     }
 }
 
-/** Side menu: all notes, each label with its count, the archive, then label editing and settings. */
+/**
+ * Side menu, laid out like Cemail's (MailApp.DrawerContent): a floating glass card with Settings as a small button in
+ * its top corner, the places of the notes as pills (Notes, Reminders, Archive, Protected, Trash, where Cemail has its
+ * folders) and then the labels under a "Labels" heading, each with its colour and count, and a row to edit them.
+ * Everything pops in one row after another each time it opens. A tap around the card closes it ([onDismiss]).
+ */
 @Composable
 private fun SideMenu(
-    hazeState: HazeState,
     section: Section,
     labels: List<Label>,
     counts: Map<Long, Int>,
+    revealed: Boolean,
     onSection: (Section) -> Unit,
     onEditLabels: () -> Unit,
     onSettings: () -> Unit,
+    onDismiss: () -> Unit,
 ) {
-    val colors = NavigationDrawerItemDefaults.colors(
-        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-        unselectedContainerColor = Color.Transparent,
-        selectedIconColor = MaterialTheme.colorScheme.primary,
-        selectedTextColor = MaterialTheme.colorScheme.onSurface,
-    )
-    // Like Google Keep: a narrow panel (not the full width), square on the right, with the
-    // selected item as a pill that runs from the left edge.
+    // The sheet itself is transparent and full height: a tap on it (outside the glass menu) closes the drawer.
     ModalDrawerSheet(
-        modifier = Modifier.width(DrawerWidth),
-        // The sheet itself is see-through; the glass (blur + tint) is drawn by the column inside.
+        modifier = Modifier.clickable(interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }, indication = null, onClick = onDismiss),
         drawerContainerColor = Color.Transparent,
-        drawerTonalElevation = 0.dp,
-        drawerShape = RectangleShape,
         windowInsets = WindowInsets(0),
     ) {
         Column(
             Modifier
-                .fillMaxSize()
-                .glass(RectangleShape, GlassKind.Card, hazeState = hazeState)
-                // Extra veil so a photo behind the panel can't make the text hard to read.
-                .background(LocalGlass.current.base.copy(alpha = 0.62f))
-                .windowInsetsPadding(WindowInsets.systemBars)
+                .windowInsetsPadding(WindowInsets.safeDrawing)
+                .padding(12.dp)
+                .fillMaxWidth(0.82f)
+                // Swallows taps on the menu so only the area around it closes the drawer.
+                .clickable(interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }, indication = null) {}
+                .glass(RoundedCornerShape(28.dp), GlassKind.Menu, elevation = 12.dp)
                 .verticalScroll(rememberScrollState())
-                .padding(end = 12.dp),
+                .padding(vertical = 16.dp, horizontal = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            Text(
-                stringResource(R.string.app_name),
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(start = 28.dp, top = 28.dp, bottom = 16.dp),
+            // Settings is a small button in the top corner of the menu: always reachable, without taking a row.
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                Box(
+                    Modifier
+                        .pressScale(0.85f)
+                        .size(44.dp)
+                        .clip(CircleShape)
+                        .clickable(role = Role.Button, onClickLabel = stringResource(R.string.settings), onClick = onSettings),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(Icons.Filled.Settings, stringResource(R.string.settings), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+            // Where the notes are, in Keep's order: all of them, the ones that will remind you, then put away.
+            val places = listOf(
+                Triple(Section.All, NotesIcon, R.string.section_notes),
+                Triple(Section.Reminders, Icons.Filled.Notifications, R.string.section_reminders),
+                Triple(Section.Archive, ArchiveIcon, R.string.section_archive),
+                Triple(Section.Locked, Icons.Filled.Lock, R.string.section_locked),
+                Triple(Section.Trash, Icons.Filled.Delete, R.string.section_trash),
             )
-            MenuItem(NotesIcon, stringResource(R.string.section_notes), section == Section.All, colors) {
-                onSection(Section.All)
+            places.forEachIndexed { index, (place, icon, text) ->
+                MenuRow(icon, stringResource(text), section == place, revealed, (index + 1) * 22) { onSection(place) }
             }
-            // Like Keep: the notes that will remind you, the next one first.
-            MenuItem(Icons.Filled.Notifications, stringResource(R.string.section_reminders), section == Section.Reminders, colors) {
-                onSection(Section.Reminders)
+            // The labels, like Cemail's: a heading in the accent colour and one row each, with its colour and count.
+            val labelsStart = (places.size + 1) * 22
+            Text(
+                stringResource(R.string.labels),
+                Modifier.popIn(revealed, delayMillis = labelsStart, initialScale = 0.8f).padding(start = 12.dp, top = 12.dp, bottom = 2.dp),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            labels.forEachIndexed { index, label ->
+                MenuRow(
+                    LabelIcon, label.name, section == Section.ByLabel(label.id), revealed, menuStagger(labelsStart, index + 1),
+                    iconTint = labelColor(label), count = counts[label.id],
+                ) { onSection(Section.ByLabel(label.id)) }
             }
-            if (labels.isNotEmpty()) {
-                Text(
-                    stringResource(R.string.labels),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(start = 28.dp, top = 16.dp, bottom = 6.dp),
-                )
-            }
-            labels.forEach { label ->
-                NavigationDrawerItem(
-                    label = { Text(label.name, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                    icon = { Icon(LabelIcon, null, tint = labelColor(label)) },
-                    badge = { counts[label.id]?.let { Text(it.toString()) } },
-                    selected = section == Section.ByLabel(label.id),
-                    onClick = { onSection(Section.ByLabel(label.id)) },
-                    colors = colors,
-                    shape = KeepItemShape,
-                )
-            }
-            MenuItem(Icons.Filled.Edit, stringResource(R.string.labels_edit), false, colors, onEditLabels)
-            HorizontalDivider(Modifier.padding(vertical = 10.dp, horizontal = 16.dp))
-            // Archive, then Trash, as in Google Keep.
-            MenuItem(ArchiveIcon, stringResource(R.string.section_archive), section == Section.Archive, colors) {
-                onSection(Section.Archive)
-            }
-            MenuItem(Icons.Filled.Lock, stringResource(R.string.section_locked), section == Section.Locked, colors) {
-                onSection(Section.Locked)
-            }
-            MenuItem(Icons.Filled.Delete, stringResource(R.string.section_trash), section == Section.Trash, colors) {
-                onSection(Section.Trash)
-            }
-            MenuItem(Icons.Filled.Settings, stringResource(R.string.settings), false, colors, onSettings)
-            Spacer(Modifier.height(24.dp))
+            MenuRow(Icons.Filled.Edit, stringResource(R.string.labels_edit), false, revealed, menuStagger(labelsStart, labels.size + 1), onClick = onEditLabels)
         }
     }
 }
 
+/** The delay of the [n]th row after [start]: 22 ms apart, but never a long wait on a long list (as in Cemail). */
+private fun menuStagger(start: Int, n: Int) = minOf(start + n * 22, start + 330)
+
+/** One row of the side menu: a glass pill, raised (and its icon in the accent colour) when it is the one on screen. */
 @Composable
-private fun MenuItem(
+private fun MenuRow(
     icon: ImageVector,
     text: String,
     selected: Boolean,
-    colors: androidx.compose.material3.NavigationDrawerItemColors,
+    revealed: Boolean,
+    delayMillis: Int,
+    iconTint: Color? = null,
+    count: Int? = null,
     onClick: () -> Unit,
 ) {
-    NavigationDrawerItem(
-        label = { Text(text) },
-        icon = { Icon(icon, null) },
-        selected = selected,
-        onClick = onClick,
-        colors = colors,
-        shape = KeepItemShape,
-    )
+    Row(
+        Modifier
+            .popIn(revealed, delayMillis = delayMillis, initialScale = 0.8f)
+            .pressScale(0.96f)
+            .fillMaxWidth()
+            .glass(RoundedCornerShape(50), if (selected) GlassKind.Pinned else GlassKind.Card)
+            .selectable(selected = selected, role = Role.Button, onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        Icon(icon, null, tint = iconTint ?: if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
+        Text(
+            text,
+            Modifier.weight(1f),
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        if (count != null && count > 0) {
+            Text(count.toString(), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+        }
+    }
 }
-
-private val DrawerWidth = 280.dp
-private val KeepItemShape = RoundedCornerShape(topStartPercent = 0, topEndPercent = 50, bottomEndPercent = 50, bottomStartPercent = 0)
 
 @Composable
 private fun SearchField(value: String, onValueChange: (String) -> Unit, hazeState: HazeState) {

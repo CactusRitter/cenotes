@@ -2,6 +2,10 @@
 
 Cada versión se guarda en Google Drive (`Mi unidad/Notas app/Cenotes-x.y.z.apk`, sin reemplazar la anterior) y, desde la 0.11.0, también como *release* de GitHub (`vx.y.z`, con el APK), que es de donde la app avisa de versiones nuevas. Lo que ve el usuario en Ajustes → Actualizaciones está en `app/src/main/res/raw*/changelog.txt` (inglés, español y alemán).
 
+## 0.18.0 — 2026-11-15
+- Menú lateral como el de Cemail (`MailApp.DrawerContent`): tarjeta de cristal flotante (`GlassKind.Menu`, 28 dp, 82 % del ancho) con Ajustes como botón redondo arriba, las secciones (Notas, Recordatorios, Archivo, Protegidas, Papelera) en el lugar de las carpetas y las etiquetas debajo con el título «Etiquetas» en color de acento, su color y su número, y «Editar etiquetas». Píldoras de cristal (la elegida, `GlassKind.Pinned`), aparición escalonada con `popIn` y cierre tocando fuera de la tarjeta. Sustituye al panel estilo Keep (`NavigationDrawerItem`, 280 dp).
+- Compartido con Cemail: misma colocación que su menú; Cenotes no cambia ningún archivo compartido.
+
 ## 0.17.2 — 2026-11-15
 - `popIn` (`ui/glass/Motion.kt`) usa `CompositingStrategy.ModulateAlpha`: con alpha < 1 la capa se dibujaba en un búfer del tamaño del elemento y cortaba la sombra exterior (la suave y la de Brutalista), que aparecía de golpe al terminar.
 - Compartido con Cemail: arreglo de Cemail 2.2.7, copiado igual.
