@@ -1,3 +1,6 @@
+## 0.17.2
+- Schaltflächen, Karten in den Einstellungen und Dialoge zeigen ihren 3D-Schatten schon beim Erscheinen, nicht erst am Ende.
+
 ## 0.17.1
 - Der 3D-Schatten (Einstellungen → Aussehen) ist jetzt ein weicher Schatten, der das Glas vom Hintergrund abhebt, wie in Cemail.
 

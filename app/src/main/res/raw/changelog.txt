@@ -1,3 +1,6 @@
+## 0.17.2
+- Buttons, Settings cards and dialogs show their 3D shadow while they appear, not only at the end.
+
 ## 0.17.1
 - 3D shadow (Settings → Appearance) is now a soft shadow that lifts the glass off the background, the same as in Cemail.
 

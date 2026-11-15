@@ -1,3 +1,6 @@
+## 0.17.2
+- Los botones, las tarjetas de Ajustes y los diálogos muestran su sombra 3D mientras aparecen, no solo al final.
+
 ## 0.17.1
 - La sombra 3D (Ajustes → Apariencia) es ahora una sombra suave que eleva el cristal sobre el fondo, igual que en Cemail.
 

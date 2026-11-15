@@ -2,6 +2,10 @@
 
 Cada versión se guarda en Google Drive (`Mi unidad/Notas app/Cenotes-x.y.z.apk`, sin reemplazar la anterior) y, desde la 0.11.0, también como *release* de GitHub (`vx.y.z`, con el APK), que es de donde la app avisa de versiones nuevas. Lo que ve el usuario en Ajustes → Actualizaciones está en `app/src/main/res/raw*/changelog.txt` (inglés, español y alemán).
 
+## 0.17.2 — 2026-11-15
+- `popIn` (`ui/glass/Motion.kt`) usa `CompositingStrategy.ModulateAlpha`: con alpha < 1 la capa se dibujaba en un búfer del tamaño del elemento y cortaba la sombra exterior (la suave y la de Brutalista), que aparecía de golpe al terminar.
+- Compartido con Cemail: arreglo de Cemail 2.2.7, copiado igual.
+
 ## 0.17.1 — 2026-11-15
 - Sombra 3D del cristal suave, copiada de Cemail 2.2.6 (`ui/glass/Glass.kt`, `ui/theme/Skin.kt`, `ui/theme/Theme.kt` iguales que en Cemail salvo el paquete): `SkinLook.lift`/`liftColor`, `liftShadow`, `liftSegment`, `glassDepthColor` nuevo; `glassSegment` gana `wall`/`fillOverride` (Cenotes no los usa). Texto `depth_body` nuevo en en/es/de.
 - Ajustes → Actualizaciones: mismo freno que Cemail para no pulsar dos veces «Buscar ahora».
