@@ -29,7 +29,7 @@ En Windows, `gradlew.bat`. El emulador es `Pixel_API_36`; [scripts/emulator.ps1]
 4. Publicar la *release* en GitHub con el APK y notas con secciones `## en`, `## es`, `## de`: la app avisa de versiones nuevas leyendo la última *release* del repositorio (`update/Updates.kt`). Para que funcione, el repositorio tiene que ser público, como el de Cemail.
 
 ```bash
-gh release create vx.y.z "G:/Mi unidad/Notas app/Cenotes-x.y.z.apk" --title "Cenotes x.y.z" --notes-file notas.md
+gh release create vx.y.z "G:/Mi unidad/Cenotes/Cenotes-x.y.z.apk" --title "Cenotes x.y.z" --notes-file notas.md
 ```
 
 ## Reglas del proyecto
