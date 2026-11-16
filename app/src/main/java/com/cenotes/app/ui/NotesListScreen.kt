@@ -879,6 +879,7 @@ private fun SearchField(value: String, onValueChange: (String) -> Unit, hazeStat
         value = value,
         onValueChange = onValueChange,
         modifier = Modifier
+            .padding(end = LocalSkin.current.hardShadow * 1.25f) // room for the hard shadow inside what the fade clips
             .padding(top = 4.dp, bottom = 8.dp)
             .fillMaxWidth()
             .glass(CircleShape, GlassKind.Chrome, elevation = 10.dp, hazeState = hazeState)

@@ -3,6 +3,7 @@
 Cada versión se guarda en Google Drive (`Mi unidad/Ce Apps/Cenotes/Cenotes-x.y.z.apk`, sin reemplazar la anterior) y, desde la 0.11.0, también como *release* de GitHub (`vx.y.z`, con el APK), que es de donde la app avisa de versiones nuevas. Lo que ve el usuario en Ajustes → Actualizaciones está en `app/src/main/res/raw*/changelog.txt` (inglés, español y alemán).
 
 ## Sin publicar
+- Tema Brutalista: la sombra dura de la barra de búsqueda, del chip de enlace y de la barra de formato del editor ya no se corta por la derecha durante el despliegue (`AnimatedVisibility` recorta al tamaño del contenido): cada uno lleva `padding(end = hardShadow * 1.25)` dentro. Cenotes no tiene etiquetas anidadas en el menú lateral; los desplegables de checklists no llevan sombra. Comprobado en el emulador con animaciones 10× (búsqueda); chip de enlace y barra de formato, mismo arreglo, sin probar a mano.
 - Tema Brutalista: al archivar, borrar o añadir una nota, la sombra dura de la tarjeta se recortaba durante el fundido de `animateItem` (el fundido recorta lo que sobresale de la fila, y `animateItem` no admite `ModulateAlpha`). Cada tarjeta lleva ahora `padding(end, bottom = hardShadow)` y la lista resta lo mismo en `contentPadding` y en los huecos, así que la distancia visible no cambia; con otros temas (`hardShadow` 0) no cambia nada. Reproducido en el emulador con animaciones 10× y comprobado después del arreglo.
 
 ## 1.5.0 — 2026-11-16

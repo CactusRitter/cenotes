@@ -1,5 +1,6 @@
 package com.cenotes.app.ui
 
+import com.cenotes.app.ui.theme.LocalSkin
 import com.cenotes.app.ui.theme.MicIcon
 import com.cenotes.app.ui.theme.LockOpenIcon
 import androidx.compose.material.icons.filled.Lock
@@ -676,6 +677,7 @@ private fun LinkChip(url: String) {
     val uriHandler = LocalUriHandler.current
     Row(
         Modifier
+            .padding(end = LocalSkin.current.hardShadow * 1.25f) // room for the hard shadow inside what the fade clips
             .padding(bottom = 8.dp)
             .fillMaxWidth()
             .height(48.dp)
@@ -1092,6 +1094,7 @@ private fun FormatToolbar(editor: BlockEditorState, onLink: () -> Unit, onImage:
     val type = focused?.type
     Row(
         Modifier
+            .padding(end = LocalSkin.current.hardShadow * 1.25f) // room for the hard shadow inside what the fade clips
             .padding(bottom = 12.dp)
             .fillMaxWidth()
             .height(56.dp)
