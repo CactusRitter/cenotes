@@ -3,7 +3,7 @@
 Cada versión se guarda en Google Drive (`Mi unidad/Ce Apps/Cenotes/Cenotes-x.y.z.apk`, sin reemplazar la anterior) y, desde la 0.11.0, también como *release* de GitHub (`vx.y.z`, con el APK), que es de donde la app avisa de versiones nuevas. Lo que ve el usuario en Ajustes → Actualizaciones está en `app/src/main/res/raw*/changelog.txt` (inglés, español y alemán).
 
 ## Sin publicar
-(Nada todavía.)
+- Lista de notas: al abrir una nota y volver, la lista conserva exactamente su posición (antes volvía arriba en el móvil, porque abrir una nota quita la lista y se perdía su `LazyStaggeredGridState`). El estado del scroll vive ahora en `MainActivity` (`rememberLazyStaggeredGridState` + `gridKey` guardable), así que también sobrevive a girar la pantalla, y `NotesListScreen` lo recibe y solo lo lleva arriba cuando cambia la lista (`section`, `pinnedOnly` o `query`). Probado en el emulador: móvil (abrir/cerrar nota y giro de pantalla conservan la posición; cambiar a otra sección o etiqueta y volver empieza arriba) y tamaño tableta con dos paneles.
 
 ## 1.0.2 — 2026-11-16
 - Etiquetas: al abrir una etiqueta se ven también sus notas archivadas (como en Keep), y los contadores del menú lateral las cuentan (`NotesViewModel`: `Section.ByLabel` y `labelCounts` ya no descartan `archived`; siguen fuera las protegidas y la papelera). Las archivadas llevan un icono pequeño de archivo junto al título (`NoteCard.showArchived`, texto `archived_badge`), en todas las vistas menos Archivo y Papelera. Probado en el emulador con la copia de César: Notas no muestra archivadas, Archivo igual y sin icono, y la etiqueta Blog muestra sus 23 con icono.

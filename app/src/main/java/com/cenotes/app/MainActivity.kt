@@ -94,6 +94,9 @@ class MainActivity : FragmentActivity() {
                 // still animating out must not reuse that (already "closed") editor, whose back
                 // handler would then ignore every back press.
                 var openCount by rememberSaveable { mutableIntStateOf(0) }
+                // The list's scroll lives here, above the screens that come and go, so it survives opening a note and turning the device.
+                val gridState = androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState()
+                var gridKey by rememberSaveable { mutableStateOf("") }
                 fun openNote(id: Long) {
                     openCount++
                     showSettings = false
@@ -172,6 +175,9 @@ class MainActivity : FragmentActivity() {
                         onOpenNote = ::openNote,
                         onNewNote = { startNewNote("") },
                         onOpenSettings = { showSettings = true },
+                        gridState = gridState,
+                        scrollKey = gridKey,
+                        onScrollKey = { gridKey = it },
                     )
                 }
 

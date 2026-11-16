@@ -151,7 +151,6 @@ import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.gestures.scrollBy
-import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.zIndex
@@ -169,6 +168,11 @@ fun NotesListScreen(
     onOpenNote: (Long) -> Unit,
     onNewNote: () -> Unit,
     onOpenSettings: () -> Unit,
+    /** The grid's scroll state lives above this screen, so opening a note (which takes this screen off) does not lose it. */
+    gridState: androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState,
+    /** Which list [gridState] was last scrolled for; the list goes back to the top only when this changes. */
+    scrollKey: String,
+    onScrollKey: (String) -> Unit,
 ) {
     val notes by viewModel.notes.collectAsStateWithLifecycle()
     val labels by viewModel.labels.collectAsStateWithLifecycle()
@@ -205,7 +209,15 @@ fun NotesListScreen(
 
     // Sorting by hand: hold a card and drag it (see CardReorder).
     val canReorder by viewModel.canReorder.collectAsStateWithLifecycle()
-    val gridState = rememberLazyStaggeredGridState()
+    // The scroll is kept while the same list is on screen (also after opening a note and coming back). Another list
+    // (a label, Archive, Reminders…, the pinned tab, a different search) starts at the top.
+    val listKey = "$section|$pinnedOnly|$query"
+    LaunchedEffect(listKey) {
+        if (scrollKey != listKey) {
+            if (scrollKey.isNotEmpty()) gridState.scrollToItem(0)
+            onScrollKey(listKey)
+        }
+    }
     val reorder = remember(gridState) { CardReorder(gridState) }
     val haptics = LocalHapticFeedback.current
     val latestNotes by rememberUpdatedState(notes)
