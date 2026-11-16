@@ -79,7 +79,14 @@ fun linkAt(text: String, cursor: Int): String? {
     return null
 }
 
-internal val TaskRegex = Regex("""^(\s*)[-*+]\s+\[([ xX])]\s?(.*)$""")
+/**
+ * A checklist item. A folded item (one with sub-items that is shown closed) ends in an invisible HTML comment, which
+ * Markdown viewers ignore; it is group 4 and never part of the text (group 3).
+ */
+internal val TaskRegex = Regex("""^(\s*)[-*+]\s+\[([ xX])]\s?(.*?)(\s*<!--fold-->)?$""")
+
+/** Written at the end of a folded checklist item. */
+internal const val FoldMark = " <!--fold-->"
 internal val BulletRegex = Regex("""^(\s*)([-*+])\s+(.*)$""")
 internal val NumberedRegex = Regex("""^(\s*)(\d+)([.)])\s+(.*)$""")
 internal val HeadingRegex = Regex("""^(#{1,6})\s+(.*)$""")

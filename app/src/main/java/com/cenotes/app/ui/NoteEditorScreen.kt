@@ -758,11 +758,17 @@ private fun BlockList(editor: BlockEditorState, fileFor: (String) -> File, onOpe
         val (top, height) = rows[id] ?: return
         val center = top + height / 2f + offset
         val dragged = editor.blocks.firstOrNull { it.id == id } ?: return
+        val shown = editor.hiddenIds()
         val target = editor.blocks
-            .filter { it.type == BlockType.TASK && it.id != id && rows[it.id] != null }
+            .filter { it.type == BlockType.TASK && it.id != id && it.id !in shown && rows[it.id] != null }
             .minByOrNull { b -> rows.getValue(b.id).let { (t, h) -> kotlin.math.abs(t + h / 2f - center) } } ?: return
         val (tTop, tHeight) = rows.getValue(target.id)
-        editor.moveItem(dragged, target, after = center > tTop + tHeight / 2f)
+        // Dropped on the middle of a folded item: it goes inside, at the end of its sub-items.
+        if (target.collapsed && editor.hasSubtasks(target) && center in tTop + tHeight * 0.25f..tTop + tHeight * 0.75f) {
+            editor.moveInto(dragged, target)
+        } else {
+            editor.moveItem(dragged, target, after = center > tTop + tHeight / 2f)
+        }
     }
 
     // Lines inside a closed collapsible block are not shown; the others are indented by how deep they sit.
@@ -1016,6 +1022,32 @@ private fun BlockRow(
                 else -> null
             },
         )
+        // An item with sub-items is a dropdown: the count of done ones (when folded) and the arrow that folds it.
+        if (type == BlockType.TASK && editor.hasSubtasks(block)) {
+            val (done, total) = editor.subtaskProgress(block)
+            val turn by animateFloatAsState(if (block.collapsed) 0f else 90f, glassSpring(), label = "fold")
+            if (block.collapsed) {
+                Text(
+                    "$done/$total",
+                    style = typography.labelLarge,
+                    color = colors.onSurfaceVariant,
+                    modifier = Modifier.padding(start = 4.dp).align(Alignment.CenterVertically),
+                )
+            }
+            Icon(
+                ChevronRightIcon,
+                stringResource(if (block.collapsed) R.string.toggle_open else R.string.toggle_close),
+                Modifier
+                    .align(Alignment.CenterVertically)
+                    .padding(start = 2.dp)
+                    .size(28.dp)
+                    .clip(CircleShape)
+                    .clickable(role = Role.Button) { editor.toggleFold(block) }
+                    .padding(2.dp)
+                    .graphicsLayer { rotationZ = turn },
+                tint = colors.primary,
+            )
+        }
     }
 }
 

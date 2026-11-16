@@ -177,7 +177,7 @@ class BlockEditorState(markdown: String) {
                 task != null -> block(
                     BlockType.TASK, task.groupValues[3], task.groupValues[2] != " ",
                     indentLevel(task.groupValues[1]).coerceAtMost(MaxIndent),
-                )
+                ).also { it.collapsed = task.groupValues[4].isNotEmpty() }
                 heading != null -> block(
                     when (heading.groupValues[1].length) { 1 -> BlockType.H1; 2 -> BlockType.H2; else -> BlockType.H3 },
                     heading.groupValues[2],
@@ -219,7 +219,8 @@ class BlockEditorState(markdown: String) {
                 open++
                 continue
             }
-            out += line(b, counters)
+            out += line(b, counters) +
+                if (b.type == BlockType.TASK && b.collapsed && hasSubtasks(b)) FoldMark else ""
         }
         while (open > 0) close()
         return out.joinToString("\n").trimEnd('\n').let { if (it.isBlank()) "" else it }
@@ -328,6 +329,10 @@ class BlockEditorState(markdown: String) {
             var depth = block.depth
             if (block.type == BlockType.TOGGLE) {
                 if (block.collapsed) insertAt = toggleEnd(index) + 1 else depth = block.depth + 1
+            }
+            // After a folded item, the new one goes after its hidden sub-items (not in between).
+            if (block.type == BlockType.TASK && block.collapsed && hasSubtasks(block)) {
+                insertAt = maxOf(index, descendants(index).last) + 1
             }
             block.value = TextFieldValue(parts[0], TextRange(parts[0].length))
             var last: EditorBlock? = null
@@ -441,6 +446,29 @@ class BlockEditorState(markdown: String) {
         return index + 1..end
     }
 
+    /** Whether the item has sub-items below it (what makes it a dropdown). */
+    fun hasSubtasks(block: EditorBlock): Boolean {
+        val index = blocks.indexOf(block)
+        return index >= 0 && !descendants(index).isEmpty()
+    }
+
+    /** Sub-tasks done and in total under [block], at any depth. */
+    fun subtaskProgress(block: EditorBlock): Pair<Int, Int> {
+        val index = blocks.indexOf(block)
+        if (index < 0) return 0 to 0
+        val tasks = descendants(index).map { blocks[it] }.filter { it.type == BlockType.TASK }
+        return tasks.count { it.checked } to tasks.size
+    }
+
+    /** Folds or unfolds an item with sub-items. */
+    fun toggleFold(block: EditorBlock) {
+        block.collapsed = !block.collapsed
+        if (block.collapsed) {
+            val index = blocks.indexOf(block)
+            if (index >= 0 && focusedId in descendants(index).map { blocks[it].id }.toSet()) pendingFocus = block.id
+        }
+    }
+
     /** Settings → Notes: ticked items sink to the end of their list, and unticked ones come back up (like Keep). */
     var checkedToBottom = false
 
@@ -535,6 +563,37 @@ class BlockEditorState(markdown: String) {
     }
 
     /**
+     * Moves [block] (with its sub-items) into [target] as its last sub-item. Used when an item is dropped on a folded
+     * item. The fold stays as the user left it.
+     */
+    fun moveInto(block: EditorBlock, target: EditorBlock) {
+        if (block.id == target.id) return
+        val from = blocks.indexOf(block)
+        if (from < 0) return
+        val last = maxOf(from, descendants(from).last)
+        if (blocks.indexOf(target) in from..last) return
+        if (target.indent >= MaxIndent) {
+            moveItem(block, target, after = true)
+            return
+        }
+        val unit = blocks.subList(from, last + 1).toList()
+        repeat(unit.size) { blocks.removeAt(from) }
+        val t = blocks.indexOf(target)
+        if (t < 0) {
+            blocks.addAll(from, unit)
+            return
+        }
+        val at = maxOf(t, descendants(t).last) + 1
+        val shift = target.indent + 1 - block.indent
+        unit.forEach {
+            it.indent = (it.indent + shift).coerceIn(0, MaxIndent)
+            it.depth = target.depth
+        }
+        blocks.addAll(at, unit)
+        recomputeParents()
+    }
+
+    /**
      * The checklist item next to [block] at its own level (above when [up], else below), skipping sub-items; null at the
      * start or end of its list. Lets TalkBack move items without dragging.
      */
@@ -558,6 +617,7 @@ class BlockEditorState(markdown: String) {
             if (b.type != BlockType.TASK) continue
             val children = descendants(i).map { blocks[it] }.filter { it.type == BlockType.TASK }
             if (children.isNotEmpty()) b.checked = children.all { it.checked }
+            if (descendants(i).isEmpty()) b.collapsed = false // nothing left to fold
         }
     }
 
@@ -611,6 +671,12 @@ class BlockEditorState(markdown: String) {
                 continue
             }
             closedAt = if (b.type == BlockType.TOGGLE && b.collapsed) b.depth else Int.MAX_VALUE
+        }
+        // Sub-items of a folded checklist item.
+        for ((i, b) in blocks.withIndex()) {
+            if (b.type == BlockType.TASK && b.collapsed && b.id !in hidden) {
+                for (j in descendants(i)) hidden += blocks[j].id
+            }
         }
         return hidden
     }
