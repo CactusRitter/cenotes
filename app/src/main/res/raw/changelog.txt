@@ -1,3 +1,6 @@
+## 1.5.1
+- Brutalist design: the hard shadow of note cards no longer gets cut off when you archive, delete or add a note, nor the one of the search bar, the link chip and the formatting bar as they appear.
+
 ## 1.5.0
 - Checklists: an item with indented sub-items is now a dropdown. An arrow folds and unfolds it and, when folded, shows how many sub-items are done (for example 2/5). Drop an item on a folded one and it goes in as its last sub-item. Ticking the parent ticks all its sub-items.
 - The list keeps its scroll position when you open a note and come back, and when you rotate the screen. Moving to another list starts at the top.

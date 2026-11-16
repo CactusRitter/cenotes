@@ -1,3 +1,6 @@
+## 1.5.1
+- Diseño Brutalista: la sombra dura de las tarjetas de nota ya no se corta al archivar, borrar o añadir una nota, ni la de la barra de búsqueda, el chip de enlace y la barra de formato al aparecer.
+
 ## 1.5.0
 - Listas de casillas: un elemento con sub-elementos sangrados es ahora un desplegable. Una flecha lo pliega y despliega y, plegado, muestra cuántos van hechos (por ejemplo 2/5). Si sueltas un elemento sobre uno plegado, entra como su último sub-elemento. Marcar el padre marca todas sus hijas.
 - La lista conserva su posición al abrir una nota y volver, y al girar la pantalla. Al pasar a otra lista empieza arriba.
