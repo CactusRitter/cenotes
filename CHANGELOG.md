@@ -5,6 +5,9 @@ Cada versión se guarda en Google Drive (`Mi unidad/Ce Apps/Cenotes/Cenotes-x.y.
 ## Sin publicar
 (Nada todavía.)
 
+## 1.0.1 — 2026-11-16
+- Copia de seguridad y copia de ajustes: Importar acepta cualquier archivo (`arrayOf("*/*")` en `importLauncher` y `open`); el filtro por tipo dejaba en gris el .zip en el móvil de César. `Backup.import` ya dice «no es de Cenotes» si no lo es. Probado en el emulador: un .zip con otra extensión se importa (64 notas, 17 imágenes) y un .txt da el mensaje sin colgarse.
+
 ## 1.0.0 — 2026-11-16 (primera versión completa, publicada por indicación de César a través de la sesión Ce)
 - Retro 98: el botón de nueva nota tiene el mismo color que los demás botones (plateado), no el resaltado blanco (`fabKind()`/`fabTint()`, `SkinLook.fabPinned`). Compartido con Cemail.
 - Pasa a 1.0.0: Cenotes ya tiene todo lo del plan (fases 1 a 5 y recordatorios en un lugar).

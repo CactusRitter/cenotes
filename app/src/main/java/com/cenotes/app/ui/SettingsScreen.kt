@@ -455,7 +455,9 @@ private fun BackupPage(backup: Backup, onNotesImported: () -> Unit) {
                 exportLauncher.launch(resources.getString(R.string.backup_file_name, date))
             }
             ChoiceChip(stringResource(R.string.backup_import), selected = false, enabled = !working) {
-                importLauncher.launch(arrayOf("application/zip", "application/octet-stream", "application/x-zip-compressed"))
+                // Any file: some devices label a .zip with another type (x-zip, x-compressed…) and the picker would grey it
+                // out. Backup.import checks that it is a Cenotes backup and says so if it is not.
+                importLauncher.launch(arrayOf("*/*"))
             }
         }
         val status = if (working) stringResource(R.string.backup_working) else message
@@ -497,7 +499,8 @@ private fun SettingsBackupPage(repo: SettingsRepository, onAccentChanged: () -> 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             ChoiceChip(stringResource(R.string.settings_backup_export), false) { save.launch(fileName) }
             ChoiceChip(stringResource(R.string.settings_backup_import), false) {
-                open.launch(arrayOf("application/json", "text/plain", "application/octet-stream"))
+                // Any file, for the same reason; importJson says if it is not a settings file.
+                open.launch(arrayOf("*/*"))
             }
         }
         message?.let { Text(stringResource(it), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary) }

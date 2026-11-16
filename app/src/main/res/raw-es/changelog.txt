@@ -1,3 +1,6 @@
+## 1.0.1
+- Copia de seguridad: Importar ya deja elegir cualquier archivo, así que el .zip de una copia no sale en gris en los dispositivos que lo marcan con otro tipo. Si el archivo no es una copia de Cenotes, lo dice. Igual al importar los ajustes.
+
 ## 1.0.0
 - Cenotes 1.0: la primera versión completa. Notas, listas y bloques desplegables; etiquetas y colores de nota; recordatorios a una hora o en un lugar; notas protegidas; historial de cada nota; exportar, dictar y texto de imágenes; papelera, archivo y orden a mano; widgets, tabletas y los seis diseños Ce, en inglés, español y alemán.
 - Retro 98: el botón de nota nueva tiene el mismo color que los demás botones.

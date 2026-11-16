@@ -1,3 +1,6 @@
+## 1.0.1
+- Sicherung: Beim Importieren kannst du jetzt jede Datei wählen, damit eine Sicherungs-.zip nicht mehr grau erscheint, wenn dein Gerät sie anders kennzeichnet. Ist die Datei keine Cenotes-Sicherung, sagt die App es. Das Gleiche gilt für das Importieren der Einstellungen.
+
 ## 1.0.0
 - Cenotes 1.0: die erste vollständige Version. Notizen, Checklisten und ausklappbare Blöcke; Labels und Notizfarben; Erinnerungen zu einer Uhrzeit oder an einem Ort; geschützte Notizen; Verlauf jeder Notiz; Exportieren, Diktieren und Text aus Bildern; Papierkorb, Archiv und eigene Reihenfolge; Widgets, Tablets und die sechs Ce-Designs, auf Englisch, Spanisch und Deutsch.
 - Retro 98: Die Schaltfläche für neue Notizen hat dieselbe Farbe wie die anderen Schaltflächen.
