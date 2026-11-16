@@ -1,28 +1,71 @@
 package com.cenotes.app.update
 
-import android.app.DownloadManager
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.net.Uri
-import android.os.Environment
-import android.util.Log
-import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import com.cenotes.app.BuildConfig
+import android.util.Log
+import java.io.File
+import org.json.JSONObject
+import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.json.JSONObject
-import java.net.HttpURLConnection
-import java.net.URL
+import okhttp3.OkHttpClient
+import okhttp3.Request
 
-// Same update system as Cemail (docs/DESIGN.md): each version is a GitHub release with its APK, and the app offers it.
+/** A newer version of Cenotes published on GitHub; [size] is the APK's size in bytes (0 if GitHub did not say). */
+data class AppUpdate(val version: String, val apkUrl: String, val pageUrl: String, val notes: String = "", val size: Long = 0)
 
-/** A newer version of Cenotes published on GitHub. */
-data class AppUpdate(val version: String, val apkUrl: String, val pageUrl: String, val notes: String = "")
+/** Where the download of a newer version stands. */
+sealed interface DownloadState {
+    data object Idle : DownloadState
+
+    /** [total] is -1 while the size is not known. */
+    data class Downloading(val version: String, val bytes: Long, val total: Long) : DownloadState
+
+    /** Fully downloaded: the installer can be opened. */
+    data class Ready(val version: String) : DownloadState
+
+    /** It stopped: [incomplete] when the file came but not whole, otherwise the connection or the server failed. */
+    data class Failed(val version: String, val incomplete: Boolean) : DownloadState
+}
+
+private data class GitHubAsset(val name: String, val url: String, val size: Long)
+
+// Cenotes reads GitHub's answer with org.json (no serialization plugin); the fields are the same as in Cemail.
+private data class GitHubRelease(
+    val tag: String,
+    val page: String,
+    val draft: Boolean,
+    val prerelease: Boolean,
+    val body: String?,
+    val assets: List<GitHubAsset>,
+) {
+    companion object {
+        fun parse(text: String): GitHubRelease {
+            val o = JSONObject(text)
+            val list = o.optJSONArray("assets")
+            val assets = (0 until (list?.length() ?: 0)).map { list!!.getJSONObject(it) }.map {
+                GitHubAsset(it.optString("name"), it.optString("browser_download_url"), it.optLong("size"))
+            }
+            return GitHubRelease(
+                o.optString("tag_name"), o.optString("html_url"), o.optBoolean("draft"), o.optBoolean("prerelease"),
+                if (o.isNull("body")) null else o.optString("body"), assets,
+            )
+        }
+    }
+}
 
 /** Version numbers as "1.10.2" (a leading "v" is fine), compared number by number. */
 object Versions {
@@ -46,11 +89,11 @@ object Versions {
 }
 
 /**
- * Looks on GitHub for a newer version of Cenotes (the latest release of its repository, with its APK), at most twice a
- * day, and downloads it for Android to install. GitHub sees the address of the connection and nothing else: no
- * account, no notes. Nothing is installed without the user: Android always asks.
+ * Looks on GitHub for a newer version of Cenotes (the latest release of the public repository, with its APK), at most
+ * twice a day, and downloads it for Android to install. GitHub sees the address of the connection and nothing else:
+ * no account, no mail. Nothing is installed without the user: Android always asks.
  */
-class Updates(private val context: Context) {
+class Updates(private val context: Context, private val client: OkHttpClient = OkHttpClient()) {
     private val prefs = context.getSharedPreferences("updates", Context.MODE_PRIVATE)
 
     private val _available = MutableStateFlow(stored())
@@ -61,37 +104,27 @@ class Updates(private val context: Context) {
     suspend fun check(force: Boolean = false): AppUpdate? = withContext(Dispatchers.IO) {
         val now = System.currentTimeMillis()
         if (!force && now - prefs.getLong(KEY_CHECKED, 0) < EVERY) return@withContext _available.value
-        val connection = URL(LATEST).openConnection() as HttpURLConnection
-        val release = try {
-            connection.connectTimeout = 15_000
-            connection.readTimeout = 15_000
-            connection.setRequestProperty("Accept", "application/vnd.github+json")
-            connection.setRequestProperty("User-Agent", "Cenotes") // GitHub wants one; nothing about the user goes in it
-            if (connection.responseCode !in 200..299) throw java.io.IOException("GitHub ${connection.responseCode}")
-            JSONObject(connection.inputStream.bufferedReader().use { it.readText() })
-        } finally {
-            connection.disconnect()
+        val request = Request.Builder().url(LATEST)
+            .header("Accept", "application/vnd.github+json")
+            .header("User-Agent", "Cenotes") // GitHub wants one; nothing about the user goes in it
+            .build()
+        val release = client.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) throw java.io.IOException("GitHub ${response.code}")
+            GitHubRelease.parse(response.body.string())
         }
         prefs.edit().putLong(KEY_CHECKED, now).apply()
-        val assets = release.optJSONArray("assets")
-        val apk = (0 until (assets?.length() ?: 0)).map { assets!!.getJSONObject(it) }
-            .firstOrNull { it.optString("name").endsWith(".apk", ignoreCase = true) }
-        val version = release.optString("tag_name").removePrefix("v")
-        val usable = !release.optBoolean("draft") && !release.optBoolean("prerelease") && apk != null
-        val found = if (usable && Versions.isNewer(version, BuildConfig.VERSION_NAME)) {
-            AppUpdate(
-                version,
-                apk!!.optString("browser_download_url"),
-                release.optString("html_url"),
-                if (release.isNull("body")) "" else release.optString("body"),
-            )
+        val apk = release.assets.firstOrNull { it.name.endsWith(".apk", ignoreCase = true) }
+        val version = release.tag.removePrefix("v")
+        val found = if (!release.draft && !release.prerelease && apk != null && Versions.isNewer(version, BuildConfig.VERSION_NAME)) {
+            AppUpdate(version, apk.url, release.page, release.body.orEmpty(), apk.size)
         } else {
             null
         }
-        Log.i(TAG, "checked: latest ${release.optString("tag_name")}, ${if (found != null) "newer" else "up to date"}")
+        Log.i(TAG, "checked: latest ${release.tag}, ${if (found != null) "newer" else "up to date"}")
         prefs.edit().apply {
-            if (found == null) remove(KEY_VERSION).remove(KEY_APK).remove(KEY_PAGE).remove(KEY_NOTES)
-            else putString(KEY_VERSION, found.version).putString(KEY_APK, found.apkUrl).putString(KEY_PAGE, found.pageUrl).putString(KEY_NOTES, found.notes)
+            if (found == null) remove(KEY_VERSION).remove(KEY_APK).remove(KEY_PAGE).remove(KEY_NOTES).remove(KEY_SIZE)
+            else putString(KEY_VERSION, found.version).putString(KEY_APK, found.apkUrl).putString(KEY_PAGE, found.pageUrl)
+                .putString(KEY_NOTES, found.notes).putLong(KEY_SIZE, found.size)
         }.apply()
         // Asking by hand (Settings) offers it again even if it was set aside.
         if (force) prefs.edit().remove(KEY_IGNORED).apply()
@@ -105,36 +138,132 @@ class Updates(private val context: Context) {
         _available.value = null
     }
 
+    // The download lives here, in the app (not in a screen): it goes on when the screen turns or Settings is left, as
+    // long as the app's process lives. No download manager and no notification: the progress is shown in the app.
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private var job: Job? = null
+    private val dir = File(context.filesDir, "updates")
+    private val _download = MutableStateFlow(initialDownload())
+    /** How the download of the newer version is going. */
+    val download: StateFlow<DownloadState> = _download.asStateFlow()
+
+    init {
+        scope.launch { cleanUp() }
+    }
+
     /**
-     * Downloads the APK with Android's download manager (its notification shows the progress) and opens the installer
-     * when it is done. Returns false if the download could not even start.
+     * Downloads the APK of [update] into the app's own storage, showing the progress in [download], and opens the
+     * installer when it is complete. A download that was cut off goes on from where it stopped (if the server allows
+     * it). Does nothing while a download is already running.
      */
-    fun download(update: AppUpdate, title: String): Boolean = try {
-        val manager = context.getSystemService(DownloadManager::class.java)
-        val name = "Cenotes-${update.version}.apk"
-        java.io.File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), name).delete() // an earlier, unfinished try
-        val id = manager.enqueue(
-            DownloadManager.Request(Uri.parse(update.apkUrl))
-                .setTitle(title)
-                .setMimeType(APK)
-                .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-                .setDestinationInExternalFilesDir(context, Environment.DIRECTORY_DOWNLOADS, name),
-        )
-        prefs.edit().putLong(KEY_DOWNLOAD, id).putString(KEY_DOWNLOADED, update.version).apply()
-        val receiver = object : BroadcastReceiver() {
-            override fun onReceive(c: Context, intent: Intent) {
-                if (intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1) != id) return
-                context.unregisterReceiver(this)
-                if (!install(update)) Log.e(TAG, "download of ${update.version} failed")
+    fun startDownload(update: AppUpdate) {
+        if (job?.isActive == true) return
+        job = scope.launch {
+            val done = apkFile(update.version)
+            if (done.exists()) {
+                _download.value = DownloadState.Ready(update.version)
+                withContext(Dispatchers.Main) { install(update) }
+                return@launch
+            }
+            dir.mkdirs()
+            val part = File(dir, done.name + ".part")
+            try {
+                Log.i(TAG, "downloading ${update.version}")
+                fetch(update, part)
+                if (!part.renameTo(done)) throw java.io.IOException("could not keep the file")
+                _download.value = DownloadState.Ready(update.version)
+                Log.i(TAG, "downloaded ${update.version}")
+                withContext(Dispatchers.Main) { install(update) }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: IncompleteException) {
+                part.delete() // something is wrong with it: the next try starts from the beginning
+                Log.e(TAG, "download of ${update.version} incomplete", e)
+                _download.value = DownloadState.Failed(update.version, incomplete = true)
+            } catch (e: Exception) {
+                Log.e(TAG, "download of ${update.version} failed", e)
+                _download.value = DownloadState.Failed(update.version, incomplete = false)
             }
         }
-        // The download manager is another app: its broadcast has to be let in.
-        ContextCompat.registerReceiver(context, receiver, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE), ContextCompat.RECEIVER_EXPORTED)
-        Log.i(TAG, "downloading ${update.version}")
-        true
-    } catch (e: Exception) {
-        Log.e(TAG, "could not start the download", e)
-        false
+    }
+
+    /** Stops the download and throws away what came so far. */
+    fun cancelDownload() {
+        job?.cancel()
+        job = null
+        scope.launch {
+            dir.listFiles { f -> f.name.endsWith(".part") }?.forEach { it.delete() }
+            _download.value = DownloadState.Idle
+        }
+    }
+
+    /** Copies the APK into [part], going on from what [part] already has. Throws when it cannot be fully fetched. */
+    private suspend fun fetch(update: AppUpdate, part: File) {
+        var have = if (part.exists()) part.length() else 0L
+        val request = Request.Builder().url(update.apkUrl)
+            .header("User-Agent", "Cenotes")
+            .apply { if (have > 0) header("Range", "bytes=$have-") }
+            .build()
+        downloadClient.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) throw java.io.IOException("download ${response.code}")
+            val resumed = response.code == 206
+            if (resumed) Log.i(TAG, "going on from $have bytes") else have = 0 // the server sent it all again
+            val length = response.body.contentLength()
+            val total = when {
+                length < 0 -> update.size.takeIf { it > 0 } ?: -1L
+                else -> have + length
+            }
+            _download.value = DownloadState.Downloading(update.version, have, total)
+            java.io.FileOutputStream(part, resumed).use { out ->
+                response.body.byteStream().use { input ->
+                    val buffer = ByteArray(64 * 1024)
+                    var shownAt = 0L
+                    while (true) {
+                        currentCoroutineContext().ensureActive()
+                        val n = input.read(buffer)
+                        if (n < 0) break
+                        out.write(buffer, 0, n)
+                        have += n
+                        val now = System.currentTimeMillis()
+                        if (now - shownAt > 100) { // about ten times a second is enough for the bar
+                            shownAt = now
+                            _download.value = DownloadState.Downloading(update.version, have, total)
+                        }
+                    }
+                }
+            }
+            _download.value = DownloadState.Downloading(update.version, have, total)
+            // Complete: as long as the server said, and as large as GitHub says the APK is.
+            if ((total > 0 && have != total) || (update.size > 0 && have != update.size)) {
+                throw IncompleteException("got $have of ${if (update.size > 0) update.size else total} bytes")
+            }
+        }
+    }
+
+    private class IncompleteException(message: String) : java.io.IOException(message)
+
+    /** The APK of [version] once it is fully downloaded. */
+    private fun apkFile(version: String) = File(dir, "Cenotes-$version.apk")
+
+    /** After a restart: an APK of the version on offer that is already here can be installed at once. */
+    private fun initialDownload(): DownloadState {
+        val version = _available.value?.version ?: return DownloadState.Idle
+        return if (apkFile(version).exists()) DownloadState.Ready(version) else DownloadState.Idle
+    }
+
+    /**
+     * Throws away downloaded APKs that are no use any more (this version or older, so already installed, or an older
+     * offer than the current one) and those that Android's download manager kept for earlier versions.
+     */
+    private fun cleanUp() {
+        val offered = _available.value?.version
+        dir.listFiles()?.forEach { file ->
+            val version = file.name.removePrefix("Cenotes-").substringBefore(".apk")
+            if (version != offered) file.delete()
+        }
+        context.getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS)
+            ?.listFiles { f -> f.name.startsWith("Cenotes-") && f.name.endsWith(".apk") }
+            ?.forEach { it.delete() }
     }
 
     /** Whether Android already lets Cenotes install apps. Granting it can restart the app, so it is asked before downloading. */
@@ -157,19 +286,9 @@ class Updates(private val context: Context) {
      * false while it is not fully downloaded. Android shows what is being installed and asks first.
      */
     fun install(update: AppUpdate): Boolean {
-        if (prefs.getString(KEY_DOWNLOADED, null) != update.version) {
-            Log.w(TAG, "install: ${update.version} was not downloaded")
-            return false
-        }
-        val manager = context.getSystemService(DownloadManager::class.java)
-        // The download manager's link to the file, or (when it does not give one, as on some emulators) the file
-        // itself, which is in Cenotes' own folder, through our FileProvider.
-        val file = manager.getUriForDownloadedFile(prefs.getLong(KEY_DOWNLOAD, -1))
-            ?: downloadedApk(update)?.let { androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.files", it) }
-        if (file == null) {
-            Log.w(TAG, "install: the APK of ${update.version} is not there (yet)")
-            return false
-        }
+        val apk = apkFile(update.version)
+        if (!apk.exists()) return false
+        val file = FileProvider.getUriForFile(context, "${context.packageName}.files", apk)
         return try {
             context.startActivity(
                 Intent(Intent.ACTION_VIEW).setDataAndType(file, APK)
@@ -182,24 +301,17 @@ class Updates(private val context: Context) {
         }
     }
 
-    /** The downloaded APK of [update] in Cenotes' download folder, once it is complete. */
-    private fun downloadedApk(update: AppUpdate): java.io.File? {
-        val manager = context.getSystemService(DownloadManager::class.java)
-        val done = runCatching {
-            manager.query(DownloadManager.Query().setFilterById(prefs.getLong(KEY_DOWNLOAD, -1))).use { c ->
-                c.moveToFirst() && c.getInt(c.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS)) == DownloadManager.STATUS_SUCCESSFUL
-            }
-        }.getOrDefault(false)
-        val file = java.io.File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "Cenotes-${update.version}.apk")
-        Log.i(TAG, "install: download finished=$done, file=${file.length()} bytes")
-        return file.takeIf { done && it.length() > 0 }
-    }
-
     private fun stored(): AppUpdate? {
         val version = prefs.getString(KEY_VERSION, null) ?: return null
         if (!Versions.isNewer(version, BuildConfig.VERSION_NAME) || version == prefs.getString(KEY_IGNORED, null)) return null
-        return AppUpdate(version, prefs.getString(KEY_APK, null) ?: return null, prefs.getString(KEY_PAGE, "").orEmpty(), prefs.getString(KEY_NOTES, "").orEmpty())
+        return AppUpdate(
+            version, prefs.getString(KEY_APK, null) ?: return null, prefs.getString(KEY_PAGE, "").orEmpty(),
+            prefs.getString(KEY_NOTES, "").orEmpty(), prefs.getLong(KEY_SIZE, 0),
+        )
     }
+
+    /** For the APK: a long read timeout (a slow connection), and redirects followed (GitHub sends it from elsewhere). */
+    private val downloadClient by lazy { client.newBuilder().readTimeout(60, TimeUnit.SECONDS).build() }
 
     private companion object {
         const val TAG = "CenotesUpdates"
@@ -212,7 +324,6 @@ class Updates(private val context: Context) {
         const val KEY_PAGE = "page"
         const val KEY_NOTES = "notes"
         const val KEY_IGNORED = "ignored"
-        const val KEY_DOWNLOAD = "download_id"
-        const val KEY_DOWNLOADED = "download_version"
+        const val KEY_SIZE = "size"
     }
 }

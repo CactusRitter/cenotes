@@ -55,6 +55,7 @@ dependencies {
     ksp(libs.androidx.room.compiler)
     implementation(libs.haze)
     implementation(libs.coil.compose)
+    implementation(libs.okhttp)
     implementation(libs.glance.appwidget)
     implementation(libs.androidx.biometric)
     implementation(libs.mlkit.text.recognition)
