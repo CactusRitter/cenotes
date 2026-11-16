@@ -12,8 +12,8 @@ android {
         applicationId = "com.cenotes.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 34
-        versionName = "1.0.2"
+        versionCode = 35
+        versionName = "1.5.0"
     }
 
     buildTypes {

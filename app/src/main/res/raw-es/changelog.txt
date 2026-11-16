@@ -1,3 +1,7 @@
+## 1.5.0
+- Listas de casillas: un elemento con sub-elementos sangrados es ahora un desplegable. Una flecha lo pliega y despliega y, plegado, muestra cuántos van hechos (por ejemplo 2/5). Si sueltas un elemento sobre uno plegado, entra como su último sub-elemento. Marcar el padre marca todas sus hijas.
+- La lista conserva su posición al abrir una nota y volver, y al girar la pantalla. Al pasar a otra lista empieza arriba.
+
 ## 1.0.2
 - Etiquetas: al abrir una etiqueta se ven también sus notas archivadas, como en Keep, y el menú lateral las cuenta. Las notas archivadas llevan un pequeño icono de archivo junto al título.
 

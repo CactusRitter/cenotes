@@ -1,3 +1,7 @@
+## 1.5.0
+- Checklisten: Ein Eintrag mit eingerückten Unterpunkten ist jetzt ein Aufklapper. Ein Pfeil klappt ihn ein und aus und zeigt eingeklappt, wie viele erledigt sind (z. B. 2/5). Ziehst du einen Eintrag auf einen eingeklappten, landet er als letzter Unterpunkt darin. Das Abhaken des Hauptpunkts hakt alle Unterpunkte ab.
+- Die Liste behält ihre Scrollposition, wenn du eine Notiz öffnest und zurückkehrst, und beim Drehen des Bildschirms. Beim Wechsel zu einer anderen Liste beginnt sie oben.
+
 ## 1.0.2
 - Labels: Beim Öffnen eines Labels siehst du jetzt auch seine archivierten Notizen, wie in Keep, und das Seitenmenü zählt sie mit. Archivierte Notizen tragen neben dem Titel ein kleines Archiv-Symbol.
 
