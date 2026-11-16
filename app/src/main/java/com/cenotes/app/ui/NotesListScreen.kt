@@ -332,11 +332,14 @@ fun NotesListScreen(
                         state = gridState,
                         columns = if (layout == NoteLayout.GRID) StaggeredGridCells.Adaptive(160.dp)
                         else StaggeredGridCells.Fixed(1),
+                        // The solid shadow of a card (Brutalist) sits outside it; the card's own fade (animateItem) cuts what
+                        // is outside its bounds, so each card carries room for the shadow and the gaps lose that much.
                         contentPadding = PaddingValues(
-                            start = 16.dp, end = 16.dp, top = topPadding + 4.dp, bottom = bottomInset + 112.dp,
+                            start = 16.dp, end = 16.dp - LocalSkin.current.hardShadow, top = topPadding + 4.dp,
+                            bottom = bottomInset + 112.dp,
                         ),
-                        verticalItemSpacing = 10.dp,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalItemSpacing = 10.dp - LocalSkin.current.hardShadow,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp - LocalSkin.current.hardShadow),
                         modifier = Modifier.fillMaxSize(),
                     ) {
                         // A newer Cenotes on GitHub: the notice goes first, across the whole width (like Cemail's Inbox).
@@ -380,6 +383,7 @@ fun NotesListScreen(
                                             fadeInSpec = glassSpring(), placementSpec = softBounceSpring(), fadeOutSpec = glassSpring(),
                                         ),
                                     )
+                                    .padding(end = LocalSkin.current.hardShadow, bottom = LocalSkin.current.hardShadow)
                                     .zIndex(if (dragging) 1f else 0f)
                                     .graphicsLayer {
                                         val t = reorder.translation(id)
