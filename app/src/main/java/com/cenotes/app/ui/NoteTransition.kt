@@ -9,7 +9,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
 import com.cenotes.app.ui.theme.LocalSkin
 
 /**
@@ -27,7 +34,7 @@ val LocalNoteTransition = compositionLocalOf<NoteTransition?> { null }
  */
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun Modifier.noteSharedBounds(noteId: Long, zIndex: Float = 0f): Modifier {
+fun Modifier.noteSharedBounds(noteId: Long, zIndex: Float = 0f, shadowRoom: Dp = 0.dp): Modifier {
     val t = LocalNoteTransition.current ?: return this
     if (noteId <= 0L) return this
     val self = this
@@ -39,8 +46,17 @@ fun Modifier.noteSharedBounds(noteId: Long, zIndex: Float = 0f): Modifier {
             sharedContentState = rememberSharedContentState(key = "note-$noteId"),
             animatedVisibilityScope = t.visibility,
             boundsTransform = { _, _ -> spring(dampingRatio = 0.9f, stiffness = Spring.StiffnessMediumLow) },
-            clipInOverlayDuringTransition = OverlayClip(shape),
+            // A card with a hard shadow (Brutalist) keeps it while it travels: the clip leaves room for it below and at the end.
+            clipInOverlayDuringTransition = OverlayClip(if (shadowRoom > 0.dp) ShadowRoomShape(shadowRoom) else shape),
             zIndexInOverlay = zIndex,
         )
+    }
+}
+
+/** The bounds of the element plus [room] below and at the end, where its hard shadow is drawn. */
+private class ShadowRoomShape(private val room: Dp) : Shape {
+    override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
+        val r = with(density) { room.toPx() }
+        return Outline.Rectangle(Rect(0f, 0f, size.width + r, size.height + r))
     }
 }

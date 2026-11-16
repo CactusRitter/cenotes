@@ -437,7 +437,7 @@ fun NotesListScreen(
                                             )
                                         } else Modifier,
                                     )
-                                    .noteSharedBounds(id),
+                                    .noteSharedBounds(id, shadowRoom = LocalSkin.current.hardShadow),
                             )
                         }
                     }
