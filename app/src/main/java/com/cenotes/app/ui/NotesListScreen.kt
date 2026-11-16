@@ -117,6 +117,8 @@ import com.cenotes.app.data.Label
 import com.cenotes.app.data.NoteLayout
 import com.cenotes.app.ui.glass.GlassBackground
 import com.cenotes.app.ui.glass.GlassIconButton
+import com.cenotes.app.ui.glass.SelectionBadge
+import com.cenotes.app.ui.glass.selectedOutline
 import com.cenotes.app.ui.glass.GlassKind
 import com.cenotes.app.ui.glass.GlassPill
 import com.cenotes.app.ui.glass.PillIcon
@@ -931,7 +933,7 @@ private fun NoteCard(
                 .fillMaxWidth()
                 .glass(shape, if (note.pinned) GlassKind.Pinned else GlassKind.Card)
                 .noteTint(note.color)
-                .then(if (selected) Modifier.border(2.5.dp, primary, shape) else Modifier)
+                .then(if (selected) Modifier.selectedOutline(shape) else Modifier)
                 .combinedClickable(
                     onClickLabel = stringResource(R.string.note_open), onClick = onClick,
                     onLongClickLabel = stringResource(R.string.note_select), onLongClick = onLongClick,
@@ -1050,19 +1052,7 @@ private fun NoteCard(
                 }
             }
         }
-        if (selected) {
-            Box(
-                Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(8.dp)
-                    .size(26.dp)
-                    .clip(CircleShape)
-                    .background(primary),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(Icons.Filled.Check, null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(18.dp))
-            }
-        }
+        if (selected) SelectionBadge(Modifier.align(Alignment.TopEnd).padding(8.dp))
     }
 }
 
