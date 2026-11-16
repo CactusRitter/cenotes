@@ -355,6 +355,7 @@ fun NotesListScreen(
                                 selected = id in selected,
                                 // A protected note in the Trash shows nothing of itself until the notes are unlocked.
                                 hidden = item.note.locked && !unlocked,
+                                showArchived = section != Section.Archive && section != Section.Trash,
                                 placeName = item.note.placeId?.let { pid -> places.firstOrNull { it.id == pid }?.name },
                                 // While selecting, a tap adds/removes; otherwise it opens the note.
                                 // In the Trash a note is not opened: a tap picks it, to restore it or delete it for good.
@@ -898,6 +899,8 @@ private fun NoteCard(
     placeName: String? = null,
     /** A protected note while locked: only a padlock and "Protected note", nothing of what it says. */
     hidden: Boolean = false,
+    /** Mark archived notes with a small icon: true in every view but the Archive itself, where all of them are. */
+    showArchived: Boolean = false,
 ) {
     val note = item.note
     val shape = LocalSkin.current.shape(RoundedCornerShape(24.dp))
@@ -947,6 +950,15 @@ private fun NoteCard(
                         else MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.weight(1f),
                     )
+                    // An archived note shows up in a label's view (as in Keep): a small archive icon tells it apart.
+                    if (showArchived && note.archived) {
+                        Icon(
+                            ArchiveIcon,
+                            contentDescription = stringResource(R.string.archived_badge),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(start = 4.dp).size(18.dp),
+                        )
+                    }
                     if (note.pinned) {
                         Icon(
                             Icons.Filled.Star,

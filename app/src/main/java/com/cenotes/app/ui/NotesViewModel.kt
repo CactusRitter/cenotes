@@ -131,7 +131,7 @@ class NotesViewModel(private val app: CenotesApp) : ViewModel() {
                     Section.Trash -> true
                     Section.Reminders -> (n.reminderAt != null || n.placeId != null) && !n.locked
                     Section.Locked -> n.locked
-                    is Section.ByLabel -> !n.archived && !n.locked && labelsOf[n.id].orEmpty().any { it.id == s.labelId }
+                    is Section.ByLabel -> !n.locked && labelsOf[n.id].orEmpty().any { it.id == s.labelId }
                 }
             }
             .filter { !f.pinnedOnly || it.pinned }
@@ -140,9 +140,9 @@ class NotesViewModel(private val app: CenotesApp) : ViewModel() {
             .toList()
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
-    /** Number of active (not archived) notes per label, for the side menu. */
+    /** Number of notes per label, for the side menu: archived ones count too (a label shows them, as in Keep); protected ones do not. */
     val labelCounts: StateFlow<Map<Long, Int>> = combine(dao.observeAll(), links) { all, links ->
-        val active = all.filterNot { it.archived || it.locked }.map { it.id }.toHashSet()
+        val active = all.filterNot { it.locked }.map { it.id }.toHashSet()
         links.filter { it.noteId in active }.groupingBy { it.labelId }.eachCount()
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 

@@ -3,7 +3,7 @@
 Cada versión se guarda en Google Drive (`Mi unidad/Ce Apps/Cenotes/Cenotes-x.y.z.apk`, sin reemplazar la anterior) y, desde la 0.11.0, también como *release* de GitHub (`vx.y.z`, con el APK), que es de donde la app avisa de versiones nuevas. Lo que ve el usuario en Ajustes → Actualizaciones está en `app/src/main/res/raw*/changelog.txt` (inglés, español y alemán).
 
 ## Sin publicar
-(Nada todavía.)
+- Etiquetas: al abrir una etiqueta se ven también sus notas archivadas (como en Keep), y los contadores del menú lateral las cuentan (`NotesViewModel`: `Section.ByLabel` y `labelCounts` ya no descartan `archived`; siguen fuera las protegidas y la papelera). Las archivadas llevan un icono pequeño de archivo junto al título (`NoteCard.showArchived`, texto `archived_badge`), en todas las vistas menos Archivo y Papelera. Probado en el emulador con la copia de César: Notas no muestra archivadas, Archivo igual y sin icono, y la etiqueta Blog muestra sus 23 con icono.
 
 ## 1.0.1 — 2026-11-16
 - Copia de seguridad y copia de ajustes: Importar acepta cualquier archivo (`arrayOf("*/*")` en `importLauncher` y `open`); el filtro por tipo dejaba en gris el .zip en el móvil de César. `Backup.import` ya dice «no es de Cenotes» si no lo es. Probado en el emulador: un .zip con otra extensión se importa (64 notas, 17 imágenes) y un .txt da el mensaje sin colgarse.
