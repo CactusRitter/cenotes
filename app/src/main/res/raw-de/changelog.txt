@@ -1,3 +1,6 @@
+## 1.0.2
+- Labels: Beim Öffnen eines Labels siehst du jetzt auch seine archivierten Notizen, wie in Keep, und das Seitenmenü zählt sie mit. Archivierte Notizen tragen neben dem Titel ein kleines Archiv-Symbol.
+
 ## 1.0.1
 - Sicherung: Beim Importieren kannst du jetzt jede Datei wählen, damit eine Sicherungs-.zip nicht mehr grau erscheint, wenn dein Gerät sie anders kennzeichnet. Ist die Datei keine Cenotes-Sicherung, sagt die App es. Das Gleiche gilt für das Importieren der Einstellungen.
 

@@ -1,3 +1,6 @@
+## 1.0.2
+- Labels: opening a label now shows its archived notes too, as in Keep, and the side menu counts them. Archived notes carry a small archive icon next to their title.
+
 ## 1.0.1
 - Backup: Import now lets you pick any file, so a backup .zip is no longer greyed out on devices that label it with another type. If the file is not a Cenotes backup, it says so. The same goes for importing settings.
 
