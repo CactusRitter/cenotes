@@ -76,6 +76,7 @@ fun DriveLabPage() {
     val app = context.applicationContext as CenotesApp
     fun say(text: String) {
         log = (log + text + "\n").takeLast(3000)
+        android.util.Log.i("DriveLab", text.replace("\n", " ~ "))
         android.widget.Toast.makeText(context, text.take(160), android.widget.Toast.LENGTH_LONG).show()
     }
 
