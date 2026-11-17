@@ -87,6 +87,7 @@ import com.cenotes.app.ui.theme.DownloadIcon
 import com.cenotes.app.ui.theme.SettingsBackupIcon
 import com.cenotes.app.ui.theme.LabelIcon
 import com.cenotes.app.ui.theme.LocalGlass
+import com.cenotes.app.ui.glass.GlassSwitch
 import com.cenotes.app.ui.theme.PaletteIcon
 import com.cenotes.app.ui.theme.Skin
 import com.cenotes.app.ui.theme.ThemeMode
@@ -187,8 +188,8 @@ fun SettingsScreen(
                         SettingsRoute.APPEARANCE -> AppearancePage(settings, repo, onAccentChanged)
                         SettingsRoute.NOTES -> NotesPage(settings, repo)
                         SettingsRoute.LABEL_COLORS -> LabelColorsPage(settings, onAddColor, onEditColor, onDeleteColor)
-                        SettingsRoute.BACKUP -> BackupPage(backup, onNotesImported)
-                        SettingsRoute.SETTINGS_BACKUP -> SettingsBackupPage(repo, onAccentChanged)
+                        SettingsRoute.BACKUP -> BackupPage(backup, onNotesImported, onAccentChanged)
+                        SettingsRoute.SETTINGS_BACKUP -> SettingsBackupPage(backup, onAccentChanged)
                         SettingsRoute.UPDATES -> UpdatesPage(settings, repo)
                     }
                 }
@@ -401,17 +402,19 @@ private fun LabelColorsPage(
 // --- Backup ---
 
 /**
- * Export to / import from a .zip the user picks with the system file picker (Drive, Downloads,
- * a USB stick…). Images are optional so a backup can stay small.
+ * Backups are .zip files the user saves and picks with the system file picker (Drive, Downloads, a USB stick…): one for the
+ * notes (images optional, settings optional) and one for the settings. Importing looks inside the file and asks what to
+ * restore. See [Backup] for the container.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun BackupPage(backup: Backup, onNotesImported: () -> Unit) {
+private fun BackupPage(backup: Backup, onNotesImported: () -> Unit, onSettingsRestored: () -> Unit) {
     val resources = androidx.compose.ui.platform.LocalResources.current
     val scope = rememberCoroutineScope()
     var includeImages by rememberSaveable { mutableStateOf(true) }
     var includeSettings by rememberSaveable { mutableStateOf(false) }
-    // A backup that carries settings waits here while the user chooses whether to restore them.
-    var askSettingsFor by remember { mutableStateOf<android.net.Uri?>(null) }
+    // The file the user picked and what is inside it, while they choose what to restore.
+    var pending by remember { mutableStateOf<Pair<android.net.Uri, Backup.Contents>?>(null) }
     var working by remember { mutableStateOf(false) }
     var message by rememberSaveable { mutableStateOf<String?>(null) }
 
@@ -423,6 +426,8 @@ private fun BackupPage(backup: Backup, onNotesImported: () -> Unit) {
                 block()
             } catch (e: Backup.NotABackupException) {
                 resources.getString(R.string.backup_not_cenotes)
+            } catch (e: Backup.TooNewException) {
+                resources.getString(R.string.backup_too_new)
             } catch (e: Exception) {
                 resources.getString(R.string.backup_failed, e.localizedMessage ?: e.javaClass.simpleName)
             }
@@ -430,45 +435,40 @@ private fun BackupPage(backup: Backup, onNotesImported: () -> Unit) {
         }
     }
 
-    val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
+    val notesLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
         if (uri != null) run {
-            val r = backup.export(uri, includeImages, includeSettings)
+            val r = backup.exportNotes(uri, includeImages, includeSettings)
             resources.getString(R.string.backup_exported, r.notes, r.images)
         }
     }
-    suspend fun importFrom(uri: android.net.Uri, restoreSettings: Boolean): String {
-        val r = backup.import(uri, restoreSettings)
-        onNotesImported()
-        return listOfNotNull(
-            resources.getString(R.string.backup_imported, r.added, r.skipped, r.images),
-            if (r.updated > 0) resources.getString(R.string.backup_imported_updated, r.updated) else null,
-            if (r.kept > 0) resources.getString(R.string.backup_imported_kept, r.kept) else null,
-            if (r.settingsRestored) resources.getString(R.string.backup_imported_settings) else null,
-        ).joinToString(" ")
+    val settingsLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
+        if (uri != null) run {
+            backup.exportSettings(uri)
+            resources.getString(R.string.settings_backup_saved)
+        }
     }
     val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) run {
-            if (backup.hasSettings(uri)) {
-                askSettingsFor = uri
-                ""
-            } else importFrom(uri, restoreSettings = false)
+            pending = uri to backup.inspect(uri)
+            ""
         }
     }
-    askSettingsFor?.let { uri ->
-        androidx.compose.material3.AlertDialog(
-            onDismissRequest = { askSettingsFor = null },
-            shape = androidx.compose.foundation.shape.RoundedCornerShape(28.dp),
-            containerColor = LocalGlass.current.menu,
-            title = { Text(stringResource(R.string.backup_restore_settings_title), fontWeight = androidx.compose.ui.text.font.FontWeight.Bold) },
-            text = { Text(stringResource(R.string.backup_restore_settings_body)) },
-            confirmButton = {
-                androidx.compose.material3.TextButton(onClick = { askSettingsFor = null; run { importFrom(uri, restoreSettings = true) } }) {
-                    Text(stringResource(R.string.backup_restore_settings_yes), fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
-                }
-            },
-            dismissButton = {
-                androidx.compose.material3.TextButton(onClick = { askSettingsFor = null; run { importFrom(uri, restoreSettings = false) } }) {
-                    Text(stringResource(R.string.backup_restore_settings_no))
+    pending?.let { (uri, contents) ->
+        RestoreDialog(
+            contents = contents,
+            onDismiss = { pending = null },
+            onRestore = { notes, settings ->
+                pending = null
+                run {
+                    val r = backup.import(uri, notes, settings)
+                    if (r.notesRestored) onNotesImported()
+                    if (r.settingsRestored) onSettingsRestored()
+                    listOfNotNull(
+                        if (r.notesRestored) resources.getString(R.string.backup_imported, r.added, r.skipped, r.images) else null,
+                        if (r.updated > 0) resources.getString(R.string.backup_imported_updated, r.updated) else null,
+                        if (r.kept > 0) resources.getString(R.string.backup_imported_kept, r.kept) else null,
+                        if (r.settingsRestored) resources.getString(R.string.backup_imported_settings) else null,
+                    ).joinToString(" ")
                 }
             },
         )
@@ -488,61 +488,111 @@ private fun BackupPage(backup: Backup, onNotesImported: () -> Unit) {
     SettingsCard {
         Text(stringResource(R.string.backup), style = MaterialTheme.typography.titleSmall)
         Text(stringResource(R.string.backup_summary), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            ChoiceChip(stringResource(R.string.backup_export), selected = false, enabled = !working) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            ChoiceChip(stringResource(R.string.backup_export_notes), selected = false, enabled = !working) {
                 val date = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT).format(Date())
-                exportLauncher.launch(resources.getString(R.string.backup_file_name, date))
+                notesLauncher.launch(resources.getString(R.string.backup_file_notes, date))
+            }
+            ChoiceChip(stringResource(R.string.backup_export_settings), selected = false, enabled = !working) {
+                val date = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT).format(Date())
+                settingsLauncher.launch(resources.getString(R.string.backup_file_settings, date))
             }
             ChoiceChip(stringResource(R.string.backup_import), selected = false, enabled = !working) {
                 // Any file: some devices label a .zip with another type (x-zip, x-compressed…) and the picker would grey it
-                // out. Backup.import checks that it is a Cenotes backup and says so if it is not.
+                // out. Backup.inspect checks that it is a Cenotes backup and says so if it is not.
                 importLauncher.launch(arrayOf("*/*"))
             }
         }
         val status = if (working) stringResource(R.string.backup_working) else message
-        if (status != null) {
+        if (!status.isNullOrEmpty()) {
             Text(status, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
         }
+    }
+}
+
+/** Asks what to restore from a backup, with a switch only for what the file carries. Settings start off when notes are there too. */
+@Composable
+private fun RestoreDialog(contents: Backup.Contents, onDismiss: () -> Unit, onRestore: (notes: Boolean, settings: Boolean) -> Unit) {
+    var notes by remember { mutableStateOf(contents.notes) }
+    var settings by remember { mutableStateOf(contents.settings && !contents.notes) }
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(28.dp),
+        containerColor = LocalGlass.current.menu,
+        title = { Text(stringResource(R.string.backup_restore_title), fontWeight = androidx.compose.ui.text.font.FontWeight.Bold) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                if (contents.notes) RestoreRow(R.string.backup_restore_notes, notes) { notes = it }
+                if (contents.settings) RestoreRow(R.string.backup_restore_settings, settings) { settings = it }
+            }
+        },
+        confirmButton = {
+            androidx.compose.material3.TextButton(enabled = notes || settings, onClick = { onRestore(notes, settings) }) {
+                Text(stringResource(R.string.backup_restore_confirm), fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+            }
+        },
+        dismissButton = { androidx.compose.material3.TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
+    )
+}
+
+@Composable
+private fun RestoreRow(label: Int, checked: Boolean, onChange: (Boolean) -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+        Text(stringResource(label), style = MaterialTheme.typography.bodyLarge)
+        GlassSwitch(checked, onChange)
     }
 }
 
 // --- Settings backup ---
 
 /**
- * Settings → Settings backup: every setting (look, colours, label colours, updates) saved to a file the user picks
+ * Settings → Settings backup: every setting (look, colours, label colours, updates) in a .zip the user picks
  * (Drive, Downloads…) and brought back on this or another device. Notes are not in it: they have their own backup.
  */
 @Composable
-private fun SettingsBackupPage(repo: SettingsRepository, onAccentChanged: () -> Unit) {
-    val context = LocalContext.current
-    var message by remember { mutableStateOf<Int?>(null) }
-    val save = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+private fun SettingsBackupPage(backup: Backup, onAccentChanged: () -> Unit) {
+    val resources = androidx.compose.ui.platform.LocalResources.current
+    val scope = rememberCoroutineScope()
+    var message by remember { mutableStateOf<String?>(null) }
+    val save = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
-        message = runCatching {
-            context.contentResolver.openOutputStream(uri)!!.use { it.write(repo.exportJson().toByteArray()) }
-        }.fold({ R.string.settings_backup_saved }, { R.string.settings_backup_failed })
+        scope.launch {
+            message = runCatching { backup.exportSettings(uri) }
+                .fold({ resources.getString(R.string.settings_backup_saved) }, { resources.getString(R.string.settings_backup_failed) })
+        }
     }
     val open = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
-        val text = runCatching { context.contentResolver.openInputStream(uri)!!.use { it.readBytes().decodeToString() } }.getOrNull()
-        message = when {
-            text == null -> R.string.settings_backup_failed
-            repo.importJson(text) -> R.string.settings_backup_restored.also { onAccentChanged() }
-            else -> R.string.settings_backup_invalid
+        scope.launch {
+            message = try {
+                if (backup.inspect(uri).settings) {
+                    backup.import(uri, notes = false, settings = true)
+                    onAccentChanged()
+                    resources.getString(R.string.settings_backup_restored)
+                } else resources.getString(R.string.settings_backup_invalid)
+            } catch (e: Backup.NotABackupException) {
+                resources.getString(R.string.settings_backup_invalid)
+            } catch (e: Backup.TooNewException) {
+                resources.getString(R.string.backup_too_new)
+            } catch (e: Exception) {
+                resources.getString(R.string.settings_backup_failed)
+            }
         }
     }
-    val fileName = stringResource(R.string.settings_backup_file)
     SettingsCard {
         Text(stringResource(R.string.settings_backup_title), style = MaterialTheme.typography.titleSmall)
         Text(stringResource(R.string.settings_backup_body), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            ChoiceChip(stringResource(R.string.settings_backup_export), false) { save.launch(fileName) }
+            ChoiceChip(stringResource(R.string.settings_backup_export), false) {
+                val date = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT).format(Date())
+                save.launch(resources.getString(R.string.backup_file_settings, date))
+            }
             ChoiceChip(stringResource(R.string.settings_backup_import), false) {
-                // Any file, for the same reason; importJson says if it is not a settings file.
+                // Any file, for the same reason; inspect says if it is not a settings backup.
                 open.launch(arrayOf("*/*"))
             }
         }
-        message?.let { Text(stringResource(it), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary) }
+        message?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary) }
     }
 }
 

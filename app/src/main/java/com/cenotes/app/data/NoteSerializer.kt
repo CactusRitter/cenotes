@@ -11,8 +11,8 @@ object NoteSerializer {
 
     data class PlaceRef(val name: String, val latitude: Double, val longitude: Double, val leave: Boolean)
 
-    /** A note read from JSON (id 0, to be inserted), with the label names and place it refers to. [hasUuid] is false for old backups. */
-    data class Parsed(val note: Note, val hasUuid: Boolean, val labels: List<String>, val place: PlaceRef?)
+    /** A note read from JSON (id 0, to be inserted), with the label names and place it refers to. */
+    data class Parsed(val note: Note, val labels: List<String>, val place: PlaceRef?)
 
     fun toJson(note: Note, content: String, labelNames: List<String>, place: Place?): JSONObject =
         JSONObject()
@@ -51,7 +51,6 @@ object NoteSerializer {
             locked = o.optBoolean("locked"),
             position = o.optLong("position", updatedAt),
             uuid = uuid.ifEmpty { newUuid() },
-            // Formats before 9 only know the last text edit.
             modifiedAt = o.optLong("modifiedAt", updatedAt),
         )
         val labels = o.optJSONArray("labels")?.let { names ->
@@ -61,6 +60,6 @@ object NoteSerializer {
             val name = p.optString("name").trim()
             if (name.isNotEmpty() && p.has("latitude") && p.has("longitude")) PlaceRef(name, p.getDouble("latitude"), p.getDouble("longitude"), p.optBoolean("leave")) else null
         }
-        return Parsed(note, uuid.isNotEmpty(), labels, place)
+        return Parsed(note, labels, place)
     }
 }
