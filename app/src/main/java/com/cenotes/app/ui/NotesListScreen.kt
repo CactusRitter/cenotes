@@ -443,6 +443,14 @@ fun NotesListScreen(
                 }
             }
 
+            // Behind the status bar and the top row, once the list has scrolled: what passes below does not mix with them.
+            com.cenotes.app.ui.glass.TopScrim(
+                height = topPadding + 4.dp,
+                hazeState = hazeState,
+                visible = gridState.canScrollBackward,
+                modifier = Modifier.align(Alignment.TopCenter),
+            )
+
             Column(
                 Modifier
                     .fillMaxWidth()
