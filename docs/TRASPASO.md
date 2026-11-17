@@ -11,9 +11,10 @@ Estado vivo de la app para retomar el trabajo tras un `/clear`. Mantenerlo al d�
 - Copia de seguridad: un solo botón «Crear copia» (zip con notas, imágenes y/o ajustes) + Importar; sin página aparte de ajustes.
 
 ## En curso
-- Nada.
+- Nada mío. Una sesión lateral subió Cristal V2 (d330941, f48e906: Haze 2.0.1, `ui/glass` idéntico al de Celander), sin publicar.
 
 ## Pendiente
+- Revisar a mano los 6 diseños y la tableta con Cristal V2 (no duplicar ese trabajo).
 - Ce debe devolver tableta (R52Y806MWSP) y S26 (RFGL107KERL) a Cenotes 2.0.1: ahora llevan la build del experimento Drive.
 - Sin verificar: actualización en el OPPO de 2.0.0 a 2.0.1 desde la propia app; restauración real en los dispositivos de César.
 
