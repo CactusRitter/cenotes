@@ -45,3 +45,6 @@ gh release create vx.y.z "G:/Mi unidad/Ce Apps/Cenotes/Cenotes-x.y.z.apk" --titl
 
 ### Arquitectura
 - Simple: sin Hilt; las dependencias viven en `CenotesApp`; navegación con estado de Compose. Room es la fuente de verdad de las notas; los ajustes, en `SettingsRepository` (SharedPreferences).
+
+## Ahorro de tokens (norma de César para todas las apps Ce)
+Lee `D:\cesar\Documents\Claude Projects\Ce\docs\AHORRO.md`: subagentes para leer/comparar/buscar (resumen de 10-15 líneas), salidas siempre recortadas, mensajes cortos entre sesiones, modelo barato en tareas mecánicas, y mantener `docs/TRASPASO.md` de esta app al día (aviso a César «conviene /clear» al cerrar un bloque grande).
