@@ -147,7 +147,11 @@ fun DriveLabPage() {
                 field(pass2, "Repeat the passphrase") { pass2 = it }
             } else if (!unlocked) {
                 field(pass, "Passphrase (or recovery key)") { pass = it }
-            } else if (changing) {
+            }
+            if (unlocked && !changing) {
+                field(newPass, "Lab: phrase for the simulated change") { newPass = it }
+            }
+            if (unlocked && changing) {
                 field(pass, "Current passphrase") { pass = it }
                 field(newPass, "New passphrase (min $MinPassphrase)") { newPass = it }
                 field(pass2, "Repeat the new passphrase") { pass2 = it }
@@ -251,6 +255,24 @@ fun DriveLabPage() {
             }
             ChoiceChip("List", false, enabled = s.token != null && !busy) {
                 drive { api -> api.list().let { l -> say("${l.size} file(s) in Drive: " + l.joinToString { "${it.name} (${it.size} B)" }) } }
+            }
+            ChoiceChip("Reset keyring (lab)", false, enabled = s.token != null && !busy) {
+                drive { api ->
+                    val all = api.list().filter { it.name == DriveKeyring.FileName || it.name == TestFile }
+                    all.forEach { api.delete(it.id) }
+                    s.keyring = null; s.keyringId = null; s.dek = null; s.checked = true
+                    say("Reset: deleted ${all.size} file(s) (keyring and test data).")
+                }
+            }
+            ChoiceChip("Lab: simulate change elsewhere", false, enabled = unlocked && newPass.length >= MinPassphrase && !busy) {
+                drive { api ->
+                    val before = s.keyring ?: return@drive
+                    val dek = s.dek ?: return@drive
+                    val f = api.list().firstOrNull { it.name == DriveKeyring.FileName } ?: return@drive
+                    val next = withContext(Dispatchers.Default) { DriveKeyring.changePassphrase(Keyring.parse(api.get(f.id)), dek, newPass.toCharArray()) }
+                    api.put(DriveKeyring.FileName, next.toBytes(), f.id)
+                    say("Lab: another device uploaded generation ${next.generation} (this device still has ${before.generation}).")
+                }
             }
             ChoiceChip("Lock", false, enabled = unlocked && !busy) { s.dek = null; say("Locked.") }
         }
