@@ -1,3 +1,6 @@
+## 1.6.2
+- Cenotes is now signed with its own key. You need to reinstall it once: back up your notes and settings, uninstall, install this version and restore.
+
 ## 1.6.1
 - A strip now sits behind the status bar and the top row, so notes no longer mix with the title and buttons when you scroll the list.
 - Brutalist design: the hard shadow of the card returning to the list is now visible during the whole transition.

@@ -10,3 +10,8 @@
 .cxx/
 .kotlin/
 .claude/settings.local.json
+
+# Firma de release (claves fuera del repo)
+/keystore/
+keystore.properties
+*.jks

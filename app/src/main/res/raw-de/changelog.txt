@@ -1,3 +1,6 @@
+## 1.6.2
+- Cenotes wird jetzt mit einem eigenen Schlüssel signiert. Du musst die App einmal neu installieren: Sichere deine Notizen und Einstellungen, deinstalliere sie, installiere diese Version und stelle die Sicherung wieder her.
+
 ## 1.6.1
 - Ein Streifen hinter der Statusleiste und der oberen Zeile verhindert, dass Notizen beim Scrollen der Liste mit Titel und Schaltflächen verschwimmen.
 - Brutalist-Design: Der harte Schatten der Karte, die zur Liste zurückkehrt, ist jetzt während des ganzen Übergangs sichtbar.
