@@ -1,3 +1,11 @@
+## 1.6.0
+- Updates now download inside the app, with a progress bar and a Cancel button. If the connection drops, the download picks up where it left off.
+- Selecting notes follows each design: its own border and tick in Brutalist, Retro 98, Paper and AMOLED.
+- Every note now has its own identity, and Cenotes remembers the notes you delete for good. It is the first step towards syncing between devices. Your notes are updated by themselves the first time you open the app.
+- Backups are now a .zip with your notes and your settings kept apart. When you import one, Cenotes shows what it holds and asks what to restore, with check boxes. Backups made by older versions can no longer be imported.
+- Brutalist design: the hard shadow of a card is no longer cut off when you close a note.
+- Behind the scenes: code tidy-up.
+
 ## 1.5.1
 - Brutalist design: the hard shadow of note cards no longer gets cut off when you archive, delete or add a note, nor the one of the search bar, the link chip and the formatting bar as they appear.
 

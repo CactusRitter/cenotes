@@ -1,3 +1,11 @@
+## 1.6.0
+- Las actualizaciones se descargan ahora dentro de la app, con barra de progreso y botón Cancelar. Si se corta la conexión, la descarga sigue donde se quedó.
+- Al seleccionar notas, la selección sigue cada diseño: borde y marca propios en Brutalista, Retro 98, Papel y AMOLED.
+- Cada nota tiene ahora su propia identidad, y Cenotes recuerda las notas que borras para siempre. Es el primer paso para sincronizar entre dispositivos. Tus notas se actualizan solas la primera vez que abres la app.
+- Las copias de seguridad son ahora un .zip con tus notas y tus ajustes por separado. Al importar una, Cenotes muestra lo que lleva y pregunta qué restaurar, con casillas. Las copias hechas con versiones anteriores ya no se pueden importar.
+- Diseño Brutalista: la sombra dura de una tarjeta ya no se corta al cerrar una nota.
+- Por dentro: limpieza de código.
+
 ## 1.5.1
 - Diseño Brutalista: la sombra dura de las tarjetas de nota ya no se corta al archivar, borrar o añadir una nota, ni la de la barra de búsqueda, el chip de enlace y la barra de formato al aparecer.
 
