@@ -452,8 +452,6 @@ class NotesViewModel(private val app: CenotesApp) : ViewModel() {
         }
     }
 
-    fun togglePin(note: Note) = write { dao.update(note.copy(pinned = !note.pinned)) }
-
     /** Adds [labelId] to all the selected notes, or removes it ([add] = false). Keeps the selection. */
     fun setLabelOnSelected(labelId: Long, add: Boolean) {
         val ids = _selected.value

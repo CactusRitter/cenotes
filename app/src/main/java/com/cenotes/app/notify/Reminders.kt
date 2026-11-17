@@ -38,7 +38,6 @@ object Reminders {
     private const val SNOOZE_MS = 60L * 60 * 1000
 
     fun createChannel(context: Context) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         val channel = NotificationChannel(CHANNEL, context.getString(R.string.reminder_channel), NotificationManager.IMPORTANCE_HIGH)
         channel.description = context.getString(R.string.reminder_channel_body)
         context.getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
