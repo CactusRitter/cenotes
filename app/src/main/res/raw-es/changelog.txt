@@ -1,3 +1,7 @@
+## 1.6.1
+- Una franja detrás de la barra de estado y de la fila superior evita que las notas se mezclen con el título y los botones al desplazar la lista.
+- Diseño Brutalista: la sombra dura de la tarjeta que vuelve a la lista se ve durante toda la transición.
+
 ## 1.6.0
 - Las actualizaciones se descargan ahora dentro de la app, con barra de progreso y botón Cancelar. Si se corta la conexión, la descarga sigue donde se quedó.
 - Al seleccionar notas, la selección sigue cada diseño: borde y marca propios en Brutalista, Retro 98, Papel y AMOLED.

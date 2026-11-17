@@ -1,3 +1,7 @@
+## 1.6.1
+- Ein Streifen hinter der Statusleiste und der oberen Zeile verhindert, dass Notizen beim Scrollen der Liste mit Titel und Schaltflächen verschwimmen.
+- Brutalist-Design: Der harte Schatten der Karte, die zur Liste zurückkehrt, ist jetzt während des ganzen Übergangs sichtbar.
+
 ## 1.6.0
 - Updates werden jetzt in der App heruntergeladen, mit Fortschrittsbalken und Abbrechen-Taste. Bricht die Verbindung ab, geht der Download dort weiter, wo er stehen geblieben ist.
 - Die Auswahl von Notizen folgt jetzt jedem Design: eigener Rahmen und eigenes Häkchen in Brutalist, Retro 98, Papier und AMOLED.

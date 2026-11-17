@@ -1,3 +1,7 @@
+## 1.6.1
+- A strip now sits behind the status bar and the top row, so notes no longer mix with the title and buttons when you scroll the list.
+- Brutalist design: the hard shadow of the card returning to the list is now visible during the whole transition.
+
 ## 1.6.0
 - Updates now download inside the app, with a progress bar and a Cancel button. If the connection drops, the download picks up where it left off.
 - Selecting notes follows each design: its own border and tick in Brutalist, Retro 98, Paper and AMOLED.
