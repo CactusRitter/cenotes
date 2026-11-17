@@ -1,4 +1,5 @@
-## 1.6.2
+## 2.0.0
+- Die Sicherung ist jetzt ein einziger Knopf: „Sicherung erstellen“ fragt mit Kontrollkästchen, ob Notizen (mit oder ohne Bilder) und/oder Einstellungen in einer einzigen .zip-Datei gespeichert werden.
 - Cenotes wird jetzt mit einem eigenen Schlüssel signiert. Du musst die App einmal neu installieren: Sichere deine Notizen und Einstellungen, deinstalliere sie, installiere diese Version und stelle die Sicherung wieder her.
 
 ## 1.6.1

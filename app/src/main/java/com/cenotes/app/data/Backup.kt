@@ -53,9 +53,14 @@ class Backup(
 
     // ---- Export ----
 
-    /** Notes backup: `manifest.json` + `notes.json` (+ `images/…`, + `settings.json` if [includeSettings]). */
-    suspend fun exportNotes(uri: Uri, includeImages: Boolean, includeSettings: Boolean = false): ExportResult = withContext(Dispatchers.IO) {
-        val notes = dao.all()
+    /**
+     * One backup zip: `manifest.json` + `notes.json` (+ `images/…` if [includeImages]) if [includeNotes] + `settings.json`
+     * if [includeSettings]. `contents` in the manifest says what went in.
+     */
+    suspend fun export(uri: Uri, includeNotes: Boolean, includeImages: Boolean, includeSettings: Boolean): ExportResult = withContext(Dispatchers.IO) {
+        require(includeNotes || includeSettings) { "Nothing to back up" }
+        val includeImages = includeNotes && includeImages
+        val notes = if (includeNotes) dao.all() else emptyList()
         val placeById = dao.places().associateBy { it.id }
         val labels = dao.labels()
         val labelName = labels.associate { it.id to it.name }
@@ -63,8 +68,9 @@ class Backup(
         var imageCount = 0
         val out = context.contentResolver.openOutputStream(uri, "wt") ?: error("No se pudo escribir el archivo")
         ZipOutputStream(out.buffered()).use { zip ->
-            zip.putJson(ManifestEntry, manifest(if (includeSettings) listOf(ContentNotes, ContentSettings) else listOf(ContentNotes)))
+            zip.putJson(ManifestEntry, manifest(listOfNotNull(ContentNotes.takeIf { includeNotes }, ContentSettings.takeIf { includeSettings })))
 
+            if (includeNotes) {
             val array = JSONArray()
             notes.forEach { n ->
                 array.put(
@@ -89,6 +95,7 @@ class Backup(
                 // Notes deleted for good, so an old backup or another phone does not bring them back.
                 .put("deleted", JSONArray(dao.deletedNotes().map { JSONObject().put("uuid", it.uuid).put("deletedAt", it.deletedAt) }))
             zip.putText(NotesEntry, root.toString(2))
+            }
             // The settings as the old "Settings backup" wrote them; never anything that looks like a secret (the file is plain text).
             if (includeSettings) zip.putText(SettingsEntry, settings.exportJson())
 
@@ -108,12 +115,8 @@ class Backup(
     }
 
     /** Settings backup: `manifest.json` + `settings.json` only. */
-    suspend fun exportSettings(uri: Uri) = withContext(Dispatchers.IO) {
-        val out = context.contentResolver.openOutputStream(uri, "wt") ?: error("No se pudo escribir el archivo")
-        ZipOutputStream(out.buffered()).use { zip ->
-            zip.putJson(ManifestEntry, manifest(listOf(ContentSettings)))
-            zip.putText(SettingsEntry, settings.exportJson())
-        }
+    suspend fun exportSettings(uri: Uri) {
+        export(uri, includeNotes = false, includeImages = false, includeSettings = true)
     }
 
     private fun manifest(contents: List<String>) = JSONObject()

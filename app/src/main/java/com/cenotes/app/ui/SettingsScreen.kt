@@ -400,17 +400,17 @@ private fun LabelColorsPage(
 // --- Backup ---
 
 /**
- * Backups are .zip files the user saves and picks with the system file picker (Drive, Downloads, a USB stick…): one for the
- * notes (images optional, settings optional) and one for the settings. Importing looks inside the file and asks what to
- * restore. See [Backup] for the container.
+ * Backups are one .zip the user saves and picks with the system file picker (Drive, Downloads, a USB stick…). A dialog
+ * asks what goes in (notes, with or without images; settings). Importing looks inside the file and asks what to restore. See [Backup] for the container.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun BackupPage(backup: Backup, onNotesImported: () -> Unit, onSettingsRestored: () -> Unit) {
     val resources = androidx.compose.ui.platform.LocalResources.current
     val scope = rememberCoroutineScope()
-    var includeImages by rememberSaveable { mutableStateOf(true) }
-    var includeSettings by rememberSaveable { mutableStateOf(false) }
+    // What the user chose in the create dialog, kept while the file picker is open.
+    var creating by rememberSaveable { mutableStateOf(false) }
+    var chosen by rememberSaveable { mutableStateOf(Triple(true, true, true)) }
     // The file the user picked and what is inside it, while they choose what to restore.
     var pending by remember { mutableStateOf<Pair<android.net.Uri, Backup.Contents>?>(null) }
     var working by remember { mutableStateOf(false) }
@@ -433,17 +433,31 @@ private fun BackupPage(backup: Backup, onNotesImported: () -> Unit, onSettingsRe
         }
     }
 
-    val notesLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
+    val createLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
         if (uri != null) run {
-            val r = backup.exportNotes(uri, includeImages, includeSettings)
-            resources.getString(R.string.backup_exported, r.notes, r.images)
+            val (notes, images, settings) = chosen
+            val r = backup.export(uri, notes, images, settings)
+            listOfNotNull(
+                if (notes) resources.getString(R.string.backup_exported, r.notes, r.images) else null,
+                if (settings) resources.getString(R.string.backup_exported_settings) else null,
+            ).joinToString(" ")
         }
     }
-    val settingsLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
-        if (uri != null) run {
-            backup.exportSettings(uri)
-            resources.getString(R.string.settings_backup_saved)
-        }
+    if (creating) {
+        CreateDialog(
+            onDismiss = { creating = false },
+            onCreate = { notes, images, settings ->
+                creating = false
+                chosen = Triple(notes, images, settings)
+                val date = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT).format(Date())
+                val name = when {
+                    notes && settings -> R.string.backup_file_all
+                    notes -> R.string.backup_file_notes
+                    else -> R.string.backup_file_settings
+                }
+                createLauncher.launch(resources.getString(name, date))
+            },
+        )
     }
     val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) run {
@@ -472,29 +486,11 @@ private fun BackupPage(backup: Backup, onNotesImported: () -> Unit, onSettingsRe
         )
     }
 
-    Text(stringResource(R.string.backup_two_copies), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-    SwitchRow(
-        R.string.backup_include_images,
-        if (includeImages) R.string.backup_include_images_on else R.string.backup_include_images_off,
-        includeImages,
-    ) { includeImages = it }
-    SwitchRow(
-        R.string.backup_include_settings,
-        if (includeSettings) R.string.backup_include_settings_on else R.string.backup_include_settings_off,
-        includeSettings,
-    ) { includeSettings = it }
     SettingsCard {
         Text(stringResource(R.string.backup), style = MaterialTheme.typography.titleSmall)
         Text(stringResource(R.string.backup_summary), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            ChoiceChip(stringResource(R.string.backup_export_notes), selected = false, enabled = !working) {
-                val date = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT).format(Date())
-                notesLauncher.launch(resources.getString(R.string.backup_file_notes, date))
-            }
-            ChoiceChip(stringResource(R.string.backup_export_settings), selected = false, enabled = !working) {
-                val date = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT).format(Date())
-                settingsLauncher.launch(resources.getString(R.string.backup_file_settings, date))
-            }
+            ChoiceChip(stringResource(R.string.backup_create), selected = false, enabled = !working) { creating = true }
             ChoiceChip(stringResource(R.string.backup_import), selected = false, enabled = !working) {
                 // Any file: some devices label a .zip with another type (x-zip, x-compressed…) and the picker would grey it
                 // out. Backup.inspect checks that it is a Cenotes backup and says so if it is not.
@@ -506,6 +502,33 @@ private fun BackupPage(backup: Backup, onNotesImported: () -> Unit, onSettingsRe
             Text(status, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
         }
     }
+}
+
+/** Asks what to back up: notes (with images or not) and/or settings; at least one of the two. */
+@Composable
+private fun CreateDialog(onDismiss: () -> Unit, onCreate: (notes: Boolean, images: Boolean, settings: Boolean) -> Unit) {
+    var notes by rememberSaveable { mutableStateOf(true) }
+    var images by rememberSaveable { mutableStateOf(true) }
+    var settings by rememberSaveable { mutableStateOf(true) }
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(28.dp),
+        containerColor = LocalGlass.current.menu,
+        title = { Text(stringResource(R.string.backup_create_title), fontWeight = androidx.compose.ui.text.font.FontWeight.Bold) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                RestoreRow(R.string.backup_restore_notes, notes) { notes = it }
+                if (notes) RestoreRow(R.string.backup_with_images, images, modifier = Modifier.padding(start = 32.dp)) { images = it }
+                RestoreRow(R.string.backup_restore_settings, settings) { settings = it }
+            }
+        },
+        confirmButton = {
+            androidx.compose.material3.TextButton(enabled = notes || settings, onClick = { onCreate(notes, images, settings) }) {
+                Text(stringResource(R.string.backup_create_confirm), fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+            }
+        },
+        dismissButton = { androidx.compose.material3.TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
+    )
 }
 
 /** Asks what to restore from a backup, with a switch only for what the file carries. Settings start off when notes are there too. */
@@ -538,10 +561,10 @@ private fun RestoreDialog(contents: Backup.Contents, onDismiss: () -> Unit, onRe
  * checklist (Material's, or the Windows 98 one in Retro 98), so it follows every design.
  */
 @Composable
-private fun RestoreRow(label: Int, checked: Boolean, onChange: (Boolean) -> Unit) {
+private fun RestoreRow(label: Int, checked: Boolean, modifier: Modifier = Modifier, onChange: (Boolean) -> Unit) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .toggleable(value = checked, role = androidx.compose.ui.semantics.Role.Checkbox, onValueChange = onChange)
             .padding(vertical = 4.dp),
