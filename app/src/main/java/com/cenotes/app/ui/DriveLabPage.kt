@@ -281,10 +281,11 @@ fun DriveLabPage() {
             }
             ChoiceChip("Reset keyring (lab)", false, enabled = s.token != null && !busy) {
                 drive { api ->
-                    val all = api.list().filter { it.name == DriveKeyring.FileName || it.name == TestFile }
+                    // Everything in the app folder: keyring, test file, notes, tombstones and images.
+                    val all = api.list()
                     all.forEach { api.delete(it.id) }
                     s.keyring = null; s.keyringId = null; s.dek = null; s.checked = true
-                    say("Reset: deleted ${all.size} file(s) (keyring and test data).")
+                    say("Reset: deleted ${all.size} file(s) (the whole app folder).")
                 }
             }
             ChoiceChip("Lab: simulate change elsewhere", false, enabled = unlocked && newPass.length >= MinPassphrase && !busy) {
