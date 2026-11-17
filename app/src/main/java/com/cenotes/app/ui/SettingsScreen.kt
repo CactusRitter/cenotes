@@ -409,7 +409,7 @@ private fun BackupPage(backup: Backup, onNotesImported: () -> Unit) {
     val resources = androidx.compose.ui.platform.LocalResources.current
     val scope = rememberCoroutineScope()
     var includeImages by rememberSaveable { mutableStateOf(true) }
-    var includeSettings by rememberSaveable { mutableStateOf(true) }
+    var includeSettings by rememberSaveable { mutableStateOf(false) }
     // A backup that carries settings waits here while the user chooses whether to restore them.
     var askSettingsFor by remember { mutableStateOf<android.net.Uri?>(null) }
     var working by remember { mutableStateOf(false) }
@@ -474,6 +474,7 @@ private fun BackupPage(backup: Backup, onNotesImported: () -> Unit) {
         )
     }
 
+    Text(stringResource(R.string.backup_two_copies), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     SwitchRow(
         R.string.backup_include_images,
         if (includeImages) R.string.backup_include_images_on else R.string.backup_include_images_off,

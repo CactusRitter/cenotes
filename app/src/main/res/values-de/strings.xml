@@ -83,6 +83,7 @@
     <string name="backup_not_cenotes">Diese Datei ist keine Cenotes-Sicherung.</string>
     <string name="backup_failed">Nicht abgeschlossen: %1$s</string>
     <string name="backup_file_name">Cenotes-Sicherung-%1$s.zip</string>
+    <string name="backup_two_copies">Es gibt zwei getrennte Sicherungen: diese enthält deine Notizen (Bilder optional); deine Einstellungen haben eine eigene Sicherung unter Einstellungen → Sicherung der Einstellungen.</string>
     <string name="backup_include_settings">Einstellungen einschließen</string>
     <string name="backup_include_settings_on">Die Datei enthält auch Aussehen, Farben, Reihenfolge und weitere Einstellungen, um sie auf einem anderen Handy wiederherzustellen. Nie Passwörter oder Schlüssel.</string>
     <string name="backup_include_settings_off">Nur Notizen; Einstellungen werden nicht gespeichert.</string>

@@ -83,6 +83,7 @@
     <string name="backup_not_cenotes">Ese archivo no es una copia de Cenotes.</string>
     <string name="backup_failed">No se pudo completar: %1$s</string>
     <string name="backup_file_name">Cenotes-copia-%1$s.zip</string>
+    <string name="backup_two_copies">Son dos copias distintas: esta guarda tus notas (con imágenes si quieres); los ajustes tienen su propia copia en Ajustes → Copia de ajustes.</string>
     <string name="backup_include_settings">Incluir ajustes</string>
     <string name="backup_include_settings_on">El archivo guarda también el aspecto, los colores, el orden y demás ajustes, para restaurarlos en otro móvil. Nunca contraseñas ni claves.</string>
     <string name="backup_include_settings_off">Solo las notas; los ajustes no se guardan.</string>
