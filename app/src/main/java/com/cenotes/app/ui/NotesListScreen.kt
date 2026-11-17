@@ -20,7 +20,6 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -56,7 +55,6 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
@@ -115,7 +113,6 @@ import com.cenotes.app.CenotesApp
 import com.cenotes.app.R
 import com.cenotes.app.data.Label
 import com.cenotes.app.data.NoteLayout
-import com.cenotes.app.ui.glass.GlassBackground
 import com.cenotes.app.ui.glass.GlassIconButton
 import com.cenotes.app.ui.glass.SelectionBadge
 import com.cenotes.app.ui.glass.selectedOutline

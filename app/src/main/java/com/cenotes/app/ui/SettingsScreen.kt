@@ -16,7 +16,6 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.foundation.selection.selectable
@@ -70,7 +69,6 @@ import com.cenotes.app.data.AppSettings
 import com.cenotes.app.data.Backup
 import com.cenotes.app.data.MaxCustomColors
 import com.cenotes.app.data.SettingsRepository
-import com.cenotes.app.ui.glass.GlassBackground
 import com.cenotes.app.ui.glass.GlassKind
 import com.cenotes.app.ui.glass.GlassPill
 import com.cenotes.app.ui.glass.GlassSlider

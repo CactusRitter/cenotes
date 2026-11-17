@@ -73,7 +73,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.DropdownMenu
@@ -129,7 +128,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cenotes.app.R
 import com.cenotes.app.data.Note
-import com.cenotes.app.ui.glass.GlassBackground
 import com.cenotes.app.ui.glass.GlassIconButton
 import com.cenotes.app.ui.glass.GlassKind
 import com.cenotes.app.ui.glass.GlassPill
