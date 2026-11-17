@@ -108,6 +108,7 @@ private object SettingsRoute {
     const val LABEL_COLORS = "label_colors"
     const val BACKUP = "backup"
     const val UPDATES = "updates"
+    const val DRIVE_LAB = "drive_lab"
 
     fun parent(route: String): String? = if (route == MAIN) null else MAIN
     fun depth(route: String): Int = if (route == MAIN) 0 else 1
@@ -135,6 +136,7 @@ fun SettingsScreen(
         SettingsRoute.LABEL_COLORS -> stringResource(R.string.label_colors)
         SettingsRoute.BACKUP -> stringResource(R.string.backup)
         SettingsRoute.UPDATES -> stringResource(R.string.settings_section_updates)
+        SettingsRoute.DRIVE_LAB -> "Drive lab"
         else -> stringResource(R.string.settings)
     }
 
@@ -185,6 +187,7 @@ fun SettingsScreen(
                         SettingsRoute.LABEL_COLORS -> LabelColorsPage(settings, onAddColor, onEditColor, onDeleteColor)
                         SettingsRoute.BACKUP -> BackupPage(backup, onNotesImported, onAccentChanged)
                         SettingsRoute.UPDATES -> UpdatesPage(settings, repo)
+                        SettingsRoute.DRIVE_LAB -> DriveLabPage()
                     }
                 }
             }
@@ -203,6 +206,7 @@ private fun MainPage(settings: AppSettings, onRoute: (String) -> Unit) {
         Triple(stringResource(R.string.label_colors), stringResource(R.string.label_colors_summary, settings.customColors.size, MaxCustomColors), SettingsRoute.LABEL_COLORS to LabelIcon),
         Triple(stringResource(R.string.backup), stringResource(R.string.backup_summary), SettingsRoute.BACKUP to BackupIcon),
         Triple(stringResource(R.string.settings_section_updates), stringResource(R.string.settings_version, BuildConfig.VERSION_NAME), SettingsRoute.UPDATES to DownloadIcon),
+        Triple("Drive lab", "Experiment, not in releases", SettingsRoute.DRIVE_LAB to DownloadIcon),
     )
     rows.forEachIndexed { index, (title, body, target) ->
         BigRow(title, body, index, onClick = { onRoute(target.first) }) {

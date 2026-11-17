@@ -80,5 +80,6 @@ dependencies {
     implementation(libs.androidx.biometric)
     implementation(libs.mlkit.text.recognition)
     implementation(libs.play.services.location)
+    implementation(libs.play.services.auth)
     debugImplementation(libs.androidx.ui.tooling)
 }
