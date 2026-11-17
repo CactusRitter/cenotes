@@ -87,7 +87,7 @@ import com.cenotes.app.ui.theme.DownloadIcon
 import com.cenotes.app.ui.theme.SettingsBackupIcon
 import com.cenotes.app.ui.theme.LabelIcon
 import com.cenotes.app.ui.theme.LocalGlass
-import com.cenotes.app.ui.glass.GlassSwitch
+import androidx.compose.foundation.selection.toggleable
 import com.cenotes.app.ui.theme.PaletteIcon
 import com.cenotes.app.ui.theme.Skin
 import com.cenotes.app.ui.theme.ThemeMode
@@ -535,11 +535,35 @@ private fun RestoreDialog(contents: Backup.Contents, onDismiss: () -> Unit, onRe
     )
 }
 
+/**
+ * One choice of the restore dialog: a checkbox and its label, the whole row toggles. The box is the same one as in a
+ * checklist (Material's, or the Windows 98 one in Retro 98), so it follows every design.
+ */
 @Composable
 private fun RestoreRow(label: Int, checked: Boolean, onChange: (Boolean) -> Unit) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .toggleable(value = checked, role = androidx.compose.ui.semantics.Role.Checkbox, onValueChange = onChange)
+            .padding(vertical = 4.dp),
+    ) {
+        com.cenotes.app.ui.glass.TaskCheckbox(
+            checked = checked,
+            onCheckedChange = null,
+            modifier = Modifier.padding(start = 2.dp, end = 14.dp),
+            size = 18.dp,
+        ) {
+            androidx.compose.runtime.CompositionLocalProvider(androidx.compose.material3.LocalMinimumInteractiveComponentSize provides 0.dp) {
+                androidx.compose.material3.Checkbox(
+                    checked = checked,
+                    onCheckedChange = null,
+                    colors = androidx.compose.material3.CheckboxDefaults.colors(checkedColor = MaterialTheme.colorScheme.primary),
+                    modifier = Modifier.padding(end = 12.dp),
+                )
+            }
+        }
         Text(stringResource(label), style = MaterialTheme.typography.bodyLarge)
-        GlassSwitch(checked, onChange)
     }
 }
 
