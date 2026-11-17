@@ -31,7 +31,9 @@ import com.cenotes.app.sync.AuthStep
 import com.cenotes.app.sync.DriveApi
 import com.cenotes.app.sync.DriveAuth
 import com.cenotes.app.sync.DriveCrypto
+import com.cenotes.app.CenotesApp
 import com.cenotes.app.sync.DriveKeyring
+import com.cenotes.app.sync.DriveSync
 import com.cenotes.app.sync.Keyring
 import com.cenotes.app.ui.theme.VisibilityIcon
 import com.cenotes.app.ui.theme.VisibilityOffIcon
@@ -70,6 +72,8 @@ fun DriveLabPage() {
     var changing by rememberSaveable { mutableStateOf(false) }
     var log by rememberSaveable { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
+    var letter by rememberSaveable { mutableStateOf("A") }
+    val app = context.applicationContext as CenotesApp
     fun say(text: String) {
         log = (log + text + "\n").takeLast(3000)
         android.widget.Toast.makeText(context, text.take(160), android.widget.Toast.LENGTH_LONG).show()
@@ -147,6 +151,9 @@ fun DriveLabPage() {
                 field(pass2, "Repeat the passphrase") { pass2 = it }
             } else if (!unlocked) {
                 field(pass, "Passphrase (or recovery key)") { pass = it }
+            }
+            if (unlocked) {
+                OutlinedTextField(value = letter, onValueChange = { letter = it.take(1).uppercase() }, label = { Text("Lab note letter (A-E)") }, singleLine = true)
             }
             if (unlocked && !changing) {
                 field(newPass, "Lab: phrase for the simulated change") { newPass = it }
@@ -245,6 +252,21 @@ fun DriveLabPage() {
                         say(plain.fold({ "Downloaded and decrypted: ${String(it)}" }, { "Cannot decrypt (${it.javaClass.simpleName})" }))
                     }
                 }
+                ChoiceChip("Sync now", false, enabled = !busy) {
+                    drive { api ->
+                        refresh(api)
+                        val dek = s.dek ?: return@drive
+                        val prefs = context.getSharedPreferences("drive_sync", android.content.Context.MODE_PRIVATE)
+                        val r = DriveSync(api, dek, app.database.noteDao(), app.images, prefs).sync()
+                        say(r.toString())
+                    }
+                }
+                ChoiceChip("Lab: seed 5 notes", false, enabled = !busy) { scope.launch { say(labSeed(app)) } }
+                ChoiceChip("Lab: new note", false, enabled = !busy) { scope.launch { say(labNew(app)) } }
+                ChoiceChip("Lab: edit note $letter", false, enabled = !busy) { scope.launch { say(labEdit(app, letter)) } }
+                ChoiceChip("Lab: trash note $letter", false, enabled = !busy) { scope.launch { say(labTrash(app, letter)) } }
+                ChoiceChip("Lab: delete note $letter", false, enabled = !busy) { scope.launch { say(labDelete(app, letter)) } }
+                ChoiceChip("Lab: show notes", false, enabled = !busy) { scope.launch { say(labShow(app)) } }
                 ChoiceChip("Delete test", false, enabled = !busy) {
                     drive { api ->
                         val f = api.list().filter { it.name == TestFile }

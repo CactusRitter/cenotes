@@ -57,15 +57,19 @@ object DriveAuth {
     }
 }
 
-class DriveFile(val id: String, val name: String, val modifiedTime: String, val size: Long)
+class DriveFile(val id: String, val name: String, val modifiedTime: String, val size: Long, val props: Map<String, String> = emptyMap())
 
 class DriveApi(private val token: String, private val http: OkHttpClient = OkHttpClient()) {
     private val files = "https://www.googleapis.com/drive/v3/files"
     private val upload = "https://www.googleapis.com/upload/drive/v3/files"
 
+    /** Requests made through this client (for measuring the sync). */
+    val requests = java.util.concurrent.atomic.AtomicInteger()
+
     private fun Request.Builder.auth() = header("Authorization", "Bearer $token")
 
     private suspend fun <T> call(request: Request, read: (okhttp3.Response) -> T): T = withContext(Dispatchers.IO) {
+        requests.incrementAndGet()
         http.newCall(request).execute().use { r ->
             if (!r.isSuccessful) throw DriveException(r.code, r.body.string().take(400))
             read(r)
@@ -78,7 +82,7 @@ class DriveApi(private val token: String, private val http: OkHttpClient = OkHtt
         do {
             val url = files.toHttpUrl().newBuilder()
                 .addQueryParameter("spaces", "appDataFolder")
-                .addQueryParameter("fields", "nextPageToken,files(id,name,modifiedTime,size)")
+                .addQueryParameter("fields", "nextPageToken,files(id,name,modifiedTime,size,appProperties)")
                 .addQueryParameter("pageSize", "1000")
                 .apply { page?.let { addQueryParameter("pageToken", it) } }
                 .build()
@@ -86,7 +90,9 @@ class DriveApi(private val token: String, private val http: OkHttpClient = OkHtt
             val arr = json.optJSONArray("files") ?: JSONArray()
             for (i in 0 until arr.length()) {
                 val f = arr.getJSONObject(i)
-                out += DriveFile(f.getString("id"), f.getString("name"), f.optString("modifiedTime"), f.optString("size", "0").toLong())
+                val ap = f.optJSONObject("appProperties")
+                val props = ap?.keys()?.asSequence()?.associateWith { ap.optString(it) } ?: emptyMap()
+                out += DriveFile(f.getString("id"), f.getString("name"), f.optString("modifiedTime"), f.optString("size", "0").toLong(), props)
             }
             page = json.optString("nextPageToken").ifEmpty { null }
         } while (page != null)
@@ -94,8 +100,11 @@ class DriveApi(private val token: String, private val http: OkHttpClient = OkHtt
     }
 
     /** Creates the file, or replaces its content when [existingId] is given. Returns the file id. */
-    suspend fun put(name: String, bytes: ByteArray, existingId: String? = null): String {
-        val meta = JSONObject().put("name", name).apply { if (existingId == null) put("parents", JSONArray().put("appDataFolder")) }
+    suspend fun put(name: String, bytes: ByteArray, existingId: String? = null, props: Map<String, String> = emptyMap()): String {
+        val meta = JSONObject().put("name", name).apply {
+            if (existingId == null) put("parents", JSONArray().put("appDataFolder"))
+            if (props.isNotEmpty()) put("appProperties", JSONObject(props))
+        }
         val body = MultipartBody.Builder().setType("multipart/related".toMediaType())
             .addPart(meta.toString().toRequestBody("application/json; charset=UTF-8".toMediaType()))
             .addPart(bytes.toRequestBody("application/octet-stream".toMediaType()))

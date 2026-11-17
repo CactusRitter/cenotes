@@ -19,6 +19,10 @@ abstract class NoteDao {
     @Query("SELECT * FROM notes WHERE trashedAt IS NULL ORDER BY pinned DESC, updatedAt DESC")
     abstract suspend fun all(): List<Note>
 
+    /** EXPERIMENT (Drive sync): every note, the Trash included. */
+    @Query("SELECT * FROM notes")
+    abstract suspend fun allForSync(): List<Note>
+
     /** The Trash, most recently deleted first. */
     @Query("SELECT * FROM notes WHERE trashedAt IS NOT NULL ORDER BY trashedAt DESC")
     abstract fun observeTrash(): Flow<List<Note>>
