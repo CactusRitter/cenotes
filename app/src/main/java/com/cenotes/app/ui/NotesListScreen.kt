@@ -382,7 +382,6 @@ fun NotesListScreen(
                                             fadeInSpec = glassSpring(), placementSpec = softBounceSpring(), fadeOutSpec = glassSpring(),
                                         ),
                                     )
-                                    .padding(end = LocalSkin.current.hardShadow, bottom = LocalSkin.current.hardShadow)
                                     .zIndex(if (dragging) 1f else 0f)
                                     .graphicsLayer {
                                         val t = reorder.translation(id)
@@ -434,7 +433,10 @@ fun NotesListScreen(
                                             )
                                         } else Modifier,
                                     )
-                                    .noteSharedBounds(id, shadowRoom = LocalSkin.current.hardShadow),
+                                    // The room for the hard shadow (Brutalist) goes INSIDE the shared element, so the overlay that draws the card while it
+                                    // travels includes the shadow; outside the element it was left out until the transition ended.
+                                    .noteSharedBounds(id, clipRect = LocalSkin.current.hardShadow > 0.dp)
+                                    .padding(end = LocalSkin.current.hardShadow, bottom = LocalSkin.current.hardShadow),
                             )
                         }
                     }
