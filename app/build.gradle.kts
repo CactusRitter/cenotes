@@ -56,7 +56,7 @@ dependencies {
     implementation(libs.haze)
     implementation(libs.coil.compose)
     implementation(libs.okhttp)
-    testImplementation("junit:junit:4.13.2")
+    testImplementation(libs.junit)
     implementation(libs.glance.appwidget)
     implementation(libs.androidx.biometric)
     implementation(libs.mlkit.text.recognition)
