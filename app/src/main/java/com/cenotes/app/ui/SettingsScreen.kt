@@ -82,7 +82,6 @@ import com.cenotes.app.ui.glass.softBounceSpring
 import com.cenotes.app.ui.theme.Accent
 import com.cenotes.app.ui.theme.BackupIcon
 import com.cenotes.app.ui.theme.DownloadIcon
-import com.cenotes.app.ui.theme.SettingsBackupIcon
 import com.cenotes.app.ui.theme.LabelIcon
 import com.cenotes.app.ui.theme.LocalGlass
 import androidx.compose.foundation.selection.toggleable
@@ -108,7 +107,6 @@ private object SettingsRoute {
     const val NOTES = "notes"
     const val LABEL_COLORS = "label_colors"
     const val BACKUP = "backup"
-    const val SETTINGS_BACKUP = "settings_backup"
     const val UPDATES = "updates"
 
     fun parent(route: String): String? = if (route == MAIN) null else MAIN
@@ -136,7 +134,6 @@ fun SettingsScreen(
         SettingsRoute.NOTES -> stringResource(R.string.section_notes)
         SettingsRoute.LABEL_COLORS -> stringResource(R.string.label_colors)
         SettingsRoute.BACKUP -> stringResource(R.string.backup)
-        SettingsRoute.SETTINGS_BACKUP -> stringResource(R.string.settings_section_backup)
         SettingsRoute.UPDATES -> stringResource(R.string.settings_section_updates)
         else -> stringResource(R.string.settings)
     }
@@ -187,7 +184,6 @@ fun SettingsScreen(
                         SettingsRoute.NOTES -> NotesPage(settings, repo)
                         SettingsRoute.LABEL_COLORS -> LabelColorsPage(settings, onAddColor, onEditColor, onDeleteColor)
                         SettingsRoute.BACKUP -> BackupPage(backup, onNotesImported, onAccentChanged)
-                        SettingsRoute.SETTINGS_BACKUP -> SettingsBackupPage(backup, onAccentChanged)
                         SettingsRoute.UPDATES -> UpdatesPage(settings, repo)
                     }
                 }
@@ -206,7 +202,6 @@ private fun MainPage(settings: AppSettings, onRoute: (String) -> Unit) {
         Triple(stringResource(R.string.section_notes), stringResource(R.string.settings_row_notes_body), SettingsRoute.NOTES to NotesIcon),
         Triple(stringResource(R.string.label_colors), stringResource(R.string.label_colors_summary, settings.customColors.size, MaxCustomColors), SettingsRoute.LABEL_COLORS to LabelIcon),
         Triple(stringResource(R.string.backup), stringResource(R.string.backup_summary), SettingsRoute.BACKUP to BackupIcon),
-        Triple(stringResource(R.string.settings_section_backup), stringResource(R.string.settings_row_backup_body), SettingsRoute.SETTINGS_BACKUP to SettingsBackupIcon),
         Triple(stringResource(R.string.settings_section_updates), stringResource(R.string.settings_version, BuildConfig.VERSION_NAME), SettingsRoute.UPDATES to DownloadIcon),
     )
     rows.forEachIndexed { index, (title, body, target) ->
@@ -585,59 +580,6 @@ private fun RestoreRow(label: Int, checked: Boolean, modifier: Modifier = Modifi
             }
         }
         Text(stringResource(label), style = MaterialTheme.typography.bodyLarge)
-    }
-}
-
-// --- Settings backup ---
-
-/**
- * Settings → Settings backup: every setting (look, colours, label colours, updates) in a .zip the user picks
- * (Drive, Downloads…) and brought back on this or another device. Notes are not in it: they have their own backup.
- */
-@Composable
-private fun SettingsBackupPage(backup: Backup, onAccentChanged: () -> Unit) {
-    val resources = androidx.compose.ui.platform.LocalResources.current
-    val scope = rememberCoroutineScope()
-    var message by remember { mutableStateOf<String?>(null) }
-    val save = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
-        if (uri == null) return@rememberLauncherForActivityResult
-        scope.launch {
-            message = runCatching { backup.exportSettings(uri) }
-                .fold({ resources.getString(R.string.settings_backup_saved) }, { resources.getString(R.string.settings_backup_failed) })
-        }
-    }
-    val open = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if (uri == null) return@rememberLauncherForActivityResult
-        scope.launch {
-            message = try {
-                if (backup.inspect(uri).settings) {
-                    backup.import(uri, notes = false, settings = true)
-                    onAccentChanged()
-                    resources.getString(R.string.settings_backup_restored)
-                } else resources.getString(R.string.settings_backup_invalid)
-            } catch (e: Backup.NotABackupException) {
-                resources.getString(R.string.settings_backup_invalid)
-            } catch (e: Backup.TooNewException) {
-                resources.getString(R.string.backup_too_new)
-            } catch (e: Exception) {
-                resources.getString(R.string.settings_backup_failed)
-            }
-        }
-    }
-    SettingsCard {
-        Text(stringResource(R.string.settings_backup_title), style = MaterialTheme.typography.titleSmall)
-        Text(stringResource(R.string.settings_backup_body), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            ChoiceChip(stringResource(R.string.settings_backup_export), false) {
-                val date = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT).format(Date())
-                save.launch(resources.getString(R.string.backup_file_settings, date))
-            }
-            ChoiceChip(stringResource(R.string.settings_backup_import), false) {
-                // Any file, for the same reason; inspect says if it is not a settings backup.
-                open.launch(arrayOf("*/*"))
-            }
-        }
-        message?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary) }
     }
 }
 

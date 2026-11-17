@@ -1,3 +1,6 @@
+## 2.0.1
+- Una sola copia de seguridad: desaparece la página aparte «Copia de ajustes». «Crear copia de seguridad» pregunta qué guardar (notas, imágenes, ajustes) e Importar restaura cualquiera de ellas.
+
 ## 2.0.0
 - La copia de seguridad es ahora un solo botón: «Crear copia de seguridad» pregunta, con casillas, si guardar notas (con o sin imágenes) y/o ajustes en un único .zip.
 - Cenotes pasa a firmarse con clave propia. Hay que reinstalarla una vez: haz una copia de seguridad de tus notas y ajustes, desinstala, instala esta versión y restaura.

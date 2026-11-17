@@ -114,11 +114,6 @@ class Backup(
         ExportResult(notes.size, imageCount)
     }
 
-    /** Settings backup: `manifest.json` + `settings.json` only. */
-    suspend fun exportSettings(uri: Uri) {
-        export(uri, includeNotes = false, includeImages = false, includeSettings = true)
-    }
-
     private fun manifest(contents: List<String>) = JSONObject()
         .put("app", ManifestApp)
         .put("container", Container)

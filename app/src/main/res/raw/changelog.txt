@@ -1,3 +1,6 @@
+## 2.0.1
+- One single backup: the separate "Settings backup" page is gone. "Create backup" asks what to save (notes, images, settings), and Import restores any of them.
+
 ## 2.0.0
 - Backups are now one button: "Create backup" asks, with check boxes, whether to save notes (with or without images) and/or settings in a single .zip.
 - Cenotes is now signed with its own key. You need to reinstall it once: back up your notes and settings, uninstall, install this version and restore.

@@ -239,16 +239,6 @@ val DownloadIcon: ImageVector by lazy {
     pathIcon("Download", "M19,9h-4V3H9v6H5l7,7 7,-7zM5,18v2h14v-2H5z")
 }
 
-/** A gear with an arrow: the backup of the settings (the notes have [BackupIcon]). */
-val SettingsBackupIcon: ImageVector by lazy {
-    pathIcon(
-        "SettingsBackupRestore",
-        "M14,12c0,-1.1 -0.9,-2 -2,-2s-2,0.9 -2,2 0.9,2 2,2 2,-0.9 2,-2zM12,3c-4.97,0 -9,4.03 -9,9H0l4,4 4,-4H5" +
-            "c0,-3.87 3.13,-7 7,-7s7,3.13 7,7 -3.13,7 -7,7c-1.51,0 -2.91,-0.49 -4.06,-1.3l-1.42,1.44" +
-            "C8.04,20.3 9.94,21 12,21c4.97,0 9,-4.03 9,-9s-4.03,-9 -9,-9z",
-    )
-}
-
 /** Two bars: the handle to drag a list item up or down. */
 val DragHandleIcon: ImageVector by lazy {
     pathIcon("DragHandle", "M20,9H4v2h16V9zM4,15h16v-2H4V15z")

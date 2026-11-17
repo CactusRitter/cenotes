@@ -171,16 +171,6 @@
 
     <!-- Copia de ajustes y actualizaciones (los mismos textos que Cemail) -->
     <string name="settings_version">Versión %1$s</string>
-    <string name="settings_section_backup">Copia de ajustes</string>
-    <string name="settings_row_backup_body">Guárdalos en un archivo o tráelos de otro dispositivo</string>
-    <string name="settings_backup_title">Copia de tus ajustes</string>
-    <string name="settings_backup_body">Guarda el diseño, los colores, el cristal, los colores de etiquetas y si buscar actualizaciones en un archivo que eliges tú (Drive, Descargas…). Restáurala aquí o en otro dispositivo. Tus notas no van en ella: tienen su propia copia de seguridad.</string>
-    <string name="settings_backup_export">Guardar copia</string>
-    <string name="settings_backup_import">Restaurar copia</string>
-    <string name="settings_backup_saved">Ajustes guardados.</string>
-    <string name="settings_backup_restored">Ajustes restaurados.</string>
-    <string name="settings_backup_invalid">Ese archivo no es una copia de ajustes de Cenotes.</string>
-    <string name="settings_backup_failed">No se pudo leer o escribir el archivo.</string>
     <string name="settings_section_updates">Actualizaciones</string>
     <string name="settings_updates_title">Buscar versiones nuevas</string>
     <string name="settings_updates_body">Una o dos veces al día, Cenotes pregunta a GitHub, donde se publican sus versiones, si hay una más nueva, y lo avisa arriba en tus notas. GitHub solo ve la dirección de tu conexión, nada de ti ni de tus notas.</string>

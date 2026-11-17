@@ -177,16 +177,6 @@
 
     <!-- Settings backup and updates (same texts as Cemail) -->
     <string name="settings_version">Version %1$s</string>
-    <string name="settings_section_backup">Settings backup</string>
-    <string name="settings_row_backup_body">Save them to a file or bring them from another device</string>
-    <string name="settings_backup_title">Backup of your settings</string>
-    <string name="settings_backup_body">Saves the design, colours, glass, label colours and updates choice to a file you choose (Drive, Downloads…). Restore it here or on another device. Your notes are not in it: they have their own backup.</string>
-    <string name="settings_backup_export">Save a backup</string>
-    <string name="settings_backup_import">Restore a backup</string>
-    <string name="settings_backup_saved">Settings saved.</string>
-    <string name="settings_backup_restored">Settings restored.</string>
-    <string name="settings_backup_invalid">That file is not a Cenotes settings backup.</string>
-    <string name="settings_backup_failed">The file could not be read or written.</string>
     <string name="settings_section_updates">Updates</string>
     <string name="settings_updates_title">Look for new versions</string>
     <string name="settings_updates_body">Once or twice a day Cenotes asks GitHub, where its versions are published, whether there is a newer one, and says so at the top of your notes. GitHub only sees the address of your connection, nothing about you or your notes.</string>
