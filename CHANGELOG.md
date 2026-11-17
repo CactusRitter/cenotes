@@ -3,6 +3,7 @@
 Cada versión se guarda en Google Drive (`Mi unidad/Ce Apps/Cenotes/Cenotes-x.y.z.apk`, sin reemplazar la anterior) y, desde la 0.11.0, también como *release* de GitHub (`vx.y.z`, con el APK), que es de donde la app avisa de versiones nuevas. Lo que ve el usuario en Ajustes → Actualizaciones está en `app/src/main/res/raw*/changelog.txt` (inglés, español y alemán).
 
 ## Sin publicar
+- Cristal V2, igual que Celander: Haze 2.0.1 (`hazeBlur`, capas `GlassLayers`, `LocalHazeState`), curva de transparencia con contraste AA (`GlassTokens`), sombra suave `softShadow`, `glassTile`, `fadingTopEdge`. `ui/glass` es idéntico al de Celander salvo el paquete; el ajuste de transparencia (0–100 %) se conserva. Probado en el emulador (arranque y lista, claro y oscuro); sin probar los 6 diseños uno a uno ni la tableta.
 
 ## 2.0.1 — 2026-11-17
 - Se quita la página «Copia de ajustes» (ruta `SETTINGS_BACKUP`, `SettingsBackupPage`, `SettingsBackupIcon`, `Backup.exportSettings` y los textos `settings_backup_*`, `settings_section_backup`, `settings_row_backup_body` en en/es/de): con el botón único «Crear copia de seguridad» (casillas Notas / Con imágenes / Ajustes) sobraba y confundía. Ajustes queda con una sola entrada «Copia de seguridad» (Crear + Importar); un zip de solo ajustes se restaura con el Importar normal. Probado en el emulador: crear y restaurar notas, ajustes y ambos desde la única entrada.
