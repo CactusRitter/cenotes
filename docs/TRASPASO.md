@@ -5,7 +5,7 @@ Estado vivo de la app para retomar el trabajo tras un `/clear`. Mantenerlo al d�
 
 ## Estado
 - Versión publicada: **2.0.1** (versionCode 40), release `v2.0.1` en GitHub (`releases/latest`, la que lee la app para avisar de actualizaciones).
-- `main` = `origin/main`, limpio. «Sin publicar» de `CHANGELOG.md` vacío.
+- `main` = `origin/main`, limpio. «Sin publicar» lleva solo Cristal V2.
 - APKs en `G:\Mi unidad\Ce Apps\Cenotes\` (no borrar ninguno).
 - Firma: clave propia `keystore/cenotes-release.jks` + `keystore/keystore.properties` (fuera de git; copia en `G:\Mi unidad\Ce Apps\Común\`). Versiones ≤1.6.1 iban con la clave de depuración antigua; desde 2.0.0 con la propia (misma firma en adelante).
 - Copia de seguridad: un solo botón «Crear copia» (zip con notas, imágenes y/o ajustes) + Importar; sin página aparte de ajustes.
