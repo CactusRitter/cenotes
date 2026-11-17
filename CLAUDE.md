@@ -50,3 +50,5 @@ gh release create vx.y.z "G:/Mi unidad/Ce Apps/Cenotes/Cenotes-x.y.z.apk" --titl
 Lee `D:\cesar\Documents\Claude Projects\Ce\docs\AHORRO.md`: subagentes para leer/comparar/buscar (resumen de 10-15 líneas), salidas siempre recortadas, mensajes cortos entre sesiones, modelo barato en tareas mecánicas, y mantener `docs/TRASPASO.md` de esta app al día (aviso a César «conviene /clear» al cerrar un bloque grande).
 
 **Informar a la líder:** al cerrar cada bloque, `SendMessage` a «Ce Líder» con un resumen de máximo 6 líneas (qué hiciste y commit, decisiones de diseño que tomaste, qué no probaste, qué le pides a César). César no debe ser el único que se entera.
+
+**Consolas y cuentas:** lo ya hecho (Google Cloud, Entra, claves, webs, dispositivos) está en `D:\cesar\Documents\Claude Projects\Ce\docs\NUBE.md`; mírelo antes de abrir una consola o preguntar a César, y anota allí lo nuevo.
