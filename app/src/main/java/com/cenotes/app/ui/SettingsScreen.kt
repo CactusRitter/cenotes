@@ -409,6 +409,9 @@ private fun BackupPage(backup: Backup, onNotesImported: () -> Unit) {
     val resources = androidx.compose.ui.platform.LocalResources.current
     val scope = rememberCoroutineScope()
     var includeImages by rememberSaveable { mutableStateOf(true) }
+    var includeSettings by rememberSaveable { mutableStateOf(true) }
+    // A backup that carries settings waits here while the user chooses whether to restore them.
+    var askSettingsFor by remember { mutableStateOf<android.net.Uri?>(null) }
     var working by remember { mutableStateOf(false) }
     var message by rememberSaveable { mutableStateOf<String?>(null) }
 
@@ -429,16 +432,46 @@ private fun BackupPage(backup: Backup, onNotesImported: () -> Unit) {
 
     val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
         if (uri != null) run {
-            val r = backup.export(uri, includeImages)
+            val r = backup.export(uri, includeImages, includeSettings)
             resources.getString(R.string.backup_exported, r.notes, r.images)
         }
     }
+    suspend fun importFrom(uri: android.net.Uri, restoreSettings: Boolean): String {
+        val r = backup.import(uri, restoreSettings)
+        onNotesImported()
+        return listOfNotNull(
+            resources.getString(R.string.backup_imported, r.added, r.skipped, r.images),
+            if (r.updated > 0) resources.getString(R.string.backup_imported_updated, r.updated) else null,
+            if (r.kept > 0) resources.getString(R.string.backup_imported_kept, r.kept) else null,
+            if (r.settingsRestored) resources.getString(R.string.backup_imported_settings) else null,
+        ).joinToString(" ")
+    }
     val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) run {
-            val r = backup.import(uri)
-            onNotesImported()
-            resources.getString(R.string.backup_imported, r.added, r.skipped, r.images)
+            if (backup.hasSettings(uri)) {
+                askSettingsFor = uri
+                ""
+            } else importFrom(uri, restoreSettings = false)
         }
+    }
+    askSettingsFor?.let { uri ->
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { askSettingsFor = null },
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(28.dp),
+            containerColor = LocalGlass.current.menu,
+            title = { Text(stringResource(R.string.backup_restore_settings_title), fontWeight = androidx.compose.ui.text.font.FontWeight.Bold) },
+            text = { Text(stringResource(R.string.backup_restore_settings_body)) },
+            confirmButton = {
+                androidx.compose.material3.TextButton(onClick = { askSettingsFor = null; run { importFrom(uri, restoreSettings = true) } }) {
+                    Text(stringResource(R.string.backup_restore_settings_yes), fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(onClick = { askSettingsFor = null; run { importFrom(uri, restoreSettings = false) } }) {
+                    Text(stringResource(R.string.backup_restore_settings_no))
+                }
+            },
+        )
     }
 
     SwitchRow(
@@ -446,6 +479,11 @@ private fun BackupPage(backup: Backup, onNotesImported: () -> Unit) {
         if (includeImages) R.string.backup_include_images_on else R.string.backup_include_images_off,
         includeImages,
     ) { includeImages = it }
+    SwitchRow(
+        R.string.backup_include_settings,
+        if (includeSettings) R.string.backup_include_settings_on else R.string.backup_include_settings_off,
+        includeSettings,
+    ) { includeSettings = it }
     SettingsCard {
         Text(stringResource(R.string.backup), style = MaterialTheme.typography.titleSmall)
         Text(stringResource(R.string.backup_summary), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)

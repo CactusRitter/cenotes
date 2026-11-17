@@ -5,11 +5,37 @@ import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-@Database(entities = [Note::class, Label::class, NoteLabel::class, NoteVersion::class, Place::class], version = 8, exportSchema = false)
+@Database(entities = [Note::class, Label::class, NoteLabel::class, NoteVersion::class, Place::class, DeletedNote::class], version = 9, exportSchema = false)
 abstract class NotesDatabase : RoomDatabase() {
     abstract fun noteDao(): NoteDao
 
     companion object {
+        /**
+         * 1.5 → 1.6: every note gets a stable UUID, a "modified" clock (starting at its last text edit) and deleted notes
+         * are remembered. Room runs this in one transaction, so if anything does not add up it throws and the database
+         * stays as it was (version 8, nothing lost).
+         */
+        val Migration8To9 = object : Migration(8, 9) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                val before = db.query("SELECT COUNT(*) FROM `notes`").use { it.moveToFirst(); it.getLong(0) }
+                db.execSQL("ALTER TABLE `notes` ADD COLUMN `uuid` TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE `notes` ADD COLUMN `modifiedAt` INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("UPDATE `notes` SET `modifiedAt` = `updatedAt`")
+                val ids = db.query("SELECT `id` FROM `notes`").use { c -> buildList { while (c.moveToNext()) add(c.getLong(0)) } }
+                val seen = HashSet<String>()
+                for (id in ids) {
+                    var uuid = newUuid()
+                    while (!seen.add(uuid)) uuid = newUuid()
+                    db.execSQL("UPDATE `notes` SET `uuid` = ? WHERE `id` = ?", arrayOf<Any>(uuid, id))
+                }
+                db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_notes_uuid` ON `notes` (`uuid`)")
+                db.execSQL("CREATE TABLE IF NOT EXISTS `deleted_notes` (`uuid` TEXT NOT NULL, `deletedAt` INTEGER NOT NULL, PRIMARY KEY(`uuid`))")
+                val after = db.query("SELECT COUNT(*) FROM `notes`").use { it.moveToFirst(); it.getLong(0) }
+                val withUuid = db.query("SELECT COUNT(DISTINCT `uuid`) FROM `notes` WHERE `uuid` <> ''").use { it.moveToFirst(); it.getLong(0) }
+                check(after == before && withUuid == before) { "Migration 8→9 does not add up: $before notes, $after after, $withUuid with uuid" }
+            }
+        }
+
         /** 0.16 → 0.17: reminders at a place. */
         val Migration7To8 = object : Migration(7, 8) {
             override fun migrate(db: SupportSQLiteDatabase) {

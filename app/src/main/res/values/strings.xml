@@ -86,6 +86,16 @@
     <string name="backup_not_cenotes">That file is not a Cenotes backup.</string>
     <string name="backup_failed">Could not complete: %1$s</string>
     <string name="backup_file_name">Cenotes-backup-%1$s.zip</string>
+    <string name="backup_include_settings">Include settings</string>
+    <string name="backup_include_settings_on">The file also holds your look, colours, order and other settings, to restore them on another phone. Never passwords or keys.</string>
+    <string name="backup_include_settings_off">Only notes; settings are not saved.</string>
+    <string name="backup_restore_settings_title">Restore the settings too?</string>
+    <string name="backup_restore_settings_body">This backup also holds the settings of the phone it came from (look, colours, order…). Restoring them replaces yours.</string>
+    <string name="backup_restore_settings_yes">Restore settings</string>
+    <string name="backup_restore_settings_no">Notes only</string>
+    <string name="backup_imported_updated">%1$d notes were updated from a newer copy.</string>
+    <string name="backup_imported_kept">%1$d notes you had deleted stay deleted.</string>
+    <string name="backup_imported_settings">Settings restored.</string>
     <string name="menu">Menu</string>
     <string name="section_notes">Notes</string>
     <string name="section_archive">Archive</string>

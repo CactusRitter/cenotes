@@ -23,7 +23,7 @@ abstract class NoteDao {
     @Query("SELECT * FROM notes WHERE trashedAt IS NOT NULL ORDER BY trashedAt DESC")
     abstract fun observeTrash(): Flow<List<Note>>
 
-    @Query("UPDATE notes SET trashedAt = :at WHERE id IN (:ids)")
+    @Query("UPDATE notes SET trashedAt = :at, modifiedAt = " + NowSql + " WHERE id IN (:ids)")
     abstract suspend fun setTrashed(ids: Collection<Long>, at: Long?)
 
     @Query("SELECT id FROM notes WHERE trashedAt IS NOT NULL AND trashedAt < :before")
@@ -32,10 +32,10 @@ abstract class NoteDao {
     @Query("SELECT id FROM notes WHERE trashedAt IS NOT NULL")
     abstract suspend fun trashIds(): List<Long>
 
-    @Query("UPDATE notes SET locked = :locked WHERE id IN (:ids)")
+    @Query("UPDATE notes SET locked = :locked, modifiedAt = " + NowSql + " WHERE id IN (:ids)")
     abstract suspend fun setLocked(ids: Collection<Long>, locked: Boolean)
 
-    @Query("UPDATE notes SET color = :color WHERE id IN (:ids)")
+    @Query("UPDATE notes SET color = :color, modifiedAt = " + NowSql + " WHERE id IN (:ids)")
     abstract suspend fun setColor(ids: Collection<Long>, color: Int)
 
     // ---- Reminders ----
@@ -65,20 +65,44 @@ abstract class NoteDao {
     abstract suspend fun insert(note: Note): Long
 
     @Update
-    abstract suspend fun update(note: Note)
+    protected abstract suspend fun updateRaw(note: Note)
 
-    @Query("UPDATE notes SET archived = :archived WHERE id IN (:ids)")
+    /** Saves the note and stamps [Note.modifiedAt]. */
+    open suspend fun update(note: Note) = updateRaw(note.copy(modifiedAt = maxOf(System.currentTimeMillis(), note.modifiedAt)))
+
+    @Query("UPDATE notes SET modifiedAt = " + NowSql + " WHERE id IN (:ids)")
+    abstract suspend fun touch(ids: Collection<Long>)
+
+    @Query("UPDATE notes SET archived = :archived, modifiedAt = " + NowSql + " WHERE id IN (:ids)")
     abstract suspend fun setArchived(ids: Collection<Long>, archived: Boolean)
 
-    @Query("UPDATE notes SET pinned = :pinned WHERE id IN (:ids)")
+    @Query("UPDATE notes SET pinned = :pinned, modifiedAt = " + NowSql + " WHERE id IN (:ids)")
     abstract suspend fun setPinned(ids: Collection<Long>, pinned: Boolean)
 
     @Query("DELETE FROM notes WHERE id IN (:ids)")
     protected abstract suspend fun deleteNotesOnly(ids: Collection<Long>)
 
-    /** Deletes notes together with their label links and their history. */
+    @Query("SELECT * FROM deleted_notes")
+    abstract suspend fun deletedNotes(): List<DeletedNote>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    abstract suspend fun insertDeleted(deleted: List<DeletedNote>)
+
+    @Query("DELETE FROM deleted_notes WHERE deletedAt < :before")
+    abstract suspend fun purgeDeleted(before: Long)
+
+    @Query("UPDATE notes SET modifiedAt = :at WHERE id = :id")
+    abstract suspend fun setModified(id: Long, at: Long)
+
+    @Query("SELECT * FROM notes WHERE uuid = :uuid LIMIT 1")
+    abstract suspend fun byUuid(uuid: String): Note?
+
+    /** Deletes notes together with their label links and their history, and remembers them as deleted for good. */
     @Transaction
     open suspend fun deleteNotes(ids: Collection<Long>) {
+        val now = System.currentTimeMillis()
+        insertDeleted(getMany(ids).map { DeletedNote(it.uuid, now) })
+        purgeDeleted(now - TombstoneDays * 24L * 60 * 60 * 1000)
         deleteLinksOfNotes(ids)
         deleteVersionsOf(ids)
         deleteNotesOnly(ids)
@@ -118,12 +142,12 @@ abstract class NoteDao {
     @Query("SELECT * FROM notes WHERE placeId IS NOT NULL AND trashedAt IS NULL")
     abstract suspend fun placeReminders(): List<Note>
 
-    @Query("UPDATE notes SET placeId = :placeId, placeLeave = :leave WHERE id = :id")
+    @Query("UPDATE notes SET placeId = :placeId, placeLeave = :leave, modifiedAt = " + NowSql + " WHERE id = :id")
     abstract suspend fun setPlace(id: Long, placeId: Long?, leave: Boolean)
 
     // ---- Order by hand ----
 
-    @Query("UPDATE notes SET position = :position WHERE id = :id")
+    @Query("UPDATE notes SET position = :position, modifiedAt = " + NowSql + " WHERE id = :id")
     abstract suspend fun setPosition(id: Long, position: Long)
 
     /** Gives each note its new place (id → position) at once. */
@@ -220,14 +244,27 @@ abstract class NoteDao {
     protected abstract suspend fun deleteLinksOfNotes(noteIds: Collection<Long>)
 
     @Query("DELETE FROM note_labels WHERE labelId = :labelId AND noteId IN (:noteIds)")
-    abstract suspend fun removeLabel(noteIds: Collection<Long>, labelId: Long)
+    protected abstract suspend fun removeLabelOnly(noteIds: Collection<Long>, labelId: Long)
+
+    @Transaction
+    open suspend fun removeLabel(noteIds: Collection<Long>, labelId: Long) {
+        removeLabelOnly(noteIds, labelId)
+        touch(noteIds)
+    }
 
     @Transaction
     open suspend fun setLabels(noteId: Long, labelIds: Collection<Long>) {
         deleteLinksOfNotes(listOf(noteId))
         insertLinks(labelIds.map { NoteLabel(noteId, it) })
+        touch(listOf(noteId))
     }
 
-    suspend fun addLabel(noteIds: Collection<Long>, labelId: Long) =
+    @Transaction
+    open suspend fun addLabel(noteIds: Collection<Long>, labelId: Long) {
         insertLinks(noteIds.map { NoteLabel(it, labelId) })
+        touch(noteIds)
+    }
 }
+
+/** SQLite expression for "now" in milliseconds, for queries that stamp [Note.modifiedAt]. */
+const val NowSql = "CAST((julianday('now') - 2440587.5) * 86400000 AS INTEGER)"

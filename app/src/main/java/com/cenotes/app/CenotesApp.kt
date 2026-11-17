@@ -18,7 +18,7 @@ class CenotesApp : Application() {
 
     val database: NotesDatabase by lazy {
         Room.databaseBuilder(this, NotesDatabase::class.java, "notes.db")
-            .addMigrations(NotesDatabase.Migration1To2, NotesDatabase.Migration2To3, NotesDatabase.Migration3To4, NotesDatabase.Migration4To5, NotesDatabase.Migration5To6, NotesDatabase.Migration6To7, NotesDatabase.Migration7To8)
+            .addMigrations(NotesDatabase.Migration1To2, NotesDatabase.Migration2To3, NotesDatabase.Migration3To4, NotesDatabase.Migration4To5, NotesDatabase.Migration5To6, NotesDatabase.Migration6To7, NotesDatabase.Migration7To8, NotesDatabase.Migration8To9)
             .build()
     }
 
@@ -26,7 +26,7 @@ class CenotesApp : Application() {
 
     val images: ImageStore by lazy { ImageStore(this) }
 
-    val backup: Backup by lazy { Backup(this, database.noteDao(), images) }
+    val backup: Backup by lazy { Backup(this, database.noteDao(), images, settings) }
 
     /** New versions published on GitHub (Settings → Updates and the notice at the top of the notes). */
     val updates: com.cenotes.app.update.Updates by lazy { com.cenotes.app.update.Updates(this) }

@@ -5,7 +5,7 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "notes")
+@Entity(tableName = "notes", indices = [Index(value = ["uuid"], unique = true)])
 data class Note(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val title: String,
@@ -31,6 +31,10 @@ data class Note(
     /** Reminds on arriving at (or leaving, with [placeLeave]) this saved [Place]; null = no place reminder. */
     val placeId: Long? = null,
     @ColumnInfo(defaultValue = "0") val placeLeave: Boolean = false,
+    /** Stable identity of the note across devices and backups (random UUID, never changes). */
+    @ColumnInfo(defaultValue = "") val uuid: String = newUuid(),
+    /** Last change of anything in the note (text, flags, colour, labels, Trash, order); the clock for sync and conflicts. [updatedAt] stays "last text edit" and only orders the list. */
+    @ColumnInfo(defaultValue = "0") val modifiedAt: Long = System.currentTimeMillis(),
 )
 
 /**
@@ -117,3 +121,15 @@ data class Reminder(
         fun of(note: Note) = Reminder(note.reminderAt, Repeat.of(note.reminderRepeat), note.placeId, note.placeLeave)
     }
 }
+
+fun newUuid(): String = java.util.UUID.randomUUID().toString()
+
+/** Days a tombstone is kept. Decision to review if sync arrives: dropping it too soon could resurrect a note from a device that has not synced for months. */
+const val TombstoneDays = 90
+
+/** A note deleted for good (not just in the Trash): remembered by its [uuid] so it does not come back from a backup or another device. */
+@Entity(tableName = "deleted_notes")
+data class DeletedNote(
+    @PrimaryKey val uuid: String,
+    val deletedAt: Long,
+)

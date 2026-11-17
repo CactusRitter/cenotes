@@ -13,17 +13,28 @@ import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 
 /**
- * Backup file: a .zip with `notes.json` (every note, Markdown content) and, optionally,
- * `images/<file>` for the pictures. Importing merges: notes that already exist are skipped.
+ * Backup file: a .zip with `notes.json` (every note, Markdown content; the app's settings too if asked) and, optionally,
+ * `images/<file>` for the pictures. Importing merges: a note that is already here (same uuid, or same title and text in
+ * old backups) is kept or updated, never duplicated.
  */
-class Backup(private val context: Context, private val dao: NoteDao, private val images: ImageStore) {
+class Backup(
+    private val context: Context,
+    private val dao: NoteDao,
+    private val images: ImageStore,
+    private val settings: SettingsRepository,
+) {
 
     data class ExportResult(val notes: Int, val images: Int)
-    data class ImportResult(val added: Int, val skipped: Int, val images: Int)
+
+    /**
+     * [added] new notes; [updated] notes here replaced by a newer copy from the backup; [skipped] notes already here
+     * (or empty); [kept] notes the backup has but that were deleted for good here, so they stay deleted.
+     */
+    data class ImportResult(val added: Int, val skipped: Int, val images: Int, val updated: Int = 0, val kept: Int = 0, val settingsRestored: Boolean = false)
 
     class NotABackupException : Exception()
 
-    suspend fun export(uri: Uri, includeImages: Boolean): ExportResult = withContext(Dispatchers.IO) {
+    suspend fun export(uri: Uri, includeImages: Boolean, includeSettings: Boolean = false): ExportResult = withContext(Dispatchers.IO) {
         val notes = dao.all()
         val placeById = dao.places().associateBy { it.id }
         val labels = dao.labels()
@@ -35,25 +46,12 @@ class Backup(private val context: Context, private val dao: NoteDao, private val
             val array = JSONArray()
             notes.forEach { n ->
                 array.put(
-                    JSONObject()
-                        .put("title", n.title)
-                        .put("content", if (includeImages) n.content else withoutImages(n.content))
-                        .put("pinned", n.pinned)
-                        .put("archived", n.archived)
-                        .put("updatedAt", n.updatedAt)
-                        .put("createdAt", n.createdAt)
-                        .put("color", n.color)
-                        .put("reminderAt", n.reminderAt ?: 0L)
-                        .put("reminderRepeat", n.reminderRepeat)
-                        .put("locked", n.locked)
-                        .put("position", n.position)
-                        .also { o ->
-                            // A reminder at a place goes along with the place itself (by name, as labels do).
-                            n.placeId?.let(placeById::get)?.let { p ->
-                                o.put("place", JSONObject().put("name", p.name).put("latitude", p.latitude).put("longitude", p.longitude).put("leave", n.placeLeave))
-                            }
-                        }
-                        .put("labels", JSONArray(labelsOf[n.id].orEmpty().filterNotNull())),
+                    NoteSerializer.toJson(
+                        n,
+                        content = if (includeImages) n.content else withoutImages(n.content),
+                        labelNames = labelsOf[n.id].orEmpty().filterNotNull(),
+                        place = n.placeId?.let(placeById::get),
+                    ),
                 )
             }
             val root = JSONObject()
@@ -66,6 +64,10 @@ class Backup(private val context: Context, private val dao: NoteDao, private val
                 // Chosen colours by label name (0 = automatic, left out).
                 .put("labelColors", JSONObject().also { o -> labels.filter { it.color != 0 }.forEach { o.put(it.name, it.color) } })
                 .put("notes", array)
+                // Notes deleted for good, so an old backup or another phone does not bring them back.
+                .put("deleted", JSONArray(dao.deletedNotes().map { JSONObject().put("uuid", it.uuid).put("deletedAt", it.deletedAt) }))
+            // The settings exactly as stored (typed), never anything that looks like a secret: this file is plain text.
+            if (includeSettings) root.put("settings", settings.exportValues())
             zip.putNextEntry(ZipEntry("notes.json"))
             zip.write(root.toString(2).toByteArray(Charsets.UTF_8))
             zip.closeEntry()
@@ -85,7 +87,25 @@ class Backup(private val context: Context, private val dao: NoteDao, private val
         ExportResult(notes.size, imageCount)
     }
 
-    suspend fun import(uri: Uri): ImportResult = withContext(Dispatchers.IO) {
+    /** Says whether the backup carries the app's settings (so the import can ask whether to restore them). Reads only `notes.json`. */
+    suspend fun hasSettings(uri: Uri): Boolean = withContext(Dispatchers.IO) {
+        val input = context.contentResolver.openInputStream(uri) ?: error("No se pudo leer el archivo")
+        var json: String? = null
+        ZipInputStream(input.buffered()).use { zip ->
+            while (true) {
+                val entry = zip.nextEntry ?: break
+                if (entry.name == "notes.json") {
+                    json = zip.readBytes().toString(Charsets.UTF_8)
+                    break
+                }
+            }
+        }
+        val root = json?.let { runCatching { JSONObject(it) }.getOrNull() }
+        if (root == null || root.optString("app") != AppId) throw NotABackupException()
+        root.optJSONObject("settings") != null
+    }
+
+    suspend fun import(uri: Uri, restoreSettings: Boolean = false): ImportResult = withContext(Dispatchers.IO) {
         var json: String? = null
         var imageCount = 0
         val input = context.contentResolver.openInputStream(uri) ?: error("No se pudo leer el archivo")
@@ -125,56 +145,87 @@ class Backup(private val context: Context, private val dao: NoteDao, private val
             }
         }
 
+        // Notes the backup says were deleted for good are remembered here too (only so they do not come back; nothing is deleted).
+        val tombstones = HashMap<String, Long>()
+        dao.deletedNotes().forEach { tombstones[it.uuid] = it.deletedAt }
+        root.optJSONArray("deleted")?.let { list ->
+            val fresh = ArrayList<DeletedNote>()
+            for (i in 0 until list.length()) {
+                val d = list.optJSONObject(i) ?: continue
+                val uuid = d.optString("uuid").trim()
+                val at = d.optLong("deletedAt", 0L)
+                if (uuid.isNotEmpty() && at > (tombstones[uuid] ?: -1L)) {
+                    tombstones[uuid] = at
+                    fresh += DeletedNote(uuid, at)
+                }
+            }
+            if (fresh.isNotEmpty()) dao.insertDeleted(fresh)
+        }
+
         val existing = dao.all().map { it.title to it.content }.toHashSet()
         val list = root.getJSONArray("notes")
         var added = 0
         var skipped = 0
+        var updated = 0
+        var kept = 0
         for (i in 0 until list.length()) {
-            val o = list.getJSONObject(i)
-            val title = o.optString("title")
-            val content = o.optString("content")
-            // Only notes already on the phone are skipped; the backup itself is restored as it is.
-            if ((title to content) in existing || (title.isBlank() && content.isBlank())) {
+            val p = NoteSerializer.fromJson(list.getJSONObject(i))
+            val note = p.note
+            if (note.title.isBlank() && note.content.isBlank()) {
                 skipped++
                 continue
             }
-            val id = dao.insert(
-                Note(
-                    title = title,
-                    content = content,
-                    pinned = o.optBoolean("pinned"),
-                    archived = o.optBoolean("archived"),
-                    updatedAt = o.optLong("updatedAt", System.currentTimeMillis()),
-                    createdAt = o.optLong("createdAt", o.optLong("updatedAt", System.currentTimeMillis())),
-                    color = o.optInt("color", 0),
-                    reminderAt = o.optLong("reminderAt", 0L).takeIf { it > 0L },
-                    reminderRepeat = o.optInt("reminderRepeat", 0),
-                    locked = o.optBoolean("locked"),
-                    position = o.optLong("position", o.optLong("updatedAt", System.currentTimeMillis())),
-                ),
-            )
-            o.optJSONArray("labels")?.let { names ->
-                val ids = (0 until names.length()).mapNotNull { names.optString(it).trim().takeIf(String::isNotEmpty) }
-                    .map { dao.labelIdFor(it) }
-                dao.setLabels(id, ids)
-            }
-            o.optJSONObject("place")?.let { p ->
-                val name = p.optString("name").trim()
-                if (name.isNotEmpty() && p.has("latitude") && p.has("longitude")) {
-                    val placeId = dao.placeByName(name)?.id
-                        ?: dao.insertPlace(Place(name = name, latitude = p.getDouble("latitude"), longitude = p.getDouble("longitude")))
-                    dao.setPlace(id, placeId, p.optBoolean("leave"))
+            val id: Long
+            if (p.hasUuid) {
+                val local = dao.byUuid(note.uuid)
+                if (local != null) {
+                    // Same note: the most recently changed copy wins.
+                    if (note.modifiedAt <= local.modifiedAt) {
+                        skipped++
+                        continue
+                    }
+                    id = dao.insert(note.copy(id = local.id))
+                    updated++
+                } else {
+                    // Deleted for good here after (or when) the backup's copy was last changed: it stays deleted.
+                    val deletedAt = tombstones[note.uuid]
+                    if (deletedAt != null && deletedAt >= note.modifiedAt) {
+                        kept++
+                        continue
+                    }
+                    id = dao.insert(note)
+                    added++
                 }
+            } else {
+                // Old backups (and keep2cenotes) have no uuid: a note already here with the same title and text is skipped.
+                if ((note.title to note.content) in existing) {
+                    skipped++
+                    continue
+                }
+                id = dao.insert(note)
+                added++
             }
-            added++
+            dao.setLabels(id, p.labels.map { dao.labelIdFor(it) })
+            p.place?.let { pl ->
+                val placeId = dao.placeByName(pl.name)?.id ?: dao.insertPlace(Place(name = pl.name, latitude = pl.latitude, longitude = pl.longitude))
+                dao.setPlace(id, placeId, pl.leave)
+            }
+            // The label and place calls above stamp "now"; the note keeps the time it had in the backup.
+            dao.setModified(id, note.modifiedAt)
         }
-        ImportResult(added, skipped, imageCount)
+
+        var settingsRestored = false
+        if (restoreSettings) root.optJSONObject("settings")?.let {
+            settings.importValues(it)
+            settingsRestored = true
+        }
+        ImportResult(added, skipped, imageCount, updated, kept, settingsRestored)
     }
 
     private companion object {
         const val AppId = "Cenotes"
-        /** 1 = notes only (0.7); 2 = + labels and archive (0.8); 3 = + label colours (0.9); 4 = + note colour and creation date (0.12); 5 = + reminders (0.13); 6 = + protected notes (0.14); 7 = + order by hand (0.16); 8 = + reminders at a place (0.17). All can be imported. The Trash and the history of each note are not exported. */
-        const val Format = 8
+        /** 1 = notes only (0.7); 2 = + labels and archive (0.8); 3 = + label colours (0.9); 4 = + note colour and creation date (0.12); 5 = + reminders (0.13); 6 = + protected notes (0.14); 7 = + order by hand (0.16); 8 = + reminders at a place (0.17); 9 = + uuid and modifiedAt per note, notes deleted for good, optional settings (1.6). All can be imported. The Trash and the history of each note are not exported. */
+        const val Format = 9
         val SafeName = Regex("""^[\w.-]+$""")
     }
 }

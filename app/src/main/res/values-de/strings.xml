@@ -83,6 +83,16 @@
     <string name="backup_not_cenotes">Diese Datei ist keine Cenotes-Sicherung.</string>
     <string name="backup_failed">Nicht abgeschlossen: %1$s</string>
     <string name="backup_file_name">Cenotes-Sicherung-%1$s.zip</string>
+    <string name="backup_include_settings">Einstellungen einschließen</string>
+    <string name="backup_include_settings_on">Die Datei enthält auch Aussehen, Farben, Reihenfolge und weitere Einstellungen, um sie auf einem anderen Handy wiederherzustellen. Nie Passwörter oder Schlüssel.</string>
+    <string name="backup_include_settings_off">Nur Notizen; Einstellungen werden nicht gespeichert.</string>
+    <string name="backup_restore_settings_title">Einstellungen auch wiederherstellen?</string>
+    <string name="backup_restore_settings_body">Diese Sicherung enthält auch die Einstellungen des Handys, von dem sie stammt (Aussehen, Farben, Reihenfolge …). Beim Wiederherstellen werden deine ersetzt.</string>
+    <string name="backup_restore_settings_yes">Einstellungen wiederherstellen</string>
+    <string name="backup_restore_settings_no">Nur Notizen</string>
+    <string name="backup_imported_updated">%1$d Notizen wurden mit einer neueren Kopie aktualisiert.</string>
+    <string name="backup_imported_kept">%1$d Notizen, die du gelöscht hattest, bleiben gelöscht.</string>
+    <string name="backup_imported_settings">Einstellungen wiederhergestellt.</string>
     <string name="menu">Menü</string>
     <string name="section_notes">Notizen</string>
     <string name="section_archive">Archiv</string>

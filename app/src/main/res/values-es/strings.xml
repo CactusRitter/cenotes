@@ -83,6 +83,16 @@
     <string name="backup_not_cenotes">Ese archivo no es una copia de Cenotes.</string>
     <string name="backup_failed">No se pudo completar: %1$s</string>
     <string name="backup_file_name">Cenotes-copia-%1$s.zip</string>
+    <string name="backup_include_settings">Incluir ajustes</string>
+    <string name="backup_include_settings_on">El archivo guarda también el aspecto, los colores, el orden y demás ajustes, para restaurarlos en otro móvil. Nunca contraseñas ni claves.</string>
+    <string name="backup_include_settings_off">Solo las notas; los ajustes no se guardan.</string>
+    <string name="backup_restore_settings_title">¿Restaurar también los ajustes?</string>
+    <string name="backup_restore_settings_body">Esta copia guarda además los ajustes del móvil de origen (aspecto, colores, orden…). Restaurarlos sustituye los tuyos.</string>
+    <string name="backup_restore_settings_yes">Restaurar ajustes</string>
+    <string name="backup_restore_settings_no">Solo notas</string>
+    <string name="backup_imported_updated">%1$d notas se actualizaron con una copia más reciente.</string>
+    <string name="backup_imported_kept">%1$d notas que habías borrado siguen borradas.</string>
+    <string name="backup_imported_settings">Ajustes restaurados.</string>
     <string name="menu">Menú</string>
     <string name="section_notes">Notas</string>
     <string name="section_archive">Archivo</string>

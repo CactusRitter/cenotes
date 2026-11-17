@@ -109,9 +109,14 @@ class SettingsRepository(context: Context) {
      * Every setting as JSON, for Settings → Settings backup (the same format as Cemail's, with "app": "cenotes").
      * Notes are not in it: they have their own backup.
      */
-    fun exportJson(): String {
+    fun exportJson(): String =
+        JSONObject().put("app", "cenotes").put("format", 1).put("settings", exportValues()).toString(2)
+
+    /** The settings as typed JSON (also embedded in the notes backup). Keys that look like secrets are never included. */
+    fun exportValues(): JSONObject {
         val values = JSONObject()
         prefs.all.forEach { (key, value) ->
+            if (isSecretKey(key)) return@forEach
             val typed = when (value) {
                 is Boolean -> JSONObject().put("b", value)
                 is Int -> JSONObject().put("i", value)
@@ -123,7 +128,7 @@ class SettingsRepository(context: Context) {
             }
             if (typed != null) values.put(key, typed)
         }
-        return JSONObject().put("app", "cenotes").put("format", 1).put("settings", values).toString(2)
+        return values
     }
 
     /** Applies a backup made by [exportJson]; returns false (and changes nothing) if [text] is not one. */
@@ -131,8 +136,15 @@ class SettingsRepository(context: Context) {
         val root = runCatching { JSONObject(text) }.getOrNull() ?: return false
         if (root.optString("app") != "cenotes") return false
         val values = root.optJSONObject("settings") ?: return false
+        importValues(values)
+        return true
+    }
+
+    /** Applies typed settings made by [exportValues]; secret-looking keys are ignored even if a file carries them. */
+    fun importValues(values: JSONObject) {
         val edit = prefs.edit()
         values.keys().forEach { key ->
+            if (isSecretKey(key)) return@forEach
             val typed = values.optJSONObject(key) ?: return@forEach
             when {
                 typed.has("b") -> edit.putBoolean(key, typed.getBoolean("b"))
@@ -147,7 +159,6 @@ class SettingsRepository(context: Context) {
         }
         edit.apply()
         _state.value = read()
-        return true
     }
 
     private fun saveColors(colors: List<Int>) {
@@ -205,8 +216,16 @@ class SettingsRepository(context: Context) {
         _state.value = _state.value.copy(layout = layout)
     }
 
-    private companion object {
-        const val KEY_ACCENT = "accent"
+    companion object {
+        /** Settings that look like secrets (tokens, passwords, keys) never go into a backup: backups are plain text. */
+        private val SecretPattern = Regex("pass(word|phrase)?|secret|token|credential|api.?key|private.?key|master|auth|salt|pin$", RegexOption.IGNORE_CASE)
+
+        fun isSecretKey(key: String) = SecretPattern.containsMatchIn(key)
+
+        /** Every key this class writes (the backup test checks none of them looks like a secret). */
+        val AllKeys = listOf("accent", "accent_hue", "theme_mode", "theme_style", "skin", "depth3d", "transparency", "layout", "customColors", "check_updates", "sort", "checked_to_bottom", "list_on_right", "settings_dock")
+
+        private const val KEY_ACCENT = "accent"
         const val KEY_HUE = "accent_hue"
         const val KEY_THEME = "theme_mode"
         const val KEY_STYLE = "theme_style"
