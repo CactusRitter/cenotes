@@ -299,10 +299,11 @@ fun NotesListScreen(
         },
         scrimColor = MaterialTheme.colorScheme.scrim.copy(alpha = 0.3f),
     ) {
-        androidx.compose.runtime.CompositionLocalProvider(androidx.compose.ui.platform.LocalLayoutDirection provides direction) {
+        androidx.compose.runtime.CompositionLocalProvider(androidx.compose.ui.platform.LocalLayoutDirection provides direction, com.cenotes.app.ui.glass.LocalHazeState provides hazeState) {
         Box(Modifier.fillMaxSize()) {
             // Everything in here is what the floating glass blurs.
-            ScreenBackground(Modifier.hazeSource(hazeState)) {
+            ScreenBackground(Modifier.hazeSource(hazeState, zIndex = com.cenotes.app.ui.glass.GlassLayers.BACKGROUND)) {
+            Box(Modifier.fillMaxSize().hazeSource(hazeState, zIndex = com.cenotes.app.ui.glass.GlassLayers.CONTENT)) {
                 val list = notes
                 when {
                     list == null -> Unit // Still loading; avoid flashing an empty state.
@@ -441,6 +442,7 @@ fun NotesListScreen(
                         }
                     }
                 }
+            }
             }
 
             // Behind the status bar and the top row, once the list has scrolled: what passes below does not mix with them.

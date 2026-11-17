@@ -73,6 +73,7 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
     implementation(libs.haze)
+    implementation(libs.haze.blur)
     implementation(libs.coil.compose)
     implementation(libs.okhttp)
     testImplementation(libs.junit)
