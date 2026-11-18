@@ -1,3 +1,6 @@
+## 2.2.0
+- Nuevo Ajustes → Diagnóstico: un registro de actividad y el último error que puedes compartir, copiar o borrar. Nunca incluye el texto de tus notas.
+
 ## 2.1.1
 - Arreglado: el menú lateral era transparente y se mezclaba con la lista de notas. Vuelve a ser de cristal esmerilado.
 

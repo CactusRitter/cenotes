@@ -1,3 +1,6 @@
+## 2.2.0
+- New Settings → Diagnostics: an activity log and the last error that you can share, copy or clear. It never includes the text of your notes.
+
 ## 2.1.1
 - Fixed: the side menu was see-through and mixed with the note list. It is frosted glass again.
 

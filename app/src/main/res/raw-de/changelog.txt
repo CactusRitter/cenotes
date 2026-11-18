@@ -1,3 +1,6 @@
+## 2.2.0
+- Neu: Einstellungen → Diagnose: ein Aktivitätsprotokoll und der letzte Fehler, die du teilen, kopieren oder löschen kannst. Der Text deiner Notizen ist nie enthalten.
+
 ## 2.1.1
 - Behoben: Das Seitenmenü war durchsichtig und vermischte sich mit der Notizliste. Es ist wieder Milchglas.
 
