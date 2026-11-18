@@ -270,7 +270,8 @@ fun NotesListScreen(
     val direction = androidx.compose.ui.platform.LocalLayoutDirection.current
     val drawerDirection = if (!com.cenotes.app.ui.glass.LocalListOnRight.current) direction
         else if (direction == androidx.compose.ui.unit.LayoutDirection.Ltr) androidx.compose.ui.unit.LayoutDirection.Rtl else androidx.compose.ui.unit.LayoutDirection.Ltr
-    androidx.compose.runtime.CompositionLocalProvider(androidx.compose.ui.platform.LocalLayoutDirection provides drawerDirection) {
+    // The menu panel is a sibling of the content, so it needs the haze state too: without it the glass does not blur.
+    androidx.compose.runtime.CompositionLocalProvider(androidx.compose.ui.platform.LocalLayoutDirection provides drawerDirection, com.cenotes.app.ui.glass.LocalHazeState provides hazeState) {
     ModalNavigationDrawer(
         drawerState = drawerState,
         gesturesEnabled = !selecting,

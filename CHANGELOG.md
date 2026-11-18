@@ -4,6 +4,9 @@ Cada versión se guarda en Google Drive (`Mi unidad/Ce Apps/Cenotes/Cenotes-x.y.
 
 ## Sin publicar
 
+## 2.1.1 — 2026-11-18
+- Arreglo grave del menú lateral con Cristal V2: el panel del cajón (hermano del contenido) no recibía el `HazeState` (`LocalHazeState` era null) y no desenfocaba ni rellenaba: se veía la lista a través. Ahora `NotesListScreen` provee `LocalHazeState` a todo el `ModalNavigationDrawer`. Comprobado en el emulador (Cristal, cajón abierto). Detectado en el OPPO de César; mismo fallo y causa que Cemail 2.5.0.
+
 ## 2.1.0 — 2026-11-18
 - Cristal V2, igual que Celander: Haze 2.0.1 (`hazeBlur`, capas `GlassLayers`, `LocalHazeState`), curva de transparencia con contraste AA (`GlassTokens`), sombra suave `softShadow`, `glassTile`, `fadingTopEdge`. `ui/glass` es idéntico al de Celander salvo el paquete; el ajuste de transparencia (0–100 %) se conserva. Probado en el emulador (arranque y lista, claro y oscuro); revisados los 6 diseños (lista, editor y Ajustes; claro, y oscuro en Cristal y Brutalista) y transparencia 0 y 99 %; sin probar la tableta.
 - Arreglo en Cristal V2: la lista cerraba la app (SIGSEGV de `libhwui` unos segundos después de abrir) porque las tarjetas, dentro de la fuente de haze «contenido», desenfocaban la fuente «fondo», que era su propio padre. Ahora `ScreenBackground` (fuente BACKGROUND) y el contenido (fuente CONTENT) son hermanos en `NotesListScreen`.

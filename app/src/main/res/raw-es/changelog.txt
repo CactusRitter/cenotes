@@ -1,3 +1,6 @@
+## 2.1.1
+- Arreglado: el menú lateral era transparente y se mezclaba con la lista de notas. Vuelve a ser de cristal esmerilado.
+
 ## 2.1.0
 - Nuevo aspecto Cristal V2, el mismo que Celander: desenfoque más suave, mejor contraste del texto y sombras más suaves. El ajuste de transparencia se conserva.
 - Arreglado: la lista podía cerrar la app unos segundos después de abrirla.

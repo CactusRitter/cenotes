@@ -1,3 +1,6 @@
+## 2.1.1
+- Fixed: the side menu was see-through and mixed with the note list. It is frosted glass again.
+
 ## 2.1.0
 - New Glass V2 look, shared with Celander: smoother blur, better text contrast and softer shadows. The transparency setting is kept.
 - Fixed: the list could close the app a few seconds after opening it.
