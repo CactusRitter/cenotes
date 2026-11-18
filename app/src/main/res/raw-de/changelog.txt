@@ -1,3 +1,7 @@
+## 2.1.0
+- Neuer Glas-V2-Look wie bei Celander: weicherer Blur, besserer Textkontrast und sanftere Schatten. Die Transparenz-Einstellung bleibt erhalten.
+- Behoben: Die Liste konnte die App kurz nach dem Öffnen schließen.
+
 ## 2.0.1
 - Nur noch eine Sicherung: Die separate Seite „Einstellungen sichern“ entfällt. „Sicherung erstellen“ fragt, was gespeichert wird (Notizen, Bilder, Einstellungen), und Importieren stellt jede davon wieder her.
 

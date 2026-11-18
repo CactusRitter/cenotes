@@ -1,3 +1,7 @@
+## 2.1.0
+- New Glass V2 look, shared with Celander: smoother blur, better text contrast and softer shadows. The transparency setting is kept.
+- Fixed: the list could close the app a few seconds after opening it.
+
 ## 2.0.1
 - One single backup: the separate "Settings backup" page is gone. "Create backup" asks what to save (notes, images, settings), and Import restores any of them.
 
