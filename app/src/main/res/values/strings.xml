@@ -330,4 +330,15 @@
     <string name="image_text_none">No text found in the picture.</string>
     <string name="image_text_failed">The picture could not be read.</string>
     <string name="image_text_preparing">Preparing the text reader on your device… Try again in a moment.</string>
+    <string name="settings_section_diagnostics">Diagnostics</string>
+    <string name="settings_row_diagnostics_body">Activity log and last error</string>
+    <string name="settings_crash_title">Last unexpected error</string>
+    <string name="settings_crash_body">Saved only on this device. Copy it to send it to whoever maintains the app.</string>
+    <string name="copy">Copy</string>
+    <string name="clear">Clear</string>
+    <string name="copied">Copied</string>
+    <string name="settings_log_title">Activity log</string>
+    <string name="settings_log_body">A record of what the app does on this device (backups, updates, reminders, errors), without the text of your notes. Share it so it can be read when you cannot connect a cable.</string>
+    <string name="settings_log_share">Share log</string>
+    <string name="settings_log_share_title">Share the log</string>
 </resources>

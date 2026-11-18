@@ -72,7 +72,7 @@ object Places {
             .addGeofences(fences)
             .build()
         runCatching { client.addGeofences(request, pending(context)).await() }
-            .onSuccess { Log.i(TAG, "watching ${fences.size} place(s)") }
+            .onSuccess { com.cenotes.app.AppLog.i(TAG, "watching ${fences.size} place(s)") }
             .onFailure { Log.w(TAG, "could not watch the places", it) }
     }
 

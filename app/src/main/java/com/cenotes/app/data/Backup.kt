@@ -2,6 +2,7 @@ package com.cenotes.app.data
 
 import android.content.Context
 import android.net.Uri
+import com.cenotes.app.AppLog
 import com.cenotes.app.BuildConfig
 import com.cenotes.app.ui.markdown.imageNames
 import com.cenotes.app.ui.markdown.withoutImages
@@ -111,6 +112,7 @@ class Backup(
                 }
             }
         }
+        AppLog.i("backup", "exported ${notes.size} notes, $imageCount images, settings=$includeSettings")
         ExportResult(notes.size, imageCount)
     }
 
@@ -211,6 +213,7 @@ class Backup(
         if (notes) notesJson?.let { result = importNotes(it, imageCount) }
         var settingsRestored = false
         if (settings) settingsJson?.let { settingsRestored = this@Backup.settings.importJson(it) }
+        AppLog.i("backup", "imported: ${result.added} added, ${result.updated} updated, ${result.skipped} skipped, ${result.images} images, notes=${result.notesRestored}, settings=$settingsRestored")
         result.copy(settingsRestored = settingsRestored)
     }
 

@@ -69,7 +69,7 @@ object Reminders {
         } else {
             alarms.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, pending)
         }
-        Log.i(TAG, "next reminder in ${(at - System.currentTimeMillis()) / 1000} s")
+        com.cenotes.app.AppLog.i(TAG, "next reminder in ${(at - System.currentTimeMillis()) / 1000} s")
     }
 
     /** Shows every reminder that is due, moves repeating ones on (the others are done) and sets the next alarm. */
@@ -83,7 +83,7 @@ object Reminders {
             val next = note.reminderAt?.let { repeat.next(it) }
             dao.setReminder(note.id, next, if (next == null) 0 else note.reminderRepeat)
         }
-        Log.i(TAG, "${due.size} reminder(s) shown")
+        com.cenotes.app.AppLog.i(TAG, "${due.size} reminder(s) shown")
         schedule(context)
     }
 

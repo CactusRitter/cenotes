@@ -40,6 +40,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -108,6 +109,7 @@ private object SettingsRoute {
     const val LABEL_COLORS = "label_colors"
     const val BACKUP = "backup"
     const val UPDATES = "updates"
+    const val DIAGNOSTICS = "diagnostics"
 
     fun parent(route: String): String? = if (route == MAIN) null else MAIN
     fun depth(route: String): Int = if (route == MAIN) 0 else 1
@@ -135,6 +137,7 @@ fun SettingsScreen(
         SettingsRoute.LABEL_COLORS -> stringResource(R.string.label_colors)
         SettingsRoute.BACKUP -> stringResource(R.string.backup)
         SettingsRoute.UPDATES -> stringResource(R.string.settings_section_updates)
+        SettingsRoute.DIAGNOSTICS -> stringResource(R.string.settings_section_diagnostics)
         else -> stringResource(R.string.settings)
     }
 
@@ -185,6 +188,7 @@ fun SettingsScreen(
                         SettingsRoute.LABEL_COLORS -> LabelColorsPage(settings, onAddColor, onEditColor, onDeleteColor)
                         SettingsRoute.BACKUP -> BackupPage(backup, onNotesImported, onAccentChanged)
                         SettingsRoute.UPDATES -> UpdatesPage(settings, repo)
+                        SettingsRoute.DIAGNOSTICS -> DiagnosticsPage()
                     }
                 }
             }
@@ -203,6 +207,7 @@ private fun MainPage(settings: AppSettings, onRoute: (String) -> Unit) {
         Triple(stringResource(R.string.label_colors), stringResource(R.string.label_colors_summary, settings.customColors.size, MaxCustomColors), SettingsRoute.LABEL_COLORS to LabelIcon),
         Triple(stringResource(R.string.backup), stringResource(R.string.backup_summary), SettingsRoute.BACKUP to BackupIcon),
         Triple(stringResource(R.string.settings_section_updates), stringResource(R.string.settings_version, BuildConfig.VERSION_NAME), SettingsRoute.UPDATES to DownloadIcon),
+        Triple(stringResource(R.string.settings_section_diagnostics), stringResource(R.string.settings_row_diagnostics_body), SettingsRoute.DIAGNOSTICS to Icons.Filled.Info),
     )
     rows.forEachIndexed { index, (title, body, target) ->
         BigRow(title, body, index, onClick = { onRoute(target.first) }) {

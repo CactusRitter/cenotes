@@ -13,6 +13,8 @@ import kotlinx.coroutines.SupervisorJob
 class CenotesApp : Application() {
     override fun onCreate() {
         super.onCreate()
+        AppLog.init(this)
+        CrashLog.install(this)
         com.cenotes.app.notify.Reminders.createChannel(this)
     }
 
@@ -32,5 +34,5 @@ class CenotesApp : Application() {
     val updates: com.cenotes.app.update.Updates by lazy { com.cenotes.app.update.Updates(this) }
 
     /** Lives as long as the process: saves started while leaving a screen always finish. */
-    val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default + kotlinx.coroutines.CoroutineExceptionHandler { _, error -> CrashLog.write(this, error) })
 }
