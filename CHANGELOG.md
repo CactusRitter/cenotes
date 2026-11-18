@@ -3,6 +3,7 @@
 Cada versión se guarda en Google Drive (`Mi unidad/Ce Apps/Cenotes/Cenotes-x.y.z.apk`, sin reemplazar la anterior) y, desde la 0.11.0, también como *release* de GitHub (`vx.y.z`, con el APK), que es de donde la app avisa de versiones nuevas. Lo que ve el usuario en Ajustes → Actualizaciones está en `app/src/main/res/raw*/changelog.txt` (inglés, español y alemán).
 
 ## Sin publicar
+- Actualizador y Diagnóstico pasan al kit (CeKit F2a): `AppLog`, `CrashLog`, `Updates`, `ReleaseNotes` (paquetes `com.ce.kit.log`/`update`), con su FileProvider `${applicationId}.kit` y los permisos INTERNET/REQUEST_INSTALL_PACKAGES. La app solo da nombre, versión y repositorio (`CeKit.init` en `CenotesApp`). Probado en emulador: comprobar actualización y compartir registro.
 - Módulo común CeKit (submódulo git `CeKit/`, módulo `:kit`, paquete `com.ce.kit`): `ui/glass`, `Skin`, `Theme` (`CeTheme`, `CeAppearance`: `AppSettings` la implementa) y los textos de acento/estilo/diseño pasan al kit; se borran las copias locales. Mismo comportamiento (probado en emulador: arranque, cajón). gradle.properties como Cemail.
 
 ## 2.2.0 — 2026-11-18

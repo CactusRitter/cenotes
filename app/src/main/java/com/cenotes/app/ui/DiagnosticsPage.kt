@@ -16,8 +16,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.cenotes.app.AppLog
-import com.cenotes.app.CrashLog
+import com.ce.kit.log.AppLog
+import com.ce.kit.log.CrashLog
 import com.cenotes.app.R
 
 /** Settings → Diagnostics (as in Cemail): the activity log can always be shared; the last crash shows only if there was one. */

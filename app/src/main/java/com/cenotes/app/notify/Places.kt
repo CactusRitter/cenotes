@@ -1,5 +1,6 @@
 package com.cenotes.app.notify
 
+import com.ce.kit.log.AppLog
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.PendingIntent
@@ -72,7 +73,7 @@ object Places {
             .addGeofences(fences)
             .build()
         runCatching { client.addGeofences(request, pending(context)).await() }
-            .onSuccess { com.cenotes.app.AppLog.i(TAG, "watching ${fences.size} place(s)") }
+            .onSuccess { com.ce.kit.log.AppLog.i(TAG, "watching ${fences.size} place(s)") }
             .onFailure { Log.w(TAG, "could not watch the places", it) }
     }
 

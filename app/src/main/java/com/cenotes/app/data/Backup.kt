@@ -2,7 +2,7 @@ package com.cenotes.app.data
 
 import android.content.Context
 import android.net.Uri
-import com.cenotes.app.AppLog
+import com.ce.kit.log.AppLog
 import com.cenotes.app.BuildConfig
 import com.cenotes.app.ui.markdown.imageNames
 import com.cenotes.app.ui.markdown.withoutImages

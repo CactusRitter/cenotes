@@ -13,8 +13,7 @@ import kotlinx.coroutines.SupervisorJob
 class CenotesApp : Application() {
     override fun onCreate() {
         super.onCreate()
-        AppLog.init(this)
-        CrashLog.install(this)
+        com.ce.kit.CeKit.init(this, com.ce.kit.CeAppConfig("Cenotes", BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE, "CactusRitter/cenotes"))
         com.cenotes.app.notify.Reminders.createChannel(this)
     }
 
@@ -31,8 +30,8 @@ class CenotesApp : Application() {
     val backup: Backup by lazy { Backup(this, database.noteDao(), images, settings) }
 
     /** New versions published on GitHub (Settings → Updates and the notice at the top of the notes). */
-    val updates: com.cenotes.app.update.Updates by lazy { com.cenotes.app.update.Updates(this) }
+    val updates: com.ce.kit.update.Updates get() = com.ce.kit.CeKit.updates
 
     /** Lives as long as the process: saves started while leaving a screen always finish. */
-    val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default + kotlinx.coroutines.CoroutineExceptionHandler { _, error -> CrashLog.write(this, error) })
+    val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default + kotlinx.coroutines.CoroutineExceptionHandler { _, error -> com.ce.kit.log.CrashLog.write(this, error) })
 }

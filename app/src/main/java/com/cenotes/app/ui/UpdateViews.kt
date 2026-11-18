@@ -1,7 +1,7 @@
 package com.cenotes.app.ui
 
 import androidx.compose.foundation.clickable
-import com.cenotes.app.update.DownloadState
+import com.ce.kit.update.DownloadState
 import com.ce.kit.ui.glass.glassSpring
 import com.ce.kit.ui.glass.GlassProgressBar
 import androidx.compose.animation.animateContentSize
@@ -33,7 +33,7 @@ import com.ce.kit.ui.glass.GlassKind
 import com.ce.kit.ui.glass.glass
 import com.ce.kit.ui.glass.popIn
 import com.ce.kit.ui.glass.pressScale
-import com.cenotes.app.update.ReleaseNotes
+import com.ce.kit.update.ReleaseNotes
 
 /**
  * At the top of the Inbox (and in Settings → Updates) when GitHub has a newer Cenotes: download it, with its progress

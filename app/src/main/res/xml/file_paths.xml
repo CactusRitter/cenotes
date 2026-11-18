@@ -7,9 +7,5 @@
     <!-- Note images, shared together with the note text. -->
     <files-path name="images" path="images/" />
 
-    <!-- The activity log, handed to the share sheet. -->
-    <cache-path name="shared" path="shared/" />
 
-    <!-- The APK of a newer Cenotes, for Android's installer (see Updates.install) -->
-    <files-path name="updates" path="updates/" />
 </paths>
