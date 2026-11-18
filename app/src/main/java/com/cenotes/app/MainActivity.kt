@@ -36,9 +36,9 @@ import com.cenotes.app.ui.NoteEditorScreen
 import com.cenotes.app.ui.NotesListScreen
 import com.cenotes.app.ui.NotesViewModel
 import com.cenotes.app.ui.SettingsScreen
-import com.cenotes.app.ui.glass.glassSpring
-import com.cenotes.app.ui.theme.CenotesTheme
-import com.cenotes.app.ui.theme.isDarkNow
+import com.ce.kit.ui.glass.glassSpring
+import com.ce.kit.ui.theme.CeTheme
+import com.ce.kit.ui.theme.isDarkNow
 
 /** Swallows every pointer event before the children see it. */
 private suspend fun PointerInputScope.blockAllTouches() {
@@ -79,7 +79,7 @@ class MainActivity : FragmentActivity() {
             LaunchedEffect(settings.checkUpdates) {
                 if (settings.checkUpdates) runCatching { app.updates.check() }
             }
-            CenotesTheme(settings) {
+            CeTheme(settings) {
                 val vm: NotesViewModel = viewModel(factory = NotesViewModel.Factory)
                 // null = list; 0 = new note; otherwise the id of the note being edited.
                 var editingId by rememberSaveable { mutableStateOf<Long?>(null) }
@@ -181,9 +181,9 @@ class MainActivity : FragmentActivity() {
                     )
                 }
 
-                CompositionLocalProvider(com.cenotes.app.ui.glass.LocalListOnRight provides (settings.listOnRight && twoPane)) {
+                CompositionLocalProvider(com.ce.kit.ui.glass.LocalListOnRight provides (settings.listOnRight && twoPane)) {
                 // One background behind everything: on wide screens it shows beside a centred screen.
-                com.cenotes.app.ui.glass.GlassBackground {
+                com.ce.kit.ui.glass.GlassBackground {
                 SharedTransitionLayout {
                 AnimatedContent(
                     targetState = screen,

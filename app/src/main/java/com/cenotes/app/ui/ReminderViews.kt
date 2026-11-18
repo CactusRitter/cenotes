@@ -39,10 +39,10 @@ import androidx.compose.ui.window.Dialog
 import com.cenotes.app.R
 import com.cenotes.app.data.Reminder
 import com.cenotes.app.data.Repeat
-import com.cenotes.app.ui.glass.GlassKind
-import com.cenotes.app.ui.glass.glass
-import com.cenotes.app.ui.glass.popIn
-import com.cenotes.app.ui.theme.LocalSkin
+import com.ce.kit.ui.glass.GlassKind
+import com.ce.kit.ui.glass.glass
+import com.ce.kit.ui.glass.popIn
+import com.ce.kit.ui.theme.LocalSkin
 import java.util.Calendar
 
 /** The quick times of a reminder: the same ones as Cemail's "Snooze" and "Send later". */

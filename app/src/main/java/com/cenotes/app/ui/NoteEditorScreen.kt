@@ -1,6 +1,6 @@
 package com.cenotes.app.ui
 
-import com.cenotes.app.ui.theme.LocalSkin
+import com.ce.kit.ui.theme.LocalSkin
 import com.cenotes.app.ui.theme.MicIcon
 import com.cenotes.app.ui.theme.LockOpenIcon
 import androidx.compose.material.icons.filled.Lock
@@ -128,12 +128,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cenotes.app.R
 import com.cenotes.app.data.Note
-import com.cenotes.app.ui.glass.GlassIconButton
-import com.cenotes.app.ui.glass.GlassKind
-import com.cenotes.app.ui.glass.GlassPill
-import com.cenotes.app.ui.glass.PillIcon
-import com.cenotes.app.ui.glass.glass
-import com.cenotes.app.ui.glass.glassSpring
+import com.ce.kit.ui.glass.GlassIconButton
+import com.ce.kit.ui.glass.GlassKind
+import com.ce.kit.ui.glass.GlassPill
+import com.ce.kit.ui.glass.PillIcon
+import com.ce.kit.ui.glass.glass
+import com.ce.kit.ui.glass.glassSpring
 import com.cenotes.app.ui.markdown.BlockEditorState
 import com.cenotes.app.ui.markdown.BlockType
 import com.cenotes.app.ui.markdown.EditorBlock
@@ -157,7 +157,7 @@ import com.cenotes.app.ui.theme.CheckBoxIcon
 import com.cenotes.app.ui.theme.ImageIcon
 import com.cenotes.app.ui.theme.IndentIcon
 import com.cenotes.app.ui.theme.LinkIcon
-import com.cenotes.app.ui.theme.LocalGlass
+import com.ce.kit.ui.theme.LocalGlass
 import com.cenotes.app.ui.theme.PaletteIcon
 import com.cenotes.app.ui.theme.NumberedListIcon
 import com.cenotes.app.ui.theme.OpenInNewIcon
@@ -965,7 +965,7 @@ private fun BlockRow(
         }
         if (type in NestableTypes) Spacer(Modifier.width((block.indent * 28).dp))
         when (type) {
-            BlockType.TASK -> com.cenotes.app.ui.glass.TaskCheckbox(
+            BlockType.TASK -> com.ce.kit.ui.glass.TaskCheckbox(
                 checked = block.checked,
                 onCheckedChange = { editor.toggleChecked(block) },
                 // Same footprint as Material's box (20 dp + padding), so text lines up in every design.

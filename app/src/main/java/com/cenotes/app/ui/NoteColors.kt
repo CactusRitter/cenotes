@@ -30,9 +30,9 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.cenotes.app.R
-import com.cenotes.app.ui.glass.pressScale
-import com.cenotes.app.ui.theme.LocalGlass
-import com.cenotes.app.ui.theme.LocalSkin
+import com.ce.kit.ui.glass.pressScale
+import com.ce.kit.ui.theme.LocalGlass
+import com.ce.kit.ui.theme.LocalSkin
 
 /**
  * The background colour of a note (like Google Keep's), drawn as a soft wash of the colour over the card, under its

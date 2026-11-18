@@ -11,7 +11,7 @@ import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.RectangleShape
-import com.cenotes.app.ui.theme.LocalSkin
+import com.ce.kit.ui.theme.LocalSkin
 
 /**
  * Scopes needed to animate a note card into the editor and back (like Google Keep): the card

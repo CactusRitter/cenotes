@@ -51,8 +51,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.cenotes.app.R
 import com.cenotes.app.data.Label
-import com.cenotes.app.ui.theme.Accent
-import com.cenotes.app.ui.theme.LocalGlass
+import com.ce.kit.ui.theme.Accent
+import com.ce.kit.ui.theme.LocalGlass
 import kotlinx.coroutines.launch
 
 /** The colour the user picked, or (automatic) one from the accent palette by id, tuned for light and dark. */

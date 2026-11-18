@@ -1,12 +1,13 @@
 package com.cenotes.app.data
 
 import android.content.Context
-import com.cenotes.app.ui.theme.Accent
-import com.cenotes.app.ui.theme.AccentPalette
-import com.cenotes.app.ui.theme.Skin
-import com.cenotes.app.ui.theme.ThemeMode
-import com.cenotes.app.ui.theme.ThemeStyle
-import com.cenotes.app.ui.theme.customPalette
+import com.ce.kit.ui.theme.Accent
+import com.ce.kit.ui.theme.CeAppearance
+import com.ce.kit.ui.theme.AccentPalette
+import com.ce.kit.ui.theme.Skin
+import com.ce.kit.ui.theme.ThemeMode
+import com.ce.kit.ui.theme.ThemeStyle
+import com.ce.kit.ui.theme.customPalette
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,15 +24,15 @@ data class AppSettings(
     /** A colour of the free hue bar (0–360) instead of [accent]; null = the chosen accent. */
     val customHue: Float? = null,
     /** Light, dark or following the phone. */
-    val themeMode: ThemeMode = ThemeMode.SYSTEM,
+    override val themeMode: ThemeMode = ThemeMode.SYSTEM,
     /** Background and glass tint of the glass look (only used with [Skin.GLASS]). */
-    val themeStyle: ThemeStyle = ThemeStyle.AURORA,
+    override val themeStyle: ThemeStyle = ThemeStyle.AURORA,
     /** The whole look of the app; [Skin.GLASS] is the one shared with Celander and Cemail. */
-    val skin: Skin = Skin.GLASS,
+    override val skin: Skin = Skin.GLASS,
     /** Solid "3D" shadow under every glass surface. */
-    val depth3d: Boolean = false,
+    override val depth3d: Boolean = false,
     /** 0 = solid glass, 100 = fully see-through. */
-    val transparency: Int = 65,
+    override val transparency: Int = 65,
     val layout: NoteLayout = NoteLayout.GRID,
     /** Colours the user added for labels (ARGB), at most [MaxCustomColors]. */
     val customColors: List<Int> = emptyList(),
@@ -44,9 +45,9 @@ data class AppSettings(
     val listOnRight: Boolean = false,
     /** Where Settings sits on a wide screen: -1 start, 0 centre, 1 end (moved by dragging beside it), as in Cemail. */
     val settingsDock: Int = 0,
-) {
+) : CeAppearance {
     /** The app's colour in its four shades: the custom one, or the chosen accent. */
-    val accentPalette: AccentPalette
+    override val accentPalette: AccentPalette
         get() = customHue?.let { customPalette(it) } ?: accent.palette
 }
 

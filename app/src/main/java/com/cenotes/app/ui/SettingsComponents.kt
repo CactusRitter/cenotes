@@ -30,12 +30,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.cenotes.app.ui.glass.GlassKind
-import com.cenotes.app.ui.glass.GlassSwitch
-import com.cenotes.app.ui.glass.glass
-import com.cenotes.app.ui.glass.popIn
-import com.cenotes.app.ui.glass.pressScale
-import com.cenotes.app.ui.theme.LocalSkin
+import com.ce.kit.ui.glass.GlassKind
+import com.ce.kit.ui.glass.GlassSwitch
+import com.ce.kit.ui.glass.glass
+import com.ce.kit.ui.glass.popIn
+import com.ce.kit.ui.glass.pressScale
+import com.ce.kit.ui.theme.LocalSkin
 
 // Building blocks of the Settings screens, the same as in Cemail (docs/DESIGN.md, "Ajustes y filas grandes").
 

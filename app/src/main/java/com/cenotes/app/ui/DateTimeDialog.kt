@@ -39,12 +39,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.cenotes.app.R
-import com.cenotes.app.ui.glass.GlassKind
-import com.cenotes.app.ui.glass.glass
-import com.cenotes.app.ui.glass.glassSpring
-import com.cenotes.app.ui.glass.popIn
-import com.cenotes.app.ui.glass.softBounceSpring
-import com.cenotes.app.ui.theme.LocalSkin
+import com.ce.kit.ui.glass.GlassKind
+import com.ce.kit.ui.glass.glass
+import com.ce.kit.ui.glass.glassSpring
+import com.ce.kit.ui.glass.popIn
+import com.ce.kit.ui.glass.softBounceSpring
+import com.ce.kit.ui.theme.LocalSkin
 import java.util.Calendar
 import java.util.TimeZone
 

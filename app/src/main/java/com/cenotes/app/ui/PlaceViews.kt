@@ -59,10 +59,10 @@ import com.cenotes.app.R
 import com.cenotes.app.data.Place
 import com.cenotes.app.notify.Places
 import com.cenotes.app.notify.await
-import com.cenotes.app.ui.glass.GlassKind
-import com.cenotes.app.ui.glass.glass
-import com.cenotes.app.ui.glass.popIn
-import com.cenotes.app.ui.theme.LocalSkin
+import com.ce.kit.ui.glass.GlassKind
+import com.ce.kit.ui.glass.glass
+import com.ce.kit.ui.glass.popIn
+import com.ce.kit.ui.theme.LocalSkin
 import com.cenotes.app.ui.theme.MyLocationIcon
 import com.cenotes.app.ui.theme.PlaceIcon
 import com.google.android.gms.location.LocationServices

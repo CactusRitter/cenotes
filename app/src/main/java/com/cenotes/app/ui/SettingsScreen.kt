@@ -70,27 +70,27 @@ import com.cenotes.app.data.AppSettings
 import com.cenotes.app.data.Backup
 import com.cenotes.app.data.MaxCustomColors
 import com.cenotes.app.data.SettingsRepository
-import com.cenotes.app.ui.glass.GlassKind
-import com.cenotes.app.ui.glass.GlassPill
-import com.cenotes.app.ui.glass.GlassSlider
-import com.cenotes.app.ui.glass.PillIcon
-import com.cenotes.app.ui.glass.bounceSpring
-import com.cenotes.app.ui.glass.glass
-import com.cenotes.app.ui.glass.glassSpring
-import com.cenotes.app.ui.glass.onBackdrop
-import com.cenotes.app.ui.glass.pressScale
-import com.cenotes.app.ui.glass.softBounceSpring
-import com.cenotes.app.ui.theme.Accent
+import com.ce.kit.ui.glass.GlassKind
+import com.ce.kit.ui.glass.GlassPill
+import com.ce.kit.ui.glass.GlassSlider
+import com.ce.kit.ui.glass.PillIcon
+import com.ce.kit.ui.glass.bounceSpring
+import com.ce.kit.ui.glass.glass
+import com.ce.kit.ui.glass.glassSpring
+import com.ce.kit.ui.glass.onBackdrop
+import com.ce.kit.ui.glass.pressScale
+import com.ce.kit.ui.glass.softBounceSpring
+import com.ce.kit.ui.theme.Accent
 import com.cenotes.app.ui.theme.BackupIcon
 import com.cenotes.app.ui.theme.DownloadIcon
 import com.cenotes.app.ui.theme.LabelIcon
-import com.cenotes.app.ui.theme.LocalGlass
+import com.ce.kit.ui.theme.LocalGlass
 import androidx.compose.foundation.selection.toggleable
 import com.cenotes.app.ui.theme.PaletteIcon
-import com.cenotes.app.ui.theme.Skin
-import com.cenotes.app.ui.theme.ThemeMode
-import com.cenotes.app.ui.theme.ThemeStyle
-import com.cenotes.app.ui.theme.customPalette
+import com.ce.kit.ui.theme.Skin
+import com.ce.kit.ui.theme.ThemeMode
+import com.ce.kit.ui.theme.ThemeStyle
+import com.ce.kit.ui.theme.customPalette
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
@@ -569,7 +569,7 @@ private fun RestoreRow(label: Int, checked: Boolean, modifier: Modifier = Modifi
             .toggleable(value = checked, role = androidx.compose.ui.semantics.Role.Checkbox, onValueChange = onChange)
             .padding(vertical = 4.dp),
     ) {
-        com.cenotes.app.ui.glass.TaskCheckbox(
+        com.ce.kit.ui.glass.TaskCheckbox(
             checked = checked,
             onCheckedChange = null,
             modifier = Modifier.padding(start = 2.dp, end = 14.dp),

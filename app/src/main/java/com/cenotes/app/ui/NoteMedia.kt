@@ -53,10 +53,10 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import coil3.compose.AsyncImage
 import com.cenotes.app.R
-import com.cenotes.app.ui.glass.GlassIconButton
-import com.cenotes.app.ui.glass.GlassKind
-import com.cenotes.app.ui.glass.glass
-import com.cenotes.app.ui.theme.LocalGlass
+import com.ce.kit.ui.glass.GlassIconButton
+import com.ce.kit.ui.glass.GlassKind
+import com.ce.kit.ui.glass.glass
+import com.ce.kit.ui.theme.LocalGlass
 import java.io.File
 
 /**

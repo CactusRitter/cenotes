@@ -33,13 +33,13 @@ import androidx.compose.ui.window.Dialog
 import com.cenotes.app.R
 import com.cenotes.app.data.MaxVersions
 import com.cenotes.app.data.NoteVersion
-import com.cenotes.app.ui.glass.GlassKind
-import com.cenotes.app.ui.glass.glass
-import com.cenotes.app.ui.glass.popIn
+import com.ce.kit.ui.glass.GlassKind
+import com.ce.kit.ui.glass.glass
+import com.ce.kit.ui.glass.popIn
 import com.cenotes.app.ui.markdown.MarkdownPreview
 import com.cenotes.app.ui.markdown.markdownToPlainText
 import com.cenotes.app.ui.theme.HistoryIcon
-import com.cenotes.app.ui.theme.LocalSkin
+import com.ce.kit.ui.theme.LocalSkin
 
 /**
  * ⋮ → History: the earlier versions of a note (the latest first), each with when it was written and how it began.

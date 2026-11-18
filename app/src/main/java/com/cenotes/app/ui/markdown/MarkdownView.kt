@@ -45,7 +45,7 @@ fun MarkdownPreview(source: String, maxBlocks: Int, modifier: Modifier = Modifie
                     Modifier.padding(start = (block.indent * 12).dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    com.cenotes.app.ui.glass.TaskCheckbox(block.checked, onCheckedChange = null, size = 15.dp) {
+                    com.ce.kit.ui.glass.TaskCheckbox(block.checked, onCheckedChange = null, size = 15.dp) {
                         Icon(
                             if (block.checked) CheckBoxIcon else CheckBoxOutlineIcon,
                             contentDescription = null,

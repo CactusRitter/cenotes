@@ -2,8 +2,8 @@ package com.cenotes.app.ui
 
 import androidx.compose.foundation.clickable
 import com.cenotes.app.update.DownloadState
-import com.cenotes.app.ui.glass.glassSpring
-import com.cenotes.app.ui.glass.GlassProgressBar
+import com.ce.kit.ui.glass.glassSpring
+import com.ce.kit.ui.glass.GlassProgressBar
 import androidx.compose.animation.animateContentSize
 import android.text.format.Formatter
 import androidx.compose.foundation.layout.Arrangement
@@ -29,10 +29,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cenotes.app.BuildConfig
 import com.cenotes.app.CenotesApp
 import com.cenotes.app.R
-import com.cenotes.app.ui.glass.GlassKind
-import com.cenotes.app.ui.glass.glass
-import com.cenotes.app.ui.glass.popIn
-import com.cenotes.app.ui.glass.pressScale
+import com.ce.kit.ui.glass.GlassKind
+import com.ce.kit.ui.glass.glass
+import com.ce.kit.ui.glass.popIn
+import com.ce.kit.ui.glass.pressScale
 import com.cenotes.app.update.ReleaseNotes
 
 /**

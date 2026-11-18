@@ -16,3 +16,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Cenotes"
 include(":app")
+apply(from = "CeKit/ce-kit-settings.gradle.kts")

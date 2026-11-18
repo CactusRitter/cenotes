@@ -56,7 +56,7 @@ import androidx.compose.ui.unit.dp
 import com.cenotes.app.R
 import com.cenotes.app.data.Label
 import com.cenotes.app.data.MaxCustomColors
-import com.cenotes.app.ui.theme.LocalGlass
+import com.ce.kit.ui.theme.LocalGlass
 
 /** Ready-made label colours (ARGB). */
 val PresetColors = listOf(

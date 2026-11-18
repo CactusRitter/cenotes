@@ -49,13 +49,13 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.cenotes.app.R
-import com.cenotes.app.ui.glass.GlassKind
-import com.cenotes.app.ui.glass.LocalListOnRight
-import com.cenotes.app.ui.glass.bounceSpring
-import com.cenotes.app.ui.glass.glass
-import com.cenotes.app.ui.glass.glassSpring
-import com.cenotes.app.ui.glass.onBackdrop
-import com.cenotes.app.ui.glass.softBounceSpring
+import com.ce.kit.ui.glass.GlassKind
+import com.ce.kit.ui.glass.LocalListOnRight
+import com.ce.kit.ui.glass.bounceSpring
+import com.ce.kit.ui.glass.glass
+import com.ce.kit.ui.glass.glassSpring
+import com.ce.kit.ui.glass.onBackdrop
+import com.ce.kit.ui.glass.softBounceSpring
 import com.cenotes.app.ui.theme.NotesIcon
 import kotlinx.coroutines.launch
 
@@ -72,7 +72,7 @@ val LocalSharedBackdrop = androidx.compose.runtime.compositionLocalOf { false }
 @Composable
 fun ScreenBackground(modifier: Modifier = Modifier, content: @Composable BoxScope.() -> Unit) {
     if (LocalSharedBackdrop.current) Box(modifier.fillMaxSize(), content = content)
-    else com.cenotes.app.ui.glass.GlassBackground(modifier, content)
+    else com.ce.kit.ui.glass.GlassBackground(modifier, content)
 }
 
 /** From this window width (dp) the list and the open note are shown side by side: tablets, open foldables. */

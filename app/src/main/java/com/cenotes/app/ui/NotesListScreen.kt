@@ -113,16 +113,16 @@ import com.cenotes.app.CenotesApp
 import com.cenotes.app.R
 import com.cenotes.app.data.Label
 import com.cenotes.app.data.NoteLayout
-import com.cenotes.app.ui.glass.GlassIconButton
-import com.cenotes.app.ui.glass.SelectionBadge
-import com.cenotes.app.ui.glass.selectedOutline
-import com.cenotes.app.ui.glass.GlassKind
-import com.cenotes.app.ui.glass.GlassPill
-import com.cenotes.app.ui.glass.PillIcon
-import com.cenotes.app.ui.glass.glass
-import com.cenotes.app.ui.glass.glassSpring
-import com.cenotes.app.ui.glass.onBackdrop
-import com.cenotes.app.ui.glass.popIn
+import com.ce.kit.ui.glass.GlassIconButton
+import com.ce.kit.ui.glass.SelectionBadge
+import com.ce.kit.ui.glass.selectedOutline
+import com.ce.kit.ui.glass.GlassKind
+import com.ce.kit.ui.glass.GlassPill
+import com.ce.kit.ui.glass.PillIcon
+import com.ce.kit.ui.glass.glass
+import com.ce.kit.ui.glass.glassSpring
+import com.ce.kit.ui.glass.onBackdrop
+import com.ce.kit.ui.glass.popIn
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.CustomAccessibilityAction
@@ -130,8 +130,8 @@ import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.contentDescription
-import com.cenotes.app.ui.glass.pressScale
-import com.cenotes.app.ui.glass.softBounceSpring
+import com.ce.kit.ui.glass.pressScale
+import com.ce.kit.ui.glass.softBounceSpring
 import com.cenotes.app.ui.markdown.MarkdownPreview
 import com.cenotes.app.ui.markdown.firstImage
 import com.cenotes.app.ui.markdown.taskStats
@@ -139,8 +139,8 @@ import com.cenotes.app.ui.theme.ArchiveIcon
 import com.cenotes.app.ui.theme.CheckBoxIcon
 import com.cenotes.app.ui.theme.GridViewIcon
 import com.cenotes.app.ui.theme.LabelIcon
-import com.cenotes.app.ui.theme.LocalGlass
-import com.cenotes.app.ui.theme.LocalSkin
+import com.ce.kit.ui.theme.LocalGlass
+import com.ce.kit.ui.theme.LocalSkin
 import com.cenotes.app.ui.theme.NotesIcon
 import com.cenotes.app.ui.theme.UnarchiveIcon
 import com.cenotes.app.ui.theme.ViewAgendaIcon
@@ -268,10 +268,10 @@ fun NotesListScreen(
     // With the list on the right (tablets), the menu slides in from the right too, as in Cemail: the drawer is laid out
     // mirrored, and the menu and the screen inside it get the real direction back.
     val direction = androidx.compose.ui.platform.LocalLayoutDirection.current
-    val drawerDirection = if (!com.cenotes.app.ui.glass.LocalListOnRight.current) direction
+    val drawerDirection = if (!com.ce.kit.ui.glass.LocalListOnRight.current) direction
         else if (direction == androidx.compose.ui.unit.LayoutDirection.Ltr) androidx.compose.ui.unit.LayoutDirection.Rtl else androidx.compose.ui.unit.LayoutDirection.Ltr
     // The menu panel is a sibling of the content, so it needs the haze state too: without it the glass does not blur.
-    androidx.compose.runtime.CompositionLocalProvider(androidx.compose.ui.platform.LocalLayoutDirection provides drawerDirection, com.cenotes.app.ui.glass.LocalHazeState provides hazeState) {
+    androidx.compose.runtime.CompositionLocalProvider(androidx.compose.ui.platform.LocalLayoutDirection provides drawerDirection, com.ce.kit.ui.glass.LocalHazeState provides hazeState) {
     ModalNavigationDrawer(
         drawerState = drawerState,
         gesturesEnabled = !selecting,
@@ -300,13 +300,13 @@ fun NotesListScreen(
         },
         scrimColor = MaterialTheme.colorScheme.scrim.copy(alpha = 0.3f),
     ) {
-        androidx.compose.runtime.CompositionLocalProvider(androidx.compose.ui.platform.LocalLayoutDirection provides direction, com.cenotes.app.ui.glass.LocalHazeState provides hazeState) {
+        androidx.compose.runtime.CompositionLocalProvider(androidx.compose.ui.platform.LocalLayoutDirection provides direction, com.ce.kit.ui.glass.LocalHazeState provides hazeState) {
         Box(Modifier.fillMaxSize()) {
             // Everything in here is what the floating glass blurs.
-            ScreenBackground(Modifier.hazeSource(hazeState, zIndex = com.cenotes.app.ui.glass.GlassLayers.BACKGROUND)) {}
+            ScreenBackground(Modifier.hazeSource(hazeState, zIndex = com.ce.kit.ui.glass.GlassLayers.BACKGROUND)) {}
             // Sibling, not child, of the background source: glass cards inside the content blur the background, and blurring an ancestor node crashes hwui (SIGSEGV).
 
-            Box(Modifier.fillMaxSize().hazeSource(hazeState, zIndex = com.cenotes.app.ui.glass.GlassLayers.CONTENT)) {
+            Box(Modifier.fillMaxSize().hazeSource(hazeState, zIndex = com.ce.kit.ui.glass.GlassLayers.CONTENT)) {
                 val list = notes
                 when {
                     list == null -> Unit // Still loading; avoid flashing an empty state.
@@ -448,7 +448,7 @@ fun NotesListScreen(
             }
 
             // Behind the status bar and the top row, once the list has scrolled: what passes below does not mix with them.
-            com.cenotes.app.ui.glass.TopScrim(
+            com.ce.kit.ui.glass.TopScrim(
                 height = topPadding + 4.dp,
                 hazeState = hazeState,
                 visible = gridState.canScrollBackward,
@@ -538,7 +538,7 @@ fun NotesListScreen(
                 Box(
                     Modifier
                         // Bottom right, or bottom left when the list is on the right (tablets).
-                        .align(com.cenotes.app.ui.glass.floatingCorner())
+                        .align(com.ce.kit.ui.glass.floatingCorner())
                         .navigationBarsPadding()
                         .padding(16.dp)
                         .popIn(delayMillis = 220, initialScale = 0.3f)
@@ -546,12 +546,12 @@ fun NotesListScreen(
                         .size(60.dp)
                         .glass(
                             LocalSkin.current.fabCorner?.let { RoundedCornerShape(it) } ?: CircleShape,
-                            com.cenotes.app.ui.glass.fabKind(), elevation = 10.dp, hazeState = hazeState,
+                            com.ce.kit.ui.glass.fabKind(), elevation = 10.dp, hazeState = hazeState,
                         )
                         .clickable(role = Role.Button, onClickLabel = stringResource(R.string.new_note), onClick = onNewNote),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Icon(Icons.Filled.Add, stringResource(R.string.new_note), tint = com.cenotes.app.ui.glass.fabTint())
+                    Icon(Icons.Filled.Add, stringResource(R.string.new_note), tint = com.ce.kit.ui.glass.fabTint())
                 }
             }
 
