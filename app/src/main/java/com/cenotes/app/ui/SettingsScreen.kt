@@ -510,25 +510,21 @@ private fun CreateDialog(onDismiss: () -> Unit, onCreate: (notes: Boolean, image
     var notes by rememberSaveable { mutableStateOf(true) }
     var images by rememberSaveable { mutableStateOf(true) }
     var settings by rememberSaveable { mutableStateOf(true) }
-    androidx.compose.material3.AlertDialog(
-        onDismissRequest = onDismiss,
-        shape = androidx.compose.foundation.shape.RoundedCornerShape(28.dp),
-        containerColor = LocalGlass.current.menu,
-        title = { Text(stringResource(R.string.backup_create_title), fontWeight = androidx.compose.ui.text.font.FontWeight.Bold) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                RestoreRow(R.string.backup_restore_notes, notes) { notes = it }
-                if (notes) RestoreRow(R.string.backup_with_images, images, modifier = Modifier.padding(start = 32.dp)) { images = it }
-                RestoreRow(R.string.backup_restore_settings, settings) { settings = it }
-            }
-        },
-        confirmButton = {
-            androidx.compose.material3.TextButton(enabled = notes || settings, onClick = { onCreate(notes, images, settings) }) {
-                Text(stringResource(R.string.backup_create_confirm), fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
-            }
-        },
-        dismissButton = { androidx.compose.material3.TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
-    )
+    com.ce.kit.ui.GlassDialog(
+        visible = true,
+        title = stringResource(R.string.backup_create_title),
+        message = "",
+        confirmLabel = stringResource(R.string.backup_create_confirm),
+        onConfirm = { onCreate(notes, images, settings) },
+        onDismiss = onDismiss,
+        confirmEnabled = notes || settings,
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            RestoreRow(R.string.backup_restore_notes, notes) { notes = it }
+            if (notes) RestoreRow(R.string.backup_with_images, images, modifier = Modifier.padding(start = 32.dp)) { images = it }
+            RestoreRow(R.string.backup_restore_settings, settings) { settings = it }
+        }
+    }
 }
 
 /** Asks what to restore from a backup, with a switch only for what the file carries. Settings start off when notes are there too. */
@@ -536,24 +532,20 @@ private fun CreateDialog(onDismiss: () -> Unit, onCreate: (notes: Boolean, image
 private fun RestoreDialog(contents: Backup.Contents, onDismiss: () -> Unit, onRestore: (notes: Boolean, settings: Boolean) -> Unit) {
     var notes by remember { mutableStateOf(contents.notes) }
     var settings by remember { mutableStateOf(contents.settings && !contents.notes) }
-    androidx.compose.material3.AlertDialog(
-        onDismissRequest = onDismiss,
-        shape = androidx.compose.foundation.shape.RoundedCornerShape(28.dp),
-        containerColor = LocalGlass.current.menu,
-        title = { Text(stringResource(R.string.backup_restore_title), fontWeight = androidx.compose.ui.text.font.FontWeight.Bold) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                if (contents.notes) RestoreRow(R.string.backup_restore_notes, notes) { notes = it }
-                if (contents.settings) RestoreRow(R.string.backup_restore_settings, settings) { settings = it }
-            }
-        },
-        confirmButton = {
-            androidx.compose.material3.TextButton(enabled = notes || settings, onClick = { onRestore(notes, settings) }) {
-                Text(stringResource(R.string.backup_restore_confirm), fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
-            }
-        },
-        dismissButton = { androidx.compose.material3.TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
-    )
+    com.ce.kit.ui.GlassDialog(
+        visible = true,
+        title = stringResource(R.string.backup_restore_title),
+        message = "",
+        confirmLabel = stringResource(R.string.backup_restore_confirm),
+        onConfirm = { onRestore(notes, settings) },
+        onDismiss = onDismiss,
+        confirmEnabled = notes || settings,
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            if (contents.notes) RestoreRow(R.string.backup_restore_notes, notes) { notes = it }
+            if (contents.settings) RestoreRow(R.string.backup_restore_settings, settings) { settings = it }
+        }
+    }
 }
 
 /**

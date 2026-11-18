@@ -14,7 +14,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material3.AlertDialog
+import com.ce.kit.ui.GlassDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -53,19 +53,19 @@ fun Modifier.noteTint(color: Int): Modifier {
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun NoteColorDialog(current: Int, onPick: (Int) -> Unit, onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(LocalSkin.current.radius(28.dp)),
-        containerColor = LocalGlass.current.menu,
-        title = { Text(stringResource(R.string.note_color), fontWeight = FontWeight.Bold) },
-        text = {
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                ColorChoice(0, current == 0, stringResource(R.string.note_color_none)) { onPick(0) }
-                PresetColors.forEach { c -> ColorChoice(c, current == c, null) { onPick(c) } }
-            }
-        },
-        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.done), fontWeight = FontWeight.Bold) } },
-    )
+    GlassDialog(
+        visible = true,
+        title = stringResource(R.string.note_color),
+        message = "",
+        confirmLabel = stringResource(R.string.done),
+        onConfirm = onDismiss,
+        onDismiss = onDismiss,
+    ) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            ColorChoice(0, current == 0, stringResource(R.string.note_color_none)) { onPick(0) }
+            PresetColors.forEach { c -> ColorChoice(c, current == c, null) { onPick(c) } }
+        }
+    }
 }
 
 @Composable

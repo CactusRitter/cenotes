@@ -23,7 +23,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.AlertDialog
+import com.ce.kit.ui.GlassDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -177,40 +177,35 @@ fun ImageViewer(file: File, onDismiss: () -> Unit) {
 fun LinkDialog(initialLabel: String, onDismiss: () -> Unit, onConfirm: (label: String, url: String) -> Unit) {
     var label by remember { mutableStateOf(initialLabel) }
     var url by remember { mutableStateOf("") }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(28.dp),
-        containerColor = LocalGlass.current.menu,
-        title = { Text(stringResource(R.string.link_add), fontWeight = FontWeight.Bold) },
-        text = {
-            Column {
-                OutlinedTextField(
-                    value = label,
-                    onValueChange = { label = it },
-                    label = { Text(stringResource(R.string.link_text)) },
-                    singleLine = true,
-                    shape = RoundedCornerShape(16.dp),
-                )
-                Spacer(Modifier.height(10.dp))
-                OutlinedTextField(
-                    value = url,
-                    onValueChange = { url = it.trim() },
-                    label = { Text(stringResource(R.string.link_url)) },
-                    placeholder = { Text("https://…") },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
-                    shape = RoundedCornerShape(16.dp),
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(
-                enabled = url.isNotBlank(),
-                onClick = { onConfirm(label.trim(), normalizeUrl(url)) },
-            ) { Text(stringResource(R.string.link_insert), fontWeight = FontWeight.Bold) }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
-    )
+    GlassDialog(
+        visible = true,
+        title = stringResource(R.string.link_add),
+        message = "",
+        confirmLabel = stringResource(R.string.link_insert),
+        onConfirm = { onConfirm(label.trim(), normalizeUrl(url)) },
+        onDismiss = onDismiss,
+        confirmEnabled = url.isNotBlank(),
+    ) {
+        Column {
+            OutlinedTextField(
+                value = label,
+                onValueChange = { label = it },
+                label = { Text(stringResource(R.string.link_text)) },
+                singleLine = true,
+                shape = RoundedCornerShape(16.dp),
+            )
+            Spacer(Modifier.height(10.dp))
+            OutlinedTextField(
+                value = url,
+                onValueChange = { url = it.trim() },
+                label = { Text(stringResource(R.string.link_url)) },
+                placeholder = { Text("https://…") },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
+                shape = RoundedCornerShape(16.dp),
+            )
+        }
+    }
 }
 
 fun normalizeUrl(url: String): String =

@@ -9,7 +9,7 @@ import com.cenotes.app.ui.theme.DeleteForeverIcon
 import com.cenotes.app.ui.theme.RestoreFromTrashIcon
 import com.cenotes.app.ui.theme.PaletteIcon
 import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.material3.AlertDialog
+import com.ce.kit.ui.GlassDialog
 import android.text.format.DateUtils
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
@@ -587,25 +587,18 @@ fun NotesListScreen(
         NoteColorDialog(shared, onPick = viewModel::setColorOnSelected, onDismiss = { bulkColor = false })
     }
     confirmForever?.let { target ->
-        AlertDialog(
-            onDismissRequest = { confirmForever = null },
-            shape = RoundedCornerShape(LocalSkin.current.radius(28.dp)),
-            containerColor = LocalGlass.current.menu,
-            title = {
-                Text(
-                    if (target == ForeverTarget.All) stringResource(R.string.empty_trash_title)
-                    else pluralStringResource(R.plurals.delete_forever_title, selected.size, selected.size),
-                    fontWeight = FontWeight.Bold,
-                )
+        GlassDialog(
+            visible = true,
+            title = if (target == ForeverTarget.All) stringResource(R.string.empty_trash_title)
+            else pluralStringResource(R.plurals.delete_forever_title, selected.size, selected.size),
+            message = stringResource(R.string.delete_forever_text),
+            confirmLabel = stringResource(R.string.delete_forever),
+            onConfirm = {
+                confirmForever = null
+                if (target == ForeverTarget.All) viewModel.emptyTrash() else viewModel.deleteSelectedForever()
             },
-            text = { Text(stringResource(R.string.delete_forever_text)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    confirmForever = null
-                    if (target == ForeverTarget.All) viewModel.emptyTrash() else viewModel.deleteSelectedForever()
-                }) { Text(stringResource(R.string.delete_forever), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error) }
-            },
-            dismissButton = { TextButton(onClick = { confirmForever = null }) { Text(stringResource(R.string.cancel)) } },
+            onDismiss = { confirmForever = null },
+            destructive = true,
         )
     }
     if (bulkLabels) {

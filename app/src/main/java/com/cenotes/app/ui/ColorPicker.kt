@@ -24,7 +24,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material3.AlertDialog
+import com.ce.kit.ui.GlassDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -160,36 +160,26 @@ private fun ColorEditorDialog(initial: Int?, onSave: (Int) -> Unit, onDelete: ((
     val picked = Color.hsv(hue, sat, bri)
     val hues = List(7) { Color.hsv(it * 60f, 1f, 1f) }
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(28.dp),
-        containerColor = LocalGlass.current.menu,
-        title = {
-            Text(
-                stringResource(if (initial == null) R.string.color_new else R.string.color_edit),
-                fontWeight = FontWeight.Bold,
-            )
-        },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                Box(Modifier.fillMaxWidth().height(44.dp).clip(RoundedCornerShape(14.dp)).background(picked))
-                GradientBar(hue / 360f, hues, picked) { hue = it * 360f }
-                GradientBar(sat, listOf(Color.hsv(hue, 0f, bri), Color.hsv(hue, 1f, bri)), picked) { sat = it }
-                GradientBar(bri, listOf(Color.hsv(hue, sat, 0f), Color.hsv(hue, sat, 1f)), picked) { bri = it }
-                if (onDelete != null) {
-                    TextButton(onClick = { onDelete(); onDismiss() }) {
-                        Text(stringResource(R.string.color_remove), color = MaterialTheme.colorScheme.error)
-                    }
+    GlassDialog(
+        visible = true,
+        title = stringResource(if (initial == null) R.string.color_new else R.string.color_edit),
+        message = "",
+        confirmLabel = stringResource(R.string.color_save),
+        onConfirm = { onSave(picked.toArgb()); onDismiss() },
+        onDismiss = onDismiss,
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Box(Modifier.fillMaxWidth().height(44.dp).clip(RoundedCornerShape(14.dp)).background(picked))
+            GradientBar(hue / 360f, hues, picked) { hue = it * 360f }
+            GradientBar(sat, listOf(Color.hsv(hue, 0f, bri), Color.hsv(hue, 1f, bri)), picked) { sat = it }
+            GradientBar(bri, listOf(Color.hsv(hue, sat, 0f), Color.hsv(hue, sat, 1f)), picked) { bri = it }
+            if (onDelete != null) {
+                TextButton(onClick = { onDelete(); onDismiss() }) {
+                    Text(stringResource(R.string.color_remove), color = MaterialTheme.colorScheme.error)
                 }
             }
-        },
-        confirmButton = {
-            TextButton(onClick = { onSave(picked.toArgb()); onDismiss() }) {
-                Text(stringResource(R.string.color_save), fontWeight = FontWeight.Bold)
-            }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
-    )
+        }
+    }
 }
 
 /** Colour of one label: ten ready-made colours plus the user's own ones. */
@@ -204,41 +194,41 @@ fun LabelColorDialog(
     onDeleteColor: (Int) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(28.dp),
-        containerColor = LocalGlass.current.menu,
-        title = { Text(label.name, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    maxItemsInEachRow = 5,
-                ) {
-                    PresetColors.forEach { c -> Swatch(c, label.color == c, onClick = { onPick(c); onDismiss() }) }
-                }
-                Column {
-                    Text(stringResource(R.string.colors_mine), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
-                    Spacer(Modifier.height(2.dp))
-                    Text(
-                        stringResource(R.string.colors_mine_hint),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-                CustomColorsRow(
-                    colors = customColors,
-                    selected = label.color,
-                    onPick = { onPick(it); onDismiss() },
-                    onAdd = { onAddColor(it); onPick(it); onDismiss() },
-                    onEdit = onEditColor,
-                    onDelete = onDeleteColor,
+    GlassDialog(
+        visible = true,
+        title = label.name,
+        message = "",
+        confirmLabel = stringResource(R.string.done),
+        onConfirm = onDismiss,
+        onDismiss = onDismiss,
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                maxItemsInEachRow = 5,
+            ) {
+                PresetColors.forEach { c -> Swatch(c, label.color == c, onClick = { onPick(c); onDismiss() }) }
+            }
+            Column {
+                Text(stringResource(R.string.colors_mine), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    stringResource(R.string.colors_mine_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-        },
-        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.done), fontWeight = FontWeight.Bold) } },
-    )
+            CustomColorsRow(
+                colors = customColors,
+                selected = label.color,
+                onPick = { onPick(it); onDismiss() },
+                onAdd = { onAddColor(it); onPick(it); onDismiss() },
+                onEdit = onEditColor,
+                onDelete = onDeleteColor,
+            )
+        }
+    }
 }
 
 /** Horizontal gradient slider: drag or tap anywhere on the bar. [fraction] is 0..1. */

@@ -23,7 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.AlertDialog
+import com.ce.kit.ui.GlassDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -141,33 +141,33 @@ fun LabelPickerDialog(
     onCreate: suspend (String) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(28.dp),
-        containerColor = LocalGlass.current.menu,
-        title = { Text(stringResource(R.string.labels), fontWeight = FontWeight.Bold) },
-        text = {
-            Column {
-                NewLabelField(onCreate)
-                Spacer(Modifier.padding(4.dp))
-                Column(Modifier.heightIn(max = 340.dp).verticalScroll(rememberScrollState())) {
-                    if (labels.isEmpty()) {
-                        Text(
-                            stringResource(R.string.labels_empty),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                    labels.forEach { label ->
-                        LabelRow(label, onClick = { onToggle(label.id) }) {
-                            Checkbox(checked = label.id in selected, onCheckedChange = { onToggle(label.id) })
-                        }
+    GlassDialog(
+        visible = true,
+        title = stringResource(R.string.labels),
+        message = "",
+        confirmLabel = stringResource(R.string.done),
+        onConfirm = onDismiss,
+        onDismiss = onDismiss,
+    ) {
+        Column {
+            NewLabelField(onCreate)
+            Spacer(Modifier.padding(4.dp))
+            Column(Modifier.heightIn(max = 340.dp).verticalScroll(rememberScrollState())) {
+                if (labels.isEmpty()) {
+                    Text(
+                        stringResource(R.string.labels_empty),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                labels.forEach { label ->
+                    LabelRow(label, onClick = { onToggle(label.id) }) {
+                        Checkbox(checked = label.id in selected, onCheckedChange = { onToggle(label.id) })
                     }
                 }
             }
-        },
-        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.done), fontWeight = FontWeight.Bold) } },
-    )
+        }
+    }
 }
 
 /**
@@ -183,33 +183,33 @@ fun BulkLabelDialog(
     onCreate: suspend (String) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(28.dp),
-        containerColor = LocalGlass.current.menu,
-        title = { Text(stringResource(R.string.labels_for_n, total), fontWeight = FontWeight.Bold) },
-        text = {
-            Column {
-                NewLabelField(onCreate)
-                Spacer(Modifier.padding(4.dp))
-                Column(Modifier.heightIn(max = 340.dp).verticalScroll(rememberScrollState())) {
-                    labels.forEach { label ->
-                        val n = counts[label.id] ?: 0
-                        val state = when (n) {
-                            0 -> ToggleableState.Off
-                            total -> ToggleableState.On
-                            else -> ToggleableState.Indeterminate
-                        }
-                        val apply = { onSet(label.id, state != ToggleableState.On) }
-                        LabelRow(label, onClick = apply) {
-                            TriStateCheckbox(state = state, onClick = apply)
-                        }
+    GlassDialog(
+        visible = true,
+        title = stringResource(R.string.labels_for_n, total),
+        message = "",
+        confirmLabel = stringResource(R.string.done),
+        onConfirm = onDismiss,
+        onDismiss = onDismiss,
+    ) {
+        Column {
+            NewLabelField(onCreate)
+            Spacer(Modifier.padding(4.dp))
+            Column(Modifier.heightIn(max = 340.dp).verticalScroll(rememberScrollState())) {
+                labels.forEach { label ->
+                    val n = counts[label.id] ?: 0
+                    val state = when (n) {
+                        0 -> ToggleableState.Off
+                        total -> ToggleableState.On
+                        else -> ToggleableState.Indeterminate
+                    }
+                    val apply = { onSet(label.id, state != ToggleableState.On) }
+                    LabelRow(label, onClick = apply) {
+                        TriStateCheckbox(state = state, onClick = apply)
                     }
                 }
             }
-        },
-        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.done), fontWeight = FontWeight.Bold) } },
-    )
+        }
+    }
 }
 
 /** Create, rename and delete labels. Deleting a label never deletes notes. */
@@ -229,57 +229,57 @@ fun ManageLabelsDialog(
     var confirmDelete by remember { mutableStateOf<Label?>(null) }
     var colorFor by remember { mutableStateOf<Label?>(null) }
     val labelColorText = stringResource(R.string.label_color_change)
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(28.dp),
-        containerColor = LocalGlass.current.menu,
-        title = { Text(stringResource(R.string.labels_edit), fontWeight = FontWeight.Bold) },
-        text = {
-            Column {
-                NewLabelField(onCreate)
-                Spacer(Modifier.padding(4.dp))
-                Column(
-                    Modifier.heightIn(max = 380.dp).verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(6.dp),
-                ) {
-                    labels.forEach { label ->
-                        var name by remember(label.id, label.name) { mutableStateOf(label.name) }
-                        val changed = name.trim().isNotEmpty() && name.trim() != label.name
-                        OutlinedTextField(
-                            value = name,
-                            onValueChange = { name = it },
-                            singleLine = true,
-                            shape = RoundedCornerShape(16.dp),
-                            leadingIcon = {
-                                Box(
-                                    Modifier
-                                        .size(24.dp)
-                                        .clip(CircleShape)
-                                        .background(labelColor(label))
-                                        .clickable(role = Role.Button, onClickLabel = labelColorText) { colorFor = label },
-                                )
-                            },
-                            trailingIcon = {
-                                if (changed) {
-                                    IconButton(onClick = { onRename(label.id, name) }) {
-                                        Icon(Icons.Filled.Check, stringResource(R.string.label_rename))
-                                    }
-                                } else {
-                                    IconButton(onClick = { confirmDelete = label }) {
-                                        Icon(Icons.Filled.Delete, stringResource(R.string.delete))
-                                    }
+    GlassDialog(
+        visible = true,
+        title = stringResource(R.string.labels_edit),
+        message = "",
+        confirmLabel = stringResource(R.string.done),
+        onConfirm = onDismiss,
+        onDismiss = onDismiss,
+    ) {
+        Column {
+            NewLabelField(onCreate)
+            Spacer(Modifier.padding(4.dp))
+            Column(
+                Modifier.heightIn(max = 380.dp).verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                labels.forEach { label ->
+                    var name by remember(label.id, label.name) { mutableStateOf(label.name) }
+                    val changed = name.trim().isNotEmpty() && name.trim() != label.name
+                    OutlinedTextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        singleLine = true,
+                        shape = RoundedCornerShape(16.dp),
+                        leadingIcon = {
+                            Box(
+                                Modifier
+                                    .size(24.dp)
+                                    .clip(CircleShape)
+                                    .background(labelColor(label))
+                                    .clickable(role = Role.Button, onClickLabel = labelColorText) { colorFor = label },
+                            )
+                        },
+                        trailingIcon = {
+                            if (changed) {
+                                IconButton(onClick = { onRename(label.id, name) }) {
+                                    Icon(Icons.Filled.Check, stringResource(R.string.label_rename))
                                 }
-                            },
-                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                            keyboardActions = KeyboardActions(onDone = { if (changed) onRename(label.id, name) }),
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-                    }
+                            } else {
+                                IconButton(onClick = { confirmDelete = label }) {
+                                    Icon(Icons.Filled.Delete, stringResource(R.string.delete))
+                                }
+                            }
+                        },
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                        keyboardActions = KeyboardActions(onDone = { if (changed) onRename(label.id, name) }),
+                        modifier = Modifier.fillMaxWidth(),
+                    )
                 }
             }
-        },
-        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.done), fontWeight = FontWeight.Bold) } },
-    )
+        }
+    }
     // Look the label up again so the dialog shows the colour as soon as it changes.
     labels.firstOrNull { it.id == colorFor?.id }?.let { label ->
         LabelColorDialog(
@@ -293,18 +293,14 @@ fun ManageLabelsDialog(
         )
     }
     confirmDelete?.let { label ->
-        AlertDialog(
-            onDismissRequest = { confirmDelete = null },
-            shape = RoundedCornerShape(28.dp),
-            containerColor = LocalGlass.current.menu,
-            title = { Text(stringResource(R.string.label_delete_title, label.name), fontWeight = FontWeight.Bold) },
-            text = { Text(stringResource(R.string.label_delete_text)) },
-            confirmButton = {
-                TextButton(onClick = { onDelete(label.id); confirmDelete = null }) {
-                    Text(stringResource(R.string.delete), fontWeight = FontWeight.Bold)
-                }
-            },
-            dismissButton = { TextButton(onClick = { confirmDelete = null }) { Text(stringResource(R.string.cancel)) } },
+        GlassDialog(
+            visible = true,
+            title = stringResource(R.string.label_delete_title, label.name),
+            message = stringResource(R.string.label_delete_text),
+            confirmLabel = stringResource(R.string.delete),
+            onConfirm = { onDelete(label.id); confirmDelete = null },
+            onDismiss = { confirmDelete = null },
+            destructive = true,
         )
     }
 }
