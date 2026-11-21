@@ -1,5 +1,12 @@
 package com.cenotes.app.ui
 
+import com.ce.kit.ui.settings.AppearancePage as KitAppearancePage
+import com.ce.kit.ui.settings.CeAppearanceActions
+import com.ce.kit.ui.settings.ChoiceChip
+import com.ce.kit.ui.settings.SettingsCard
+import com.ce.kit.ui.settings.SwitchRow
+import com.ce.kit.ui.settings.IconBubble
+import com.ce.kit.ui.settings.BigRow
 import com.cenotes.app.ui.theme.NotesIcon
 import com.cenotes.app.data.NoteSort
 import androidx.activity.compose.BackHandler
@@ -130,6 +137,9 @@ fun SettingsScreen(
     var route by rememberSaveable { mutableStateOf(SettingsRoute.MAIN) }
     val goBack = { SettingsRoute.parent(route)?.let { route = it } ?: onBack() }
     BackHandler(onBack = goBack)
+    // The dialogs of the pages live here, not in the scrolling page: a GlassDialog fills the box it is drawn in.
+    val colorEditor = rememberColorEditorState()
+    val backupUi = rememberBackupUi(backup, onNotesImported, onAccentChanged)
 
     val title = when (route) {
         SettingsRoute.APPEARANCE -> stringResource(R.string.appearance)
@@ -142,6 +152,7 @@ fun SettingsScreen(
     }
 
     ScreenBackground {
+      Box(Modifier.fillMaxSize()) {
         Column(
             Modifier
                 .fillMaxSize()
@@ -185,14 +196,17 @@ fun SettingsScreen(
                         SettingsRoute.MAIN -> MainPage(settings) { route = it }
                         SettingsRoute.APPEARANCE -> AppearancePage(settings, repo, onAccentChanged)
                         SettingsRoute.NOTES -> NotesPage(settings, repo)
-                        SettingsRoute.LABEL_COLORS -> LabelColorsPage(settings, onAddColor, onEditColor, onDeleteColor)
-                        SettingsRoute.BACKUP -> BackupPage(backup, onNotesImported, onAccentChanged)
+                        SettingsRoute.LABEL_COLORS -> LabelColorsPage(settings, colorEditor)
+                        SettingsRoute.BACKUP -> BackupPage(backupUi)
                         SettingsRoute.UPDATES -> UpdatesPage(settings, repo)
                         SettingsRoute.DIAGNOSTICS -> DiagnosticsPage()
                     }
                 }
             }
         }
+        ColorEditorDialogs(colorEditor, onAdd = onAddColor, onEdit = onEditColor, onDelete = onDeleteColor)
+        backupUi.dialogs()
+      }
     }
 }
 
@@ -223,170 +237,45 @@ private fun MainPage(settings: AppSettings, onRoute: (String) -> Unit) {
     )
 }
 
-// --- Appearance ---
+// --- Appearance (the page itself is the kit's; here only the app's own card and what each choice stores) ---
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun AppearancePage(settings: AppSettings, repo: SettingsRepository, onAccentChanged: () -> Unit) {
-    // Like Celander's "Design": light or dark, the colour (eight, or any hue), and the glass.
-    val glassLook = settings.skin == Skin.GLASS
-    val dark = LocalGlass.current.dark
-    SettingsCard {
-        Text(stringResource(R.string.skin_title), style = MaterialTheme.typography.titleSmall)
-        Text(stringResource(R.string.skin_body), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Skin.entries.forEach { skin ->
-                ChoiceChip(stringResource(skin.label), settings.skin == skin) { repo.setSkin(skin) }
-            }
+    val actions = remember(repo) {
+        object : CeAppearanceActions {
+            override fun setSkin(skin: Skin) = repo.setSkin(skin)
+            override fun setThemeMode(mode: ThemeMode) = repo.setThemeMode(mode)
+            override fun setDepth3d(on: Boolean) = repo.setDepth3d(on)
+            override fun setThemeStyle(style: ThemeStyle) = repo.setThemeStyle(style)
+            override fun setAccent(accent: Accent) { repo.setAccent(accent); onAccentChanged() } // widgets use the accent colour too
+            override fun setCustomHue(hue: Float) { repo.setCustomHue(hue); onAccentChanged() }
+            override fun setTransparency(percent: Int) = repo.setTransparency(percent)
         }
-        if (settings.skin.forcedDark != null) {
-            // Only one mode exists for this design: no light/dark choice to offer.
-            Text(stringResource(R.string.skin_always_dark), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        } else {
-            HorizontalDivider(Modifier.padding(vertical = 4.dp), color = MaterialTheme.colorScheme.outlineVariant)
-            Text(stringResource(R.string.theme_mode_title), style = MaterialTheme.typography.titleSmall)
+    }
+    KitAppearancePage(settings, actions) {
+        // Which side the note list goes on: only where there are two panes (tablets, open foldables), not on phones.
+        if (androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp >= TWO_PANE_MIN_WIDTH) SettingsCard {
+            Text(stringResource(R.string.list_side_title), style = MaterialTheme.typography.titleSmall)
+            Text(stringResource(R.string.list_side_body), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf(
-                    ThemeMode.SYSTEM to R.string.theme_system,
-                    ThemeMode.LIGHT to R.string.theme_light,
-                    ThemeMode.DARK to R.string.theme_dark,
-                ).forEach { (mode, label) ->
-                    ChoiceChip(stringResource(label), settings.themeMode == mode) { repo.setThemeMode(mode) }
-                }
+                ChoiceChip(stringResource(R.string.list_side_left), !settings.listOnRight) { repo.setListOnRight(false) }
+                ChoiceChip(stringResource(R.string.list_side_right), settings.listOnRight) { repo.setListOnRight(true) }
             }
         }
     }
-    if (glassLook) SwitchRow(R.string.depth_title, R.string.depth_body, settings.depth3d, repo::setDepth3d)
-    // Which side the note list goes on: only where there are two panes (tablets, open foldables), not on phones.
-    if (androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp >= TWO_PANE_MIN_WIDTH) SettingsCard {
-        Text(stringResource(R.string.list_side_title), style = MaterialTheme.typography.titleSmall)
-        Text(stringResource(R.string.list_side_body), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            ChoiceChip(stringResource(R.string.list_side_left), !settings.listOnRight) { repo.setListOnRight(false) }
-            ChoiceChip(stringResource(R.string.list_side_right), settings.listOnRight) { repo.setListOnRight(true) }
-        }
-    }
-    SettingsCard {
-        if (glassLook) {
-            Text(stringResource(R.string.style_title), style = MaterialTheme.typography.titleSmall)
-            Text(stringResource(R.string.style_body), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                ThemeStyle.entries.forEach { style ->
-                    ChoiceChip(stringResource(style.label), settings.themeStyle == style) { repo.setThemeStyle(style) }
-                }
-            }
-            HorizontalDivider(Modifier.padding(vertical = 4.dp), color = MaterialTheme.colorScheme.outlineVariant)
-        }
-        Text(stringResource(R.string.accent_title), style = MaterialTheme.typography.titleSmall)
-        Text(stringResource(R.string.accent_body), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Accent.entries.forEach { accent ->
-                AccentDot(if (dark) accent.dark else accent.light, stringResource(accent.label), selected = settings.customHue == null && settings.accent == accent) {
-                    repo.setAccent(accent)
-                    onAccentChanged() // widgets use the accent colour too
-                }
-            }
-        }
-        Text(stringResource(R.string.accent_custom), Modifier.padding(top = 4.dp), style = MaterialTheme.typography.titleSmall)
-        HueBar(settings.customHue) { hue ->
-            repo.setCustomHue(hue)
-            onAccentChanged()
-        }
-    }
-    if (glassLook) SettingsCard {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(stringResource(R.string.settings_transparency_title), Modifier.weight(1f), style = MaterialTheme.typography.titleSmall)
-            Text(
-                NumberFormat.getPercentInstance().format(settings.transparency / 100.0),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-            )
-        }
-        Text(stringResource(R.string.settings_transparency_body), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        GlassSlider(
-            value = settings.transparency.toFloat(),
-            onValueChange = { repo.setTransparency(it.roundToInt()) },
-            valueRange = 0f..100f,
-        )
-        // How the glass looks right now: coloured bars behind a floating pill.
-        Box(
-            Modifier.fillMaxWidth().height(120.dp).clip(RoundedCornerShape(20.dp)).background(MaterialTheme.colorScheme.background)
-                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)) // tinted like the app's background
-                .padding(horizontal = 14.dp, vertical = 12.dp),
-        ) {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                val c = MaterialTheme.colorScheme
-                listOf(
-                    c.primary to 0.5f, c.error to 0.8f,
-                    (if (dark) Accent.TEAL.dark else Accent.TEAL.light) to 0.35f,
-                    (if (dark) Accent.AMBER.dark else Accent.AMBER.light) to 0.65f,
-                ).forEach { (color, part) ->
-                    Box(Modifier.fillMaxWidth(part).height(14.dp).clip(CircleShape).background(color.copy(alpha = 0.8f)))
-                }
-            }
-            Text(
-                stringResource(R.string.preview),
-                Modifier.align(Alignment.Center).glass(CircleShape, GlassKind.Chrome, elevation = 6.dp).padding(horizontal = 22.dp, vertical = 10.dp),
-                style = MaterialTheme.typography.titleSmall,
-            )
-        }
-    }
-}
-
-/** One accent colour to pick: a round swatch, with a check and a ring when it is the one in use. */
-@Composable
-private fun AccentDot(color: Color, name: String, selected: Boolean, onClick: () -> Unit) {
-    val ring by animateDpAsState(if (selected) 3.dp else 0.dp, bounceSpring(), label = "ring")
-    Box(
-        Modifier
-            .pressScale(0.9f)
-            .size(44.dp)
-            .then(if (ring > 0.dp) Modifier.border(ring, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f), CircleShape) else Modifier)
-            .padding(ring + 2.dp)
-            .clip(CircleShape)
-            .background(color)
-            .selectable(selected = selected, role = Role.RadioButton, onClick = onClick)
-            .semantics { contentDescription = name },
-        contentAlignment = Alignment.Center,
-    ) {
-        if (selected) Icon(Icons.Filled.Check, name, Modifier.size(20.dp), tint = Color.White)
-    }
-}
-
-/**
- * Any colour: a rainbow bar to tap or drag along (like Celander's "Custom colour"). The knob shows the chosen hue;
- * without one (an accent of the list is in use) there is no knob.
- */
-@Composable
-private fun HueBar(hue: Float?, onHue: (Float) -> Unit) {
-    // The same colours the custom accent will have, so the bar shows exactly what each point gives.
-    val stops = remember { (0..24).map { customPalette((it * 15f).coerceAtMost(359.9f)).light } }
-    GlassSlider(
-        value = hue,
-        onValueChange = onHue,
-        valueRange = 0f..359.9f,
-        track = Brush.horizontalGradient(stops),
-        knobColor = hue?.let { customPalette(it).light } ?: Color.Transparent,
-    )
 }
 
 // --- Label colours ---
 
 @Composable
-private fun LabelColorsPage(
-    settings: AppSettings,
-    onAddColor: (Int) -> Unit,
-    onEditColor: (Int, Int) -> Unit,
-    onDeleteColor: (Int) -> Unit,
-) {
+private fun LabelColorsPage(settings: AppSettings, editor: ColorEditorState) {
     SettingsCard {
         CustomColorsRow(
             colors = settings.customColors,
             selected = 0,
             onPick = null,
-            onAdd = onAddColor,
-            onEdit = onEditColor,
-            onDelete = onDeleteColor,
+            editor = editor,
         )
         Text(
             stringResource(R.string.label_colors_help),
@@ -404,8 +293,11 @@ private fun LabelColorsPage(
  * asks what goes in (notes, with or without images; settings). Importing looks inside the file and asks what to restore. See [Backup] for the container.
  */
 @OptIn(ExperimentalLayoutApi::class)
+/** What the backup page needs: its two buttons, its status line, and its dialogs (see [dialogs]). */
+private class BackupUi(val create: () -> Unit, val import: () -> Unit, val working: Boolean, val status: String?, val dialogs: @Composable () -> Unit)
+
 @Composable
-private fun BackupPage(backup: Backup, onNotesImported: () -> Unit, onSettingsRestored: () -> Unit) {
+private fun rememberBackupUi(backup: Backup, onNotesImported: () -> Unit, onSettingsRestored: () -> Unit): BackupUi {
     val resources = androidx.compose.ui.platform.LocalResources.current
     val scope = rememberCoroutineScope()
     // What the user chose in the create dialog, kept while the file picker is open.
@@ -443,6 +335,8 @@ private fun BackupPage(backup: Backup, onNotesImported: () -> Unit, onSettingsRe
             ).joinToString(" ")
         }
     }
+    // The dialogs are not drawn here (a GlassDialog fills its box): the screen calls [BackupUi.dialogs] in its full-size Box.
+    val createDialog: @Composable () -> Unit = {
     if (creating) {
         CreateDialog(
             onDismiss = { creating = false },
@@ -459,12 +353,14 @@ private fun BackupPage(backup: Backup, onNotesImported: () -> Unit, onSettingsRe
             },
         )
     }
+    }
     val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) run {
             pending = uri to backup.inspect(uri)
             ""
         }
     }
+    val restoreDialog: @Composable () -> Unit = {
     pending?.let { (uri, contents) ->
         RestoreDialog(
             contents = contents,
@@ -485,21 +381,32 @@ private fun BackupPage(backup: Backup, onNotesImported: () -> Unit, onSettingsRe
             },
         )
     }
+    }
+    return BackupUi(
+        create = { creating = true },
+        import = {
+            // Any file: some devices label a .zip with another type (x-zip, x-compressed…) and the picker would grey it
+            // out. Backup.inspect checks that it is a Cenotes backup and says so if it is not.
+            importLauncher.launch(arrayOf("*/*"))
+        },
+        working = working,
+        status = if (working) resources.getString(R.string.backup_working) else message,
+        dialogs = { createDialog(); restoreDialog() },
+    )
+}
 
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun BackupPage(ui: BackupUi) {
     SettingsCard {
         Text(stringResource(R.string.backup), style = MaterialTheme.typography.titleSmall)
         Text(stringResource(R.string.backup_summary), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            ChoiceChip(stringResource(R.string.backup_create), selected = false, enabled = !working) { creating = true }
-            ChoiceChip(stringResource(R.string.backup_import), selected = false, enabled = !working) {
-                // Any file: some devices label a .zip with another type (x-zip, x-compressed…) and the picker would grey it
-                // out. Backup.inspect checks that it is a Cenotes backup and says so if it is not.
-                importLauncher.launch(arrayOf("*/*"))
-            }
+            ChoiceChip(stringResource(R.string.backup_create), selected = false, enabled = !ui.working, onClick = ui.create)
+            ChoiceChip(stringResource(R.string.backup_import), selected = false, enabled = !ui.working, onClick = ui.import)
         }
-        val status = if (working) stringResource(R.string.backup_working) else message
-        if (!status.isNullOrEmpty()) {
-            Text(status, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+        if (!ui.status.isNullOrEmpty()) {
+            Text(ui.status, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
         }
     }
 }

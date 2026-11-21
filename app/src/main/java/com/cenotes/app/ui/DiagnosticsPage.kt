@@ -1,5 +1,7 @@
 package com.cenotes.app.ui
 
+import com.ce.kit.ui.settings.ChoiceChip
+import com.ce.kit.ui.settings.SettingsCard
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context

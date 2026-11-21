@@ -1,5 +1,7 @@
 package com.cenotes.app.ui
 
+import com.ce.kit.ui.settings.ChoiceChip
+import com.ce.kit.ui.settings.SettingsCard
 import androidx.compose.foundation.clickable
 import com.ce.kit.update.DownloadState
 import com.ce.kit.ui.glass.glassSpring

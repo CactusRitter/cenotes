@@ -1,5 +1,6 @@
 package com.cenotes.app.ui
 
+import com.ce.kit.ui.settings.ChoiceChip
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context

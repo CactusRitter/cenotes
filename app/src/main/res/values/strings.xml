@@ -136,23 +136,6 @@
     <string name="archived_badge">Archived</string>
 
     <!-- Appearance (same texts as the other "Ce" apps) -->
-    <string name="style_title">Style</string>
-    <string name="style_body">The background and the tint of the glass.</string>
-    <string name="skin_title">Design</string>
-    <string name="skin_body">The look of the whole app. Glass is the one shared with Celander and Cemail; the others are being tried out.</string>
-    <string name="skin_always_dark">This design is always dark.</string>
-    <string name="depth_title">3D shadow</string>
-    <string name="depth_body">A soft shadow that lifts cards and buttons off the background, like glass standing above it.</string>
-    <string name="theme_mode_title">Light or dark</string>
-    <string name="theme_system">System</string>
-    <string name="theme_light">Light</string>
-    <string name="theme_dark">Dark</string>
-    <string name="accent_title">Colour</string>
-    <string name="accent_body">For buttons, selections and the background.</string>
-    <string name="accent_custom">Custom colour</string>
-    <string name="preview">Preview</string>
-    <string name="settings_transparency_title">Glass transparency</string>
-    <string name="settings_transparency_body">How see-through the cards and bars are.</string>
     <string name="settings_row_appearance_body">Light or dark, colour and glass</string>
 
     <!-- Settings backup and updates (same texts as Cemail) -->

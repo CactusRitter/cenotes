@@ -132,23 +132,6 @@
     <string name="archived_badge">Archivada</string>
 
     <!-- Apariencia (los mismos textos que en las otras apps «Ce») -->
-    <string name="style_title">Estilo</string>
-    <string name="style_body">El fondo y el tinte del cristal.</string>
-    <string name="skin_title">Diseño</string>
-    <string name="skin_body">El aspecto de toda la app. Cristal es el que comparte con Celander y Cemail; los demás están en pruebas.</string>
-    <string name="skin_always_dark">Este diseño siempre es oscuro.</string>
-    <string name="depth_title">Sombra 3D</string>
-    <string name="depth_body">Una sombra suave que eleva tarjetas y botones sobre el fondo, como un cristal por encima.</string>
-    <string name="theme_mode_title">Claro u oscuro</string>
-    <string name="theme_system">Sistema</string>
-    <string name="theme_light">Claro</string>
-    <string name="theme_dark">Oscuro</string>
-    <string name="accent_title">Color</string>
-    <string name="accent_body">Para botones, selecciones y el fondo.</string>
-    <string name="accent_custom">Color personalizado</string>
-    <string name="preview">Vista previa</string>
-    <string name="settings_transparency_title">Transparencia del cristal</string>
-    <string name="settings_transparency_body">Cuánto se transparentan las tarjetas y las barras.</string>
     <string name="settings_row_appearance_body">Claro u oscuro, color y cristal</string>
 
     <!-- Copia de ajustes y actualizaciones (los mismos textos que Cemail) -->

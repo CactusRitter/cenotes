@@ -97,20 +97,16 @@ fun CustomColorsRow(
     colors: List<Int>,
     selected: Int,
     onPick: ((Int) -> Unit)?,
-    onAdd: (Int) -> Unit,
-    onEdit: (old: Int, new: Int) -> Unit,
-    onDelete: (Int) -> Unit,
+    editor: ColorEditorState,
 ) {
-    var editing by remember { mutableStateOf<Int?>(null) }
-    var adding by remember { mutableStateOf(false) }
     FlowRow(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
         maxItemsInEachRow = 5,
     ) {
         colors.forEach { c ->
-            if (onPick != null) Swatch(c, selected == c, onClick = { onPick(c) }, onLongClick = { editing = c })
-            else Swatch(c, false, onClick = { editing = c })
+            if (onPick != null) Swatch(c, selected == c, onClick = { onPick(c) }, onLongClick = { editor.editing = c })
+            else Swatch(c, false, onClick = { editor.editing = c })
         }
         if (colors.size < MaxCustomColors) {
             Box(
@@ -119,27 +115,49 @@ fun CustomColorsRow(
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
                     .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f), CircleShape)
-                    .clickable(role = Role.Button) { adding = true },
+                    .clickable(role = Role.Button) { editor.adding = true },
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(Icons.Filled.Add, stringResource(R.string.color_add), tint = MaterialTheme.colorScheme.onSurface)
             }
         }
     }
-    if (adding) {
+}
+
+/**
+ * Which colour of a [CustomColorsRow] is being built or edited. Lives in the screen, not in the row: the editor is a
+ * GlassDialog, which fills the box it is drawn in, so [ColorEditorDialogs] goes in the screen's full-size Box.
+ */
+class ColorEditorState {
+    var adding by mutableStateOf(false)
+    var editing by mutableStateOf<Int?>(null)
+}
+
+@Composable
+fun rememberColorEditorState() = remember { ColorEditorState() }
+
+/** The editor of [editor] (add / edit / delete a custom colour); call it as a child of a full-size Box. */
+@Composable
+fun ColorEditorDialogs(
+    editor: ColorEditorState,
+    onAdd: (Int) -> Unit,
+    onEdit: (old: Int, new: Int) -> Unit,
+    onDelete: (Int) -> Unit,
+) {
+    if (editor.adding) {
         ColorEditorDialog(
             initial = null,
             onSave = { onAdd(it) },
             onDelete = null,
-            onDismiss = { adding = false },
+            onDismiss = { editor.adding = false },
         )
     }
-    editing?.let { old ->
+    editor.editing?.let { old ->
         ColorEditorDialog(
             initial = old,
             onSave = { onEdit(old, it) },
             onDelete = { onDelete(old) },
-            onDismiss = { editing = null },
+            onDismiss = { editor.editing = null },
         )
     }
 }
@@ -194,6 +212,7 @@ fun LabelColorDialog(
     onDeleteColor: (Int) -> Unit,
     onDismiss: () -> Unit,
 ) {
+    val editor = rememberColorEditorState()
     GlassDialog(
         visible = true,
         title = label.name,
@@ -223,12 +242,17 @@ fun LabelColorDialog(
                 colors = customColors,
                 selected = label.color,
                 onPick = { onPick(it); onDismiss() },
-                onAdd = { onAddColor(it); onPick(it); onDismiss() },
-                onEdit = onEditColor,
-                onDelete = onDeleteColor,
+                editor = editor,
             )
         }
     }
+    // After the dialog: drawn above it, as a sibling (a GlassDialog inside the other one would be cut to its card).
+    ColorEditorDialogs(
+        editor,
+        onAdd = { onAddColor(it); onPick(it); onDismiss() },
+        onEdit = onEditColor,
+        onDelete = onDeleteColor,
+    )
 }
 
 /** Horizontal gradient slider: drag or tap anywhere on the bar. [fraction] is 0..1. */

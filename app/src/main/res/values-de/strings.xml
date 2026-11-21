@@ -132,23 +132,6 @@
     <string name="archived_badge">Archiviert</string>
 
     <!-- Aussehen (dieselben Texte wie in den anderen „Ce“-Apps) -->
-    <string name="style_title">Stil</string>
-    <string name="style_body">Der Hintergrund und die Tönung des Glases.</string>
-    <string name="skin_title">Design</string>
-    <string name="skin_body">Das Aussehen der ganzen App. Glas ist das gemeinsame Design mit Celander und Cemail; die anderen werden noch ausprobiert.</string>
-    <string name="skin_always_dark">Dieses Design ist immer dunkel.</string>
-    <string name="depth_title">3D-Schatten</string>
-    <string name="depth_body">Ein weicher Schatten, der Karten und Schaltflächen vom Hintergrund abhebt, wie Glas darüber.</string>
-    <string name="theme_mode_title">Hell oder dunkel</string>
-    <string name="theme_system">System</string>
-    <string name="theme_light">Hell</string>
-    <string name="theme_dark">Dunkel</string>
-    <string name="accent_title">Farbe</string>
-    <string name="accent_body">Für Schaltflächen, Auswahl und Hintergrund.</string>
-    <string name="accent_custom">Eigene Farbe</string>
-    <string name="preview">Vorschau</string>
-    <string name="settings_transparency_title">Glastransparenz</string>
-    <string name="settings_transparency_body">Wie durchsichtig Karten und Leisten sind.</string>
     <string name="settings_row_appearance_body">Hell oder dunkel, Farbe und Glas</string>
 
     <!-- Sicherung der Einstellungen und Updates (dieselben Texte wie Cemail) -->
