@@ -198,8 +198,8 @@ fun SettingsScreen(
                         SettingsRoute.NOTES -> NotesPage(settings, repo)
                         SettingsRoute.LABEL_COLORS -> LabelColorsPage(settings, colorEditor)
                         SettingsRoute.BACKUP -> BackupPage(backupUi)
-                        SettingsRoute.UPDATES -> UpdatesPage(settings, repo)
-                        SettingsRoute.DIAGNOSTICS -> DiagnosticsPage()
+                        SettingsRoute.UPDATES -> com.ce.kit.ui.update.UpdatesPage(settings.checkUpdates, repo::setCheckUpdates, rememberChangelog())
+                        SettingsRoute.DIAGNOSTICS -> com.ce.kit.ui.update.DiagnosticsPage()
                     }
                 }
             }
@@ -489,40 +489,6 @@ private fun RestoreRow(label: Int, checked: Boolean, modifier: Modifier = Modifi
 
 // --- Updates ---
 
-/** Settings → Updates: this version, looking on GitHub for a newer one (by itself, or now), and what each version brought. */
-@Composable
-private fun UpdatesPage(settings: AppSettings, repo: SettingsRepository) {
-    val context = LocalContext.current
-    val updates = (context.applicationContext as CenotesApp).updates
-    val scope = rememberCoroutineScope()
-    // What "Look now" found: null = not asked yet; then a version, "up to date" or "could not check".
-    var result by remember { mutableStateOf<String?>(null) }
-    var checking by remember { mutableStateOf(false) }
-    val upToDate = stringResource(R.string.update_none, BuildConfig.VERSION_NAME)
-    val failed = stringResource(R.string.update_check_failed)
-    val foundText = stringResource(R.string.update_found)
-    SwitchRow(R.string.settings_updates_title, R.string.settings_updates_body, settings.checkUpdates, repo::setCheckUpdates)
-    UpdateBanner(allowLater = false)
-    SettingsCard {
-        Text(stringResource(R.string.settings_version, BuildConfig.VERSION_NAME), style = MaterialTheme.typography.titleSmall)
-        result?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-        ChoiceChip(stringResource(if (checking) R.string.update_checking else R.string.settings_updates_now), false, enabled = !checking) {
-            if (checking) return@ChoiceChip
-            checking = true
-            scope.launch {
-                result = try {
-                    if (updates.check(force = true) != null) foundText else upToDate
-                } catch (e: kotlinx.coroutines.CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    failed
-                }
-                checking = false
-            }
-        }
-    }
-    WhatsNew()
-}
 
 // --- Notes ---
 
@@ -548,4 +514,11 @@ private fun NotesPage(settings: AppSettings, repo: SettingsRepository) {
         }
     }
     SwitchRow(R.string.checked_bottom_title, R.string.checked_bottom_body, settings.checkedToBottom, repo::setCheckedToBottom)
+}
+
+/** The bundled release notes (res/raw/changelog), read once. */
+@Composable
+private fun rememberChangelog(): String {
+    val context = LocalContext.current
+    return remember { context.resources.openRawResource(R.raw.changelog).bufferedReader().use { it.readText() } }
 }

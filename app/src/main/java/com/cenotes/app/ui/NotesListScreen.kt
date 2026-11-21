@@ -1,5 +1,6 @@
 ﻿package com.cenotes.app.ui
 
+import com.ce.kit.ui.update.UpdateBanner
 import com.ce.kit.ui.settings.IconBubble
 import com.cenotes.app.ui.theme.LockOpenIcon
 import androidx.compose.material.icons.filled.Lock
