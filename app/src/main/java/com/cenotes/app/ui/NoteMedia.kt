@@ -183,22 +183,20 @@ fun LinkDialog(initialLabel: String, onDismiss: () -> Unit, onConfirm: (label: S
         confirmEnabled = url.isNotBlank(),
     ) {
         Column {
-            OutlinedTextField(
+            com.ce.kit.ui.GlassTextField(
                 value = label,
                 onValueChange = { label = it },
-                label = { Text(stringResource(R.string.link_text)) },
+                label = stringResource(R.string.link_text),
                 singleLine = true,
-                shape = LocalSkin.current.shape(RoundedCornerShape(16.dp)),
             )
             Spacer(Modifier.height(10.dp))
-            OutlinedTextField(
+            com.ce.kit.ui.GlassTextField(
                 value = url,
                 onValueChange = { url = it.trim() },
-                label = { Text(stringResource(R.string.link_url)) },
-                placeholder = { Text("https://…") },
+                label = stringResource(R.string.link_url),
+                placeholder = "https://…",
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
-                shape = LocalSkin.current.shape(RoundedCornerShape(16.dp)),
             )
         }
     }

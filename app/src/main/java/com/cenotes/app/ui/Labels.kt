@@ -99,12 +99,11 @@ private fun NewLabelField(onCreate: suspend (String) -> Unit) {
         name = ""
         scope.launch { onCreate(n) }
     }
-    OutlinedTextField(
+    com.ce.kit.ui.GlassTextField(
         value = name,
         onValueChange = { name = it },
-        placeholder = { Text(stringResource(R.string.label_new_hint)) },
+        placeholder = stringResource(R.string.label_new_hint),
         singleLine = true,
-        shape = LocalSkin.current.shape(RoundedCornerShape(16.dp)),
         keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Done),
         keyboardActions = KeyboardActions(onDone = { submit() }),
         trailingIcon = {
