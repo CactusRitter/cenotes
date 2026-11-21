@@ -1,3 +1,8 @@
+﻿## 2.3.0
+- Gemeinsamer Design-Code mit den anderen Ce-Apps (neues gemeinsames Modul): Dialoge, Menüs, Schaltflächen, Chips und Schalter folgen jetzt überall dem gewählten Design (Glas, Modern, AMOLED, Retro 98, Papier, Brutalistisch). Menüs und Hinweise sind nicht mehr so durchsichtig, dass sie sich mit dem Text darunter vermischen.
+- Einstellungen → Aussehen, Updates und Diagnose sind jetzt in allen Ce-Apps gleich.
+- Alle Dialoge sind jetzt Glas-Dialoge; das Notizmenü (⋮) sieht in jedem Design gleich aus.
+
 ## 2.2.0
 - Neu: Einstellungen → Diagnose: ein Aktivitätsprotokoll und der letzte Fehler, die du teilen, kopieren oder löschen kannst. Der Text deiner Notizen ist nie enthalten.
 
