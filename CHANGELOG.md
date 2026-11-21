@@ -3,6 +3,7 @@
 Cada versión se guarda en Google Drive (`Mi unidad/Ce Apps/Cenotes/Cenotes-x.y.z.apk`, sin reemplazar la anterior) y, desde la 0.11.0, también como *release* de GitHub (`vx.y.z`, con el APK), que es de donde la app avisa de versiones nuevas. Lo que ve el usuario en Ajustes → Actualizaciones está en `app/src/main/res/raw*/changelog.txt` (inglés, español y alemán).
 
 ## Sin publicar
+- Tests de migración (`MigrationTest`, Robolectric): las bases de las versiones 1 a 8 de Room se reconstruyen, se llenan con las notas reales de César (copia de `G:Mi unidadCe AppsCenotesCopias` o `CENOTES_REAL_BACKUP`; nunca entran en el repositorio) más notas de prueba (papelera, recordatorios, lugares, historial, colores de etiqueta, texto raro) y se abren con la app de hoy: nada se pierde y el esquema final coincide con las entidades. También: restaurar la copia real dos veces no duplica y una copia hecha ahora se restaura igual. Room exporta su esquema a `app/schemas/` (base para probar futuras migraciones); la lista de migraciones vive en `NotesDatabase.AllMigrations`. `gradlew testDebugUnitTest`: 63 notas reales, todo en verde.
 - Avisos, menús y diálogos con desenfoque: opacidad mínima 0,92 (kit). Sin probar.
 - Campos de texto de etiquetas, enlaces y lugares pasan a GlassTextField del kit. Sin probar en emulador.
 - Arreglo: el cajón vuelve a ser cristal con desenfoque (con 2.3.0 quedó blanco opaco por el suelo de opacidad de los menús). Probado en emulador.

@@ -57,6 +57,11 @@ android {
     }
 }
 
+// Room writes the schema of each database version here (committed): the base for testing future migrations.
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
+}
+
 dependencies {
     implementation(project(":kit"))
     implementation(libs.androidx.core.ktx)
@@ -78,6 +83,8 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.okhttp)
     testImplementation(libs.junit)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
     implementation(libs.glance.appwidget)
     implementation(libs.androidx.biometric)
     implementation(libs.mlkit.text.recognition)
