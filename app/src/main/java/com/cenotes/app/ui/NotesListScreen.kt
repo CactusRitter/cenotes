@@ -788,7 +788,7 @@ private fun SideMenu(
                 .fillMaxWidth(0.82f)
                 // Swallows taps on the menu so only the area around it closes the drawer.
                 .clickable(interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }, indication = null) {}
-                .glass(RoundedCornerShape(28.dp), GlassKind.Menu, elevation = 12.dp)
+                .glass(RoundedCornerShape(28.dp), GlassKind.Card, elevation = 12.dp)
                 .verticalScroll(rememberScrollState())
                 .padding(vertical = 16.dp, horizontal = 12.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),

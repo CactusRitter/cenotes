@@ -3,6 +3,7 @@
 Cada versión se guarda en Google Drive (`Mi unidad/Ce Apps/Cenotes/Cenotes-x.y.z.apk`, sin reemplazar la anterior) y, desde la 0.11.0, también como *release* de GitHub (`vx.y.z`, con el APK), que es de donde la app avisa de versiones nuevas. Lo que ve el usuario en Ajustes → Actualizaciones está en `app/src/main/res/raw*/changelog.txt` (inglés, español y alemán).
 
 ## Sin publicar
+- Arreglo: el cajón vuelve a ser cristal con desenfoque (con 2.3.0 quedó blanco opaco por el suelo de opacidad de los menús). Probado en emulador.
 
 ## 2.3.0 — 2026-11-21
 - Pasada de temas: el menú ⋮ (nota e imagen) usa GlassMenu del kit; botones de diálogos y pantallas (SoftButton/AccentButton), casilla de etiquetas (TaskCheckbox) y formas de controles siguen el diseño elegido (Retro 98, Brutalista…). Sin probar en emulador.
