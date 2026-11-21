@@ -1,3 +1,8 @@
+﻿## 2.3.0
+- Shared design code with the other Ce apps (new common module): dialogs, menus, buttons, chips and switches now follow the chosen design everywhere (Glass, Modern, AMOLED, Retro 98, Paper, Brutalist). Menus and notices are never see-through enough to mix with the text below.
+- Settings → Appearance, Updates and Diagnostics are now the same in every Ce app.
+- All dialogs are glass dialogs now; the note menu (⋮) looks the same in every design.
+
 ## 2.2.0
 - New Settings → Diagnostics: an activity log and the last error that you can share, copy or clear. It never includes the text of your notes.
 

@@ -1,9 +1,15 @@
-# Historial de versiones de Cenotes
+﻿# Historial de versiones de Cenotes
 
 Cada versión se guarda en Google Drive (`Mi unidad/Ce Apps/Cenotes/Cenotes-x.y.z.apk`, sin reemplazar la anterior) y, desde la 0.11.0, también como *release* de GitHub (`vx.y.z`, con el APK), que es de donde la app avisa de versiones nuevas. Lo que ve el usuario en Ajustes → Actualizaciones está en `app/src/main/res/raw*/changelog.txt` (inglés, español y alemán).
 
 ## Sin publicar
 - R8 (minify + shrinkResources) en la versión release, con reglas de Glance, receptores/tiles/workers y registradores de ML Kit (sin la regla de ML Kit el reconocimiento de texto falla al iniciarse). Probado en emulador: arranque, crear nota, menú, copia de seguridad hasta el selector de archivos. NO probado: OCR real, widgets, recordatorios, ubicación.
+- Tests de migración (`MigrationTest`, Robolectric): las bases de las versiones 1 a 8 de Room se reconstruyen, se llenan con las notas reales de César (copia de `G:Mi unidadCe AppsCenotesCopias` o `CENOTES_REAL_BACKUP`; nunca entran en el repositorio) más notas de prueba (papelera, recordatorios, lugares, historial, colores de etiqueta, texto raro) y se abren con la app de hoy: nada se pierde y el esquema final coincide con las entidades. También: restaurar la copia real dos veces no duplica y una copia hecha ahora se restaura igual. Room exporta su esquema a `app/schemas/` (base para probar futuras migraciones); la lista de migraciones vive en `NotesDatabase.AllMigrations`. `gradlew testDebugUnitTest`: 63 notas reales, todo en verde.
+- Avisos, menús y diálogos con desenfoque: opacidad mínima 0,92 (kit). Sin probar.
+- Campos de texto de etiquetas, enlaces y lugares pasan a GlassTextField del kit. Sin probar en emulador.
+- Arreglo: el cajón vuelve a ser cristal con desenfoque (con 2.3.0 quedó blanco opaco por el suelo de opacidad de los menús). Probado en emulador.
+
+## 2.3.0 — 2026-11-21
 - Pasada de temas: el menú ⋮ (nota e imagen) usa GlassMenu del kit; botones de diálogos y pantallas (SoftButton/AccentButton), casilla de etiquetas (TaskCheckbox) y formas de controles siguen el diseño elegido (Retro 98, Brutalista…). Sin probar en emulador.
 - Actualizaciones (aviso, Novedades, página Actualizaciones) y página Diagnóstico pasan al kit (CeKit F3b), con sus textos; los textos hablan de «tus datos» en lugar de «tus notas» para valer en todas las apps.
 - Página Apariencia y componentes de Ajustes (SettingsCard, ChoiceChip, SwitchRow, IconBubble, BigRow) pasan al kit (CeKit F3a), con sus textos. Los diálogos se alojan en la raíz de la pantalla (copia de seguridad, editor de color) para que el fondo atenuado cubra toda la pantalla. Menús y avisos nunca más claros que 0,92 de opacidad (informe de UI 2026-11-21) y, en Retro 98, el interruptor es una casilla biselada.

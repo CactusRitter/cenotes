@@ -5,11 +5,16 @@ import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-@Database(entities = [Note::class, Label::class, NoteLabel::class, NoteVersion::class, Place::class, DeletedNote::class], version = 9, exportSchema = false)
+@Database(entities = [Note::class, Label::class, NoteLabel::class, NoteVersion::class, Place::class, DeletedNote::class], version = 9, exportSchema = true)
 abstract class NotesDatabase : RoomDatabase() {
     abstract fun noteDao(): NoteDao
 
     companion object {
+        /** Every migration, oldest first: the app and the migration tests use this same list. */
+        val AllMigrations: Array<Migration> by lazy {
+            arrayOf(Migration1To2, Migration2To3, Migration3To4, Migration4To5, Migration5To6, Migration6To7, Migration7To8, Migration8To9)
+        }
+
         /**
          * 1.5 → 1.6: every note gets a stable UUID, a "modified" clock (starting at its last text edit) and deleted notes
          * are remembered. Room runs this in one transaction, so if anything does not add up it throws and the database

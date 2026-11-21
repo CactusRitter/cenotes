@@ -1,4 +1,4 @@
-import java.util.Properties
+﻿import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
@@ -14,8 +14,8 @@ android {
         applicationId = "com.cenotes.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 43
-        versionName = "2.2.0"
+        versionCode = 44
+        versionName = "2.3.0"
     }
 
     // Firma propia: keystore/keystore.properties (fuera de git; copia en Drive: Ce Apps/Común).
@@ -59,6 +59,11 @@ android {
     }
 }
 
+// Room writes the schema of each database version here (committed): the base for testing future migrations.
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
+}
+
 dependencies {
     implementation(project(":kit"))
     implementation(libs.androidx.core.ktx)
@@ -80,6 +85,8 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.okhttp)
     testImplementation(libs.junit)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
     implementation(libs.glance.appwidget)
     implementation(libs.androidx.biometric)
     implementation(libs.mlkit.text.recognition)

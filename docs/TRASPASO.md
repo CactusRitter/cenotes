@@ -4,14 +4,15 @@ Estado vivo de la app para retomar el trabajo tras un `/clear`. Mantenerlo al d�
 Última actualización: 21-11-2026.
 
 ## Estado
-- Versión publicada: **2.2.0** (versionCode 43), release `v2.2.0` en GitHub (`releases/latest`). Antes, el 18-11: 2.1.0 (Cristal V2), 2.1.1 (arreglo grave: el cajón no recibía `LocalHazeState` y salía transparente) y 2.2.0 (Ajustes → Diagnóstico).
+- Versión publicada: **2.3.0** (versionCode 44), release `v2.3.0` en GitHub (`releases/latest`). Antes, el 18-11: 2.1.0 (Cristal V2), 2.1.1 (arreglo grave: el cajón no recibía `LocalHazeState` y salía transparente) y 2.2.0 (Ajustes → Diagnóstico).
 - `main` = `origin/main`, limpio (último commit `b6a50f7`). «Sin publicar»: migración a **CeKit** hecha por otra sesión (submódulo `CeKit/`, módulo `:kit`, paquete `com.ce.kit`): glass/Skin/Theme, AppLog/CrashLog/Updates/ReleaseNotes, `GlassDialog` en todos los diálogos, Apariencia y componentes de Ajustes, aviso de actualización, Novedades y Diagnóstico. Lo común se toca en CeKit, no aquí.
 - APKs en `G:\Mi unidad\Ce Apps\Cenotes\` (no borrar ninguno).
 - Firma: clave propia `keystore/cenotes-release.jks` + `keystore/keystore.properties` (fuera de git; copia en `G:\Mi unidad\Ce Apps\Común\`). Desde 2.0.0, misma firma.
 - Copia de seguridad: un solo botón «Crear copia» (zip con notas, imágenes y/o ajustes) + Importar.
 
 ## En curso
-- Nada. Por orden de Ce Líder (18-11): no abrir trabajo nuevo hasta el reinicio del límite semanal ni sin encargo suyo o de César.
+- Hecho (21-11, encargo de Ce Líder): tests de migración con datos reales (`app/src/test/.../MigrationTest.kt`, `gradlew testDebugUnitTest`). Toda migración nueva (9→10…) se añade a `NotesDatabase.AllMigrations` y el test la cubre solo; el esquema 10 lo exporta Room a `app/schemas/`.
+- R8: rama `r8-prueba` (commit 2aa9163, ya en origin), pendiente de prueba en emulador y aprobación de César.
 
 ## Pendiente
 - Probar en tableta/S26/OPPO las 2.1.x–2.2.0 y lo de CeKit (sin probar: instalar el release sobre la versión anterior, tableta).

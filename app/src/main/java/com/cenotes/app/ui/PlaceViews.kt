@@ -193,12 +193,11 @@ fun PlaceDialog(
                             if (Places.allowed(context)) here()
                             else hereLauncher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
                         }
-                        OutlinedTextField(
+                        com.ce.kit.ui.GlassTextField(
                             value = query,
                             onValueChange = { query = it },
                             singleLine = true,
-                            placeholder = { Text(stringResource(R.string.place_search_hint)) },
-                            shape = RoundedCornerShape(LocalSkin.current.radius(16.dp)),
+                            placeholder = stringResource(R.string.place_search_hint),
                             trailingIcon = {
                                 IconButton(onClick = ::search) { Icon(Icons.Filled.Search, stringResource(R.string.place_search)) }
                             },
@@ -234,12 +233,11 @@ fun PlaceDialog(
                             color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis,
                         )
                     }
-                    OutlinedTextField(
+                    com.ce.kit.ui.GlassTextField(
                         value = name,
                         onValueChange = { name = it },
                         singleLine = true,
-                        label = { Text(stringResource(R.string.place_name)) },
-                        shape = RoundedCornerShape(LocalSkin.current.radius(16.dp)),
+                        label = stringResource(R.string.place_name),
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
                     )
                     Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), horizontalArrangement = Arrangement.End) {

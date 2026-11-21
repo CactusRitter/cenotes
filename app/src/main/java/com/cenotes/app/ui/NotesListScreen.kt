@@ -775,24 +775,7 @@ private fun SideMenu(
     onSettings: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    // The sheet itself is transparent and full height: a tap on it (outside the glass menu) closes the drawer.
-    ModalDrawerSheet(
-        modifier = Modifier.clickable(interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }, indication = null, onClick = onDismiss),
-        drawerContainerColor = Color.Transparent,
-        windowInsets = WindowInsets(0),
-    ) {
-        Column(
-            Modifier
-                .windowInsetsPadding(WindowInsets.safeDrawing)
-                .padding(12.dp)
-                .fillMaxWidth(0.82f)
-                // Swallows taps on the menu so only the area around it closes the drawer.
-                .clickable(interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }, indication = null) {}
-                .glass(RoundedCornerShape(28.dp), GlassKind.Menu, elevation = 12.dp)
-                .verticalScroll(rememberScrollState())
-                .padding(vertical = 16.dp, horizontal = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
+    com.ce.kit.ui.GlassDrawerSheet(onDismiss) {
             // Settings is a small button in the top corner of the menu: always reachable, without taking a row.
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                 Box(
@@ -832,7 +815,6 @@ private fun SideMenu(
                 ) { onSection(Section.ByLabel(label.id)) }
             }
             MenuRow(Icons.Filled.Edit, stringResource(R.string.labels_edit), false, revealed, menuStagger(labelsStart, labels.size + 1), onClick = onEditLabels)
-        }
     }
 }
 
