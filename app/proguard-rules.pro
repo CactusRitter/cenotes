@@ -15,3 +15,7 @@
 # ML Kit finds its components by reflection (ComponentDiscovery): their registrars keep a public constructor.
 -keep class * implements com.google.firebase.components.ComponentRegistrar { <init>(); }
 -keep class com.google.mlkit.** { <init>(); }
+
+# WorkManager (Glance refreshes widgets through it) creates its input mergers by reflection from their class name;
+# without this the widget stays on its loading spinner ("OverwritingInputMerger has no zero argument constructor").
+-keep class * extends androidx.work.InputMerger { <init>(); }

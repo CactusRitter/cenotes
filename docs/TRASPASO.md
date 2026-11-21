@@ -12,7 +12,7 @@ Estado vivo de la app para retomar el trabajo tras un `/clear`. Mantenerlo al d�
 
 ## En curso
 - Hecho (21-11, encargo de Ce Líder): tests de migración con datos reales (`app/src/test/.../MigrationTest.kt`, `gradlew testDebugUnitTest`). Toda migración nueva (9→10…) se añade a `NotesDatabase.AllMigrations` y el test la cubre solo; el esquema 10 lo exporta Room a `app/schemas/`.
-- R8: rama `r8-prueba` al día con main (merge dcace3c, en origin). Release con R8: 4,2 MB (frente a 13,8 MB). Probado en emulador (firmado con la clave debug para no borrar datos): arranca, crea nota y la conserva al reabrir, sin errores en logcat. Sin probar: widgets, ML Kit (texto de fotos), recordatorios/lugares, copia de seguridad. Fusionar solo si César lo aprueba.
+- R8: fusionado en main (21-11, aprobado por César vía Ce Líder), sin publicar. Probado con la release R8 en emulador (ver CHANGELOG). Falta en un dispositivo real: texto de foto (ML Kit) y aviso al llegar a un lugar; en el emulador fallan igual sin R8. Para probar una release en el emulador sin borrar datos: `assembleRelease` con `-Pandroid.injected.signing.*` apuntando a `~/.android/debug.keystore`.
 
 ## Pendiente
 - Probar en tableta/S26/OPPO las 2.1.x–2.2.0 y lo de CeKit (sin probar: instalar el release sobre la versión anterior, tableta).
