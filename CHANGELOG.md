@@ -3,6 +3,7 @@
 Cada versión se guarda en Google Drive (`Mi unidad/Ce Apps/Cenotes/Cenotes-x.y.z.apk`, sin reemplazar la anterior) y, desde la 0.11.0, también como *release* de GitHub (`vx.y.z`, con el APK), que es de donde la app avisa de versiones nuevas. Lo que ve el usuario en Ajustes → Actualizaciones está en `app/src/main/res/raw*/changelog.txt` (inglés, español y alemán).
 
 ## Sin publicar
+- Avisos, menús y diálogos con desenfoque: opacidad mínima 0,92 (kit). Sin probar.
 - Campos de texto de etiquetas, enlaces y lugares pasan a GlassTextField del kit. Sin probar en emulador.
 - Arreglo: el cajón vuelve a ser cristal con desenfoque (con 2.3.0 quedó blanco opaco por el suelo de opacidad de los menús). Probado en emulador.
 
