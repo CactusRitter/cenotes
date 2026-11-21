@@ -1,5 +1,7 @@
 package com.cenotes.app.ui
 
+import com.ce.kit.ui.AccentButton
+import com.ce.kit.ui.SoftButton
 import com.ce.kit.ui.settings.ChoiceChip
 import android.Manifest
 import android.annotation.SuppressLint
@@ -241,11 +243,12 @@ fun PlaceDialog(
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
                     )
                     Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), horizontalArrangement = Arrangement.End) {
-                        TextButton(onClick = { step = PlaceStep.LIST }) { Text(stringResource(R.string.back)) }
-                        TextButton(onClick = {
-                            val f = chosen ?: return@TextButton
+                        SoftButton(stringResource(R.string.back), { step = PlaceStep.LIST })
+                        Spacer(Modifier.width(8.dp))
+                        AccentButton(stringResource(R.string.place_save), {
+                            val f = chosen ?: return@AccentButton
                             scope.launch { finish(onSave(name, f.latitude, f.longitude)) }
-                        }) { Text(stringResource(R.string.place_save), fontWeight = FontWeight.Bold) }
+                        })
                     }
                 }
                 PlaceStep.PERMISSION -> {
@@ -255,8 +258,9 @@ fun PlaceDialog(
                         style = MaterialTheme.typography.bodyMedium,
                     )
                     Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), horizontalArrangement = Arrangement.End) {
-                        TextButton(onClick = { picked?.let { onSet(it, onLeave) } }) { Text(stringResource(R.string.place_permission_later)) }
-                        TextButton(onClick = ::askPermission) { Text(stringResource(R.string.place_permission_open), fontWeight = FontWeight.Bold) }
+                        SoftButton(stringResource(R.string.place_permission_later), { picked?.let { onSet(it, onLeave) } })
+                        Spacer(Modifier.width(8.dp))
+                        AccentButton(stringResource(R.string.place_permission_open), ::askPermission)
                     }
                 }
             }

@@ -1,5 +1,6 @@
 ﻿package com.cenotes.app.ui
 
+import com.ce.kit.ui.theme.LocalSkin
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.semantics.Role
@@ -103,7 +104,7 @@ private fun NewLabelField(onCreate: suspend (String) -> Unit) {
         onValueChange = { name = it },
         placeholder = { Text(stringResource(R.string.label_new_hint)) },
         singleLine = true,
-        shape = RoundedCornerShape(16.dp),
+        shape = LocalSkin.current.shape(RoundedCornerShape(16.dp)),
         keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Done),
         keyboardActions = KeyboardActions(onDone = { submit() }),
         trailingIcon = {
@@ -120,7 +121,7 @@ private fun LabelRow(label: Label, onClick: () -> Unit, trailing: @Composable ()
     Row(
         Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
+            .clip(LocalSkin.current.shape(RoundedCornerShape(14.dp)))
             .clickable(onClick = onClick)
             .padding(horizontal = 8.dp, vertical = 2.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -162,7 +163,10 @@ fun LabelPickerDialog(
                 }
                 labels.forEach { label ->
                     LabelRow(label, onClick = { onToggle(label.id) }) {
-                        Checkbox(checked = label.id in selected, onCheckedChange = { onToggle(label.id) })
+                        val on = label.id in selected
+                        com.ce.kit.ui.glass.TaskCheckbox(checked = on, onCheckedChange = { onToggle(label.id) }) {
+                            Checkbox(checked = on, onCheckedChange = { onToggle(label.id) })
+                        }
                     }
                 }
             }
@@ -251,7 +255,7 @@ fun ManageLabelsDialog(
                         value = name,
                         onValueChange = { name = it },
                         singleLine = true,
-                        shape = RoundedCornerShape(16.dp),
+                        shape = LocalSkin.current.shape(RoundedCornerShape(16.dp)),
                         leadingIcon = {
                             Box(
                                 Modifier

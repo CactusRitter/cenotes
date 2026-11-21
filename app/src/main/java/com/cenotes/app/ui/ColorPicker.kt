@@ -1,5 +1,7 @@
 package com.cenotes.app.ui
 
+import com.ce.kit.ui.theme.LocalSkin
+import com.ce.kit.ui.SoftButton
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -187,14 +189,12 @@ private fun ColorEditorDialog(initial: Int?, onSave: (Int) -> Unit, onDelete: ((
         onDismiss = onDismiss,
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            Box(Modifier.fillMaxWidth().height(44.dp).clip(RoundedCornerShape(14.dp)).background(picked))
+            Box(Modifier.fillMaxWidth().height(44.dp).clip(LocalSkin.current.shape(RoundedCornerShape(14.dp))).background(picked))
             GradientBar(hue / 360f, hues, picked) { hue = it * 360f }
             GradientBar(sat, listOf(Color.hsv(hue, 0f, bri), Color.hsv(hue, 1f, bri)), picked) { sat = it }
             GradientBar(bri, listOf(Color.hsv(hue, sat, 0f), Color.hsv(hue, sat, 1f)), picked) { bri = it }
             if (onDelete != null) {
-                TextButton(onClick = { onDelete(); onDismiss() }) {
-                    Text(stringResource(R.string.color_remove), color = MaterialTheme.colorScheme.error)
-                }
+                SoftButton(stringResource(R.string.color_remove), { onDelete(); onDismiss() }, contentColor = MaterialTheme.colorScheme.error)
             }
         }
     }

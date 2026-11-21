@@ -1,5 +1,7 @@
 package com.cenotes.app.ui
 
+import com.ce.kit.ui.AccentButton
+import com.ce.kit.ui.SoftButton
 import android.text.format.DateUtils
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -85,8 +87,9 @@ fun HistoryDialog(versions: List<NoteVersion>?, onRestore: (NoteVersion) -> Unit
                         MarkdownPreview(shown.content, maxBlocks = 60)
                     }
                     Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), horizontalArrangement = Arrangement.End) {
-                        TextButton(onClick = { open = null }) { Text(stringResource(R.string.back)) }
-                        TextButton(onClick = { onRestore(shown) }) { Text(stringResource(R.string.history_restore)) }
+                        SoftButton(stringResource(R.string.back), { open = null })
+                        Spacer(Modifier.width(8.dp))
+                        AccentButton(stringResource(R.string.history_restore), { onRestore(shown) })
                     }
                 }
                 else -> {

@@ -1,5 +1,6 @@
 package com.cenotes.app.ui
 
+import com.ce.kit.ui.SoftButton
 import com.ce.kit.ui.theme.LocalSkin
 import com.cenotes.app.ui.theme.MicIcon
 import com.cenotes.app.ui.theme.LockOpenIcon
@@ -75,8 +76,8 @@ import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
+import com.ce.kit.ui.GlassMenu
+import com.ce.kit.ui.GlassMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
@@ -397,26 +398,21 @@ fun NoteEditorScreen(
                     )
                     Box {
                         PillIcon(Icons.Filled.MoreVert, stringResource(R.string.more_options), { moreMenuOpen = true })
-                        DropdownMenu(
-                            expanded = moreMenuOpen,
-                            onDismissRequest = { moreMenuOpen = false },
-                            shape = RoundedCornerShape(20.dp),
-                            containerColor = LocalGlass.current.menu,
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text(stringResource(if (archived) R.string.unarchive else R.string.archive)) },
-                                leadingIcon = { Icon(if (archived) UnarchiveIcon else ArchiveIcon, null) },
+                        GlassMenu(expanded = moreMenuOpen, onDismiss = { moreMenuOpen = false }) {
+                            GlassMenuItem(
+                                text = stringResource(if (archived) R.string.unarchive else R.string.archive),
+                                icon = if (archived) UnarchiveIcon else ArchiveIcon,
                                 onClick = { moreMenuOpen = false; toggleArchived() },
                             )
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.reminder_title)) },
-                                leadingIcon = { Icon(Icons.Filled.Notifications, null) },
+                            GlassMenuItem(
+                                text = stringResource(R.string.reminder_title),
+                                icon = Icons.Filled.Notifications,
                                 onClick = { moreMenuOpen = false; pickingReminder = true },
                             )
                             // Protect: the note leaves the list for "Protected" (it opens with the phone's lock), with undo.
-                            DropdownMenuItem(
-                                text = { Text(stringResource(if (locked) R.string.unlock_note else R.string.lock_note)) },
-                                leadingIcon = { Icon(if (locked) LockOpenIcon else Icons.Filled.Lock, null) },
+                            GlassMenuItem(
+                                text = stringResource(if (locked) R.string.unlock_note else R.string.lock_note),
+                                icon = if (locked) LockOpenIcon else Icons.Filled.Lock,
                                 onClick = {
                                     moreMenuOpen = false
                                     if (!locked && !Unlock.available(context)) {
@@ -428,16 +424,16 @@ fun NoteEditorScreen(
                                     }
                                 },
                             )
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.note_color)) },
-                                leadingIcon = { Icon(PaletteIcon, null) },
+                            GlassMenuItem(
+                                text = stringResource(R.string.note_color),
+                                icon = PaletteIcon,
                                 onClick = { moreMenuOpen = false; pickingColor = true },
                             )
                             // Earlier versions of the note, to get back something deleted by mistake.
                             if (noteId != 0L) {
-                                DropdownMenuItem(
-                                    text = { Text(stringResource(R.string.history)) },
-                                    leadingIcon = { Icon(HistoryIcon, null) },
+                                GlassMenuItem(
+                                    text = stringResource(R.string.history),
+                                    icon = HistoryIcon,
                                     onClick = {
                                         moreMenuOpen = false
                                         history = null
@@ -446,20 +442,20 @@ fun NoteEditorScreen(
                                     },
                                 )
                             }
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.export)) },
-                                leadingIcon = { Icon(OpenInNewIcon, null) },
+                            GlassMenuItem(
+                                text = stringResource(R.string.export),
+                                icon = OpenInNewIcon,
                                 onClick = { moreMenuOpen = false; exporting = true },
                             )
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.share)) },
-                                leadingIcon = { Icon(Icons.Filled.Share, null) },
+                            GlassMenuItem(
+                                text = stringResource(R.string.share),
+                                icon = Icons.Filled.Share,
                                 onClick = { moreMenuOpen = false; share() },
                             )
                             // Goes to the Trash (with undo), so no question first, as in Google Keep.
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.delete)) },
-                                leadingIcon = { Icon(Icons.Filled.Delete, null) },
+                            GlassMenuItem(
+                                text = stringResource(R.string.delete),
+                                icon = Icons.Filled.Delete,
                                 onClick = {
                                     moreMenuOpen = false
                                     if (!closed) {
@@ -480,7 +476,7 @@ fun NoteEditorScreen(
                     .weight(1f)
                     .fillMaxWidth()
                     .padding(bottom = 12.dp)
-                    .glass(RoundedCornerShape(28.dp), if (pinned) GlassKind.Pinned else GlassKind.Card)
+                    .glass(LocalSkin.current.shape(RoundedCornerShape(28.dp)), if (pinned) GlassKind.Pinned else GlassKind.Card)
                     .noteTint(color),
             ) {
                 Column(
@@ -651,20 +647,15 @@ fun NoteEditorScreen(
 
 @Composable
 private fun ImageSourceMenu(expanded: Boolean, onDismiss: () -> Unit, onGallery: () -> Unit, onCamera: () -> Unit) {
-    DropdownMenu(
-        expanded = expanded,
-        onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(20.dp),
-        containerColor = LocalGlass.current.menu,
-    ) {
-        DropdownMenuItem(
-            text = { Text(stringResource(R.string.from_gallery)) },
-            leadingIcon = { Icon(ImageIcon, null) },
+    GlassMenu(expanded = expanded, onDismiss = onDismiss) {
+        GlassMenuItem(
+            text = stringResource(R.string.from_gallery),
+            icon = ImageIcon,
             onClick = onGallery,
         )
-        DropdownMenuItem(
-            text = { Text(stringResource(R.string.from_camera)) },
-            leadingIcon = { Icon(CameraIcon, null) },
+        GlassMenuItem(
+            text = stringResource(R.string.from_camera),
+            icon = CameraIcon,
             onClick = onCamera,
         )
     }
@@ -692,11 +683,7 @@ private fun LinkChip(url: String) {
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f),
         )
-        TextButton(onClick = { runCatching { uriHandler.openUri(normalizeUrl(url)) } }) {
-            Icon(OpenInNewIcon, null, Modifier.size(18.dp))
-            Spacer(Modifier.width(6.dp))
-            Text(stringResource(R.string.link_open), fontWeight = FontWeight.Bold)
-        }
+        SoftButton(stringResource(R.string.link_open), { runCatching { uriHandler.openUri(normalizeUrl(url)) } }, icon = OpenInNewIcon)
     }
 }
 
@@ -944,7 +931,7 @@ private fun BlockRow(
         BlockType.H1, BlockType.H2, BlockType.H3 -> Modifier.padding(top = 10.dp, bottom = 4.dp)
         BlockType.CODE -> Modifier
             .padding(vertical = 4.dp)
-            .clip(RoundedCornerShape(12.dp))
+            .clip(LocalSkin.current.shape(RoundedCornerShape(12.dp)))
             .background(colors.onSurface.copy(alpha = 0.07f))
             .padding(12.dp)
         BlockType.TASK -> Modifier

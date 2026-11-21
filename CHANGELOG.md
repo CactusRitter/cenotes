@@ -3,6 +3,7 @@
 Cada versión se guarda en Google Drive (`Mi unidad/Ce Apps/Cenotes/Cenotes-x.y.z.apk`, sin reemplazar la anterior) y, desde la 0.11.0, también como *release* de GitHub (`vx.y.z`, con el APK), que es de donde la app avisa de versiones nuevas. Lo que ve el usuario en Ajustes → Actualizaciones está en `app/src/main/res/raw*/changelog.txt` (inglés, español y alemán).
 
 ## Sin publicar
+- Pasada de temas: el menú ⋮ (nota e imagen) usa GlassMenu del kit; botones de diálogos y pantallas (SoftButton/AccentButton), casilla de etiquetas (TaskCheckbox) y formas de controles siguen el diseño elegido (Retro 98, Brutalista…). Sin probar en emulador.
 - Actualizaciones (aviso, Novedades, página Actualizaciones) y página Diagnóstico pasan al kit (CeKit F3b), con sus textos; los textos hablan de «tus datos» en lugar de «tus notas» para valer en todas las apps.
 - Página Apariencia y componentes de Ajustes (SettingsCard, ChoiceChip, SwitchRow, IconBubble, BigRow) pasan al kit (CeKit F3a), con sus textos. Los diálogos se alojan en la raíz de la pantalla (copia de seguridad, editor de color) para que el fondo atenuado cubra toda la pantalla. Menús y avisos nunca más claros que 0,92 de opacidad (informe de UI 2026-11-21) y, en Retro 98, el interruptor es una casilla biselada.
 - Todos los diálogos (11) pasan de `AlertDialog` de Material a `GlassDialog` del kit (cristal, centrado, animado, toque fuera = cancelar). Los informativos ganan un botón Cancelar. Probado en emulador (claro y oscuro, con teclado): editar etiquetas.

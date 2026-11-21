@@ -1,5 +1,7 @@
 ﻿package com.cenotes.app.ui
 
+import com.ce.kit.ui.AccentButton
+import com.ce.kit.ui.SoftButton
 import com.ce.kit.ui.update.UpdateBanner
 import com.ce.kit.ui.settings.IconBubble
 import com.cenotes.app.ui.theme.LockOpenIcon
@@ -574,7 +576,7 @@ fun NotesListScreen(
                 ) {
                     Text(data.visuals.message, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
                     data.visuals.actionLabel?.let { label ->
-                        TextButton(onClick = { data.performAction() }) { Text(label, fontWeight = FontWeight.Bold) }
+                        SoftButton(label, { data.performAction() })
                     }
                 }
             }
@@ -729,11 +731,7 @@ private fun LockedScreen(onUnlock: () -> Unit) {
                 textAlign = TextAlign.Center,
             )
             if (available) {
-                Button(onClick = onUnlock, shape = LocalSkin.current.shape(CircleShape)) {
-                    Icon(LockOpenIcon, null)
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.unlock), fontWeight = FontWeight.Bold)
-                }
+                AccentButton(stringResource(R.string.unlock), onUnlock, icon = LockOpenIcon)
             }
         }
     }
@@ -756,7 +754,7 @@ private fun LockedHeader(onLock: () -> Unit) {
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        TextButton(onClick = onLock) { Text(stringResource(R.string.lock), fontWeight = FontWeight.Bold) }
+        SoftButton(stringResource(R.string.lock), onLock)
     }
 }
 
@@ -1092,11 +1090,7 @@ private fun WelcomeCard(onCreate: () -> Unit, modifier: Modifier = Modifier) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(Modifier.height(18.dp))
-        Button(onClick = onCreate, modifier = Modifier.height(52.dp), shape = CircleShape) {
-            Icon(Icons.Filled.Add, contentDescription = null)
-            Spacer(Modifier.width(8.dp))
-            Text(stringResource(R.string.create_first_note), fontWeight = FontWeight.Bold)
-        }
+        AccentButton(stringResource(R.string.create_first_note), onCreate, icon = Icons.Filled.Add)
     }
 }
 
@@ -1221,6 +1215,6 @@ private fun TrashHeader(onEmpty: () -> Unit) {
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        TextButton(onClick = onEmpty) { Text(stringResource(R.string.empty_trash), fontWeight = FontWeight.Bold) }
+        SoftButton(stringResource(R.string.empty_trash), onEmpty)
     }
 }

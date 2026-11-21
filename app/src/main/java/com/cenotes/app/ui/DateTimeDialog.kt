@@ -1,5 +1,9 @@
 package com.cenotes.app.ui
 
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
+import com.ce.kit.ui.AccentButton
+import com.ce.kit.ui.SoftButton
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -137,10 +141,10 @@ fun DateTimeDialog(initial: Long?, onPick: (Long) -> Unit, onDismiss: () -> Unit
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                TextButton(onClick = { if (onTime) onTime = false else onDismiss() }) {
-                    Text(stringResource(if (onTime) R.string.back else R.string.cancel))
-                }
-                TextButton(
+                SoftButton(stringResource(if (onTime) R.string.back else R.string.cancel), { if (onTime) onTime = false else onDismiss() })
+                Spacer(Modifier.width(8.dp))
+                AccentButton(
+                    text = stringResource(if (onTime) R.string.pick_set else R.string.pick_next),
                     enabled = date.selectedDateMillis != null,
                     onClick = {
                         if (!onTime) {
@@ -154,9 +158,7 @@ fun DateTimeDialog(initial: Long?, onPick: (Long) -> Unit, onDismiss: () -> Unit
                             onPick(at)
                         }
                     },
-                ) {
-                    Text(stringResource(if (onTime) R.string.pick_set else R.string.pick_next), fontWeight = FontWeight.Bold)
-                }
+                )
             }
         }
     }

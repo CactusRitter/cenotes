@@ -1,5 +1,6 @@
 package com.cenotes.app.ui
 
+import com.ce.kit.ui.theme.LocalSkin
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -24,8 +25,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MoreVert
 import com.ce.kit.ui.GlassDialog
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
+import com.ce.kit.ui.GlassMenu
+import com.ce.kit.ui.GlassMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -76,7 +77,7 @@ fun NoteImage(
     onExtractText: (() -> Unit)? = null,
 ) {
     var menuOpen by remember { mutableStateOf(false) }
-    val shape = RoundedCornerShape(if (small) 16.dp else 20.dp)
+    val shape = LocalSkin.current.shape(RoundedCornerShape(if (small) 16.dp else 20.dp))
     val glass = LocalGlass.current
     Box(modifier.clip(shape).border(1.dp, glass.borderTop, shape)) {
         AsyncImage(
@@ -97,22 +98,17 @@ fun NoteImage(
             ) {
                 Icon(Icons.Filled.MoreVert, stringResource(R.string.image_options), Modifier.size(18.dp))
             }
-            DropdownMenu(
-                expanded = menuOpen,
-                onDismissRequest = { menuOpen = false },
-                shape = RoundedCornerShape(20.dp),
-                containerColor = glass.menu,
-            ) {
-                DropdownMenuItem(text = { Text(stringResource(R.string.image_view)) }, onClick = { menuOpen = false; onOpen() })
-                DropdownMenuItem(
-                    text = { Text(stringResource(if (small) R.string.image_make_large else R.string.image_make_small)) },
+            GlassMenu(expanded = menuOpen, onDismiss = { menuOpen = false }) {
+                GlassMenuItem(text = stringResource(R.string.image_view), onClick = { menuOpen = false; onOpen() })
+                GlassMenuItem(
+                    text = stringResource(if (small) R.string.image_make_large else R.string.image_make_small),
                     onClick = { menuOpen = false; onToggleSize() },
                 )
                 if (onExtractText != null) {
-                    DropdownMenuItem(text = { Text(stringResource(R.string.image_text)) }, onClick = { menuOpen = false; onExtractText() })
+                    GlassMenuItem(text = stringResource(R.string.image_text), onClick = { menuOpen = false; onExtractText() })
                 }
-                DropdownMenuItem(
-                    text = { Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error) },
+                GlassMenuItem(
+                    text = stringResource(R.string.delete), destructive = true,
                     onClick = { menuOpen = false; onDelete() },
                 )
             }
@@ -192,7 +188,7 @@ fun LinkDialog(initialLabel: String, onDismiss: () -> Unit, onConfirm: (label: S
                 onValueChange = { label = it },
                 label = { Text(stringResource(R.string.link_text)) },
                 singleLine = true,
-                shape = RoundedCornerShape(16.dp),
+                shape = LocalSkin.current.shape(RoundedCornerShape(16.dp)),
             )
             Spacer(Modifier.height(10.dp))
             OutlinedTextField(
@@ -202,7 +198,7 @@ fun LinkDialog(initialLabel: String, onDismiss: () -> Unit, onConfirm: (label: S
                 placeholder = { Text("https://…") },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
-                shape = RoundedCornerShape(16.dp),
+                shape = LocalSkin.current.shape(RoundedCornerShape(16.dp)),
             )
         }
     }
