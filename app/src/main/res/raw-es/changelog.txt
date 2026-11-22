@@ -1,4 +1,4 @@
-﻿## 2.4.0
+## 2.4.0
 - La copia de seguridad y los ajustes usan el código común de las apps Ce (mismo formato de archivo, mismas claves).
 - El cajón vuelve a ser cristal con desenfoque; los menús y avisos son más opacos.
 - Los campos de texto de etiquetas, enlaces y lugares usan el estilo de cristal común.

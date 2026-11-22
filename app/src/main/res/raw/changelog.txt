@@ -1,4 +1,4 @@
-﻿## 2.4.0
+## 2.4.0
 - Backup and settings now use the common Ce code (same file format, same keys).
 - The drawer is glass with blur again; menus and notices are more opaque.
 - Text fields for labels, links and places use the shared glass style.

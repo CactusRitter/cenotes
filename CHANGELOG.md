@@ -3,6 +3,7 @@
 Cada versión se guarda en Google Drive (`Mi unidad/Ce Apps/Cenotes/Cenotes-x.y.z.apk`, sin reemplazar la anterior) y, desde la 0.11.0, también como *release* de GitHub (`vx.y.z`, con el APK), que es de donde la app avisa de versiones nuevas. Lo que ve el usuario en Ajustes → Actualizaciones está en `app/src/main/res/raw*/changelog.txt` (inglés, español y alemán).
 
 ## Sin publicar
+- Arreglo: las novedades de la versión actual salían vacías en Actualizaciones (el changelog empezaba con BOM y la versión más nueva no se leía). El kit ignora el BOM y release.ps1 escribe sin BOM. Probado en emulador.
 
 ## 2.4.0 — 2026-11-22
 - Copia de seguridad y ajustes (F6 de CeKit): el contenedor del ZIP (manifiesto, límites contra zip-bombs, excepciones), el JSON tipado de ajustes y la lectura validada de los ajustes comunes pasan al kit; mismas claves y mismo formato. Probado en emulador con la copia real de Cenotes (Cenotes-notes-2026-11-17.zip): 63 notas, 17 imágenes y ajustes restaurados.
