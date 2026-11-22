@@ -1,4 +1,11 @@
-﻿## 2.3.0
+﻿## 2.4.0
+- Sicherung und Einstellungen nutzen jetzt den gemeinsamen Ce-Code (gleiches Dateiformat, gleiche Schlüssel).
+- Die Seitenleiste ist wieder Glas mit Unschärfe; Menüs und Hinweise sind deckender.
+- Textfelder für Labels, Links und Orte nutzen den gemeinsamen Glas-Stil.
+- Viel kleinere App: 4,2 MB statt 13,8 MB (Code-Verkleinerung aktiviert).
+- Datenbank-Migrationen werden jetzt mit echten Notizen getestet, damit kein Update etwas verliert.
+
+## 2.3.0
 - Gemeinsamer Design-Code mit den anderen Ce-Apps (neues gemeinsames Modul): Dialoge, Menüs, Schaltflächen, Chips und Schalter folgen jetzt überall dem gewählten Design (Glas, Modern, AMOLED, Retro 98, Papier, Brutalistisch). Menüs und Hinweise sind nicht mehr so durchsichtig, dass sie sich mit dem Text darunter vermischen.
 - Einstellungen → Aussehen, Updates und Diagnose sind jetzt in allen Ce-Apps gleich.
 - Alle Dialoge sind jetzt Glas-Dialoge; das Notizmenü (⋮) sieht in jedem Design gleich aus.

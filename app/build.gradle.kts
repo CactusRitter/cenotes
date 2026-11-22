@@ -14,8 +14,8 @@ android {
         applicationId = "com.cenotes.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 44
-        versionName = "2.3.0"
+        versionCode = 45
+        versionName = "2.4.0"
     }
 
     // Firma propia: keystore/keystore.properties (fuera de git; copia en Drive: Ce Apps/Común).

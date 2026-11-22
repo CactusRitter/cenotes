@@ -1,4 +1,11 @@
-﻿## 2.3.0
+﻿## 2.4.0
+- La copia de seguridad y los ajustes usan el código común de las apps Ce (mismo formato de archivo, mismas claves).
+- El cajón vuelve a ser cristal con desenfoque; los menús y avisos son más opacos.
+- Los campos de texto de etiquetas, enlaces y lugares usan el estilo de cristal común.
+- App mucho más pequeña: 4,2 MB en vez de 13,8 MB (reducción de código activada).
+- Las migraciones de la base de datos se prueban ahora con notas reales, para que ninguna actualización pierda nada.
+
+## 2.3.0
 - Código de diseño compartido con las otras apps Ce (módulo común nuevo): diálogos, menús, botones, chips e interruptores siguen ahora el diseño elegido en todas partes (Cristal, Moderno, AMOLED, Retro 98, Papel, Brutalista). Los menús y avisos ya no son tan transparentes como para mezclarse con el texto de debajo.
 - Ajustes → Apariencia, Actualizaciones y Diagnóstico son ahora iguales en todas las apps Ce.
 - Todos los diálogos son ahora diálogos de cristal; el menú de la nota (⋮) se ve igual en todos los diseños.

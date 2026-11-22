@@ -1,4 +1,11 @@
-﻿## 2.3.0
+﻿## 2.4.0
+- Backup and settings now use the common Ce code (same file format, same keys).
+- The drawer is glass with blur again; menus and notices are more opaque.
+- Text fields for labels, links and places use the shared glass style.
+- Much smaller app: 4.2 MB instead of 13.8 MB (code shrinking enabled).
+- Database migrations are now tested against real notes, so updates can't lose anything.
+
+## 2.3.0
 - Shared design code with the other Ce apps (new common module): dialogs, menus, buttons, chips and switches now follow the chosen design everywhere (Glass, Modern, AMOLED, Retro 98, Paper, Brutalist). Menus and notices are never see-through enough to mix with the text below.
 - Settings → Appearance, Updates and Diagnostics are now the same in every Ce app.
 - All dialogs are glass dialogs now; the note menu (⋮) looks the same in every design.
