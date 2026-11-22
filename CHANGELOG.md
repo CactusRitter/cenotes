@@ -1,8 +1,10 @@
-﻿# Historial de versiones de Cenotes
+# Historial de versiones de Cenotes
 
 Cada versión se guarda en Google Drive (`Mi unidad/Ce Apps/Cenotes/Cenotes-x.y.z.apk`, sin reemplazar la anterior) y, desde la 0.11.0, también como *release* de GitHub (`vx.y.z`, con el APK), que es de donde la app avisa de versiones nuevas. Lo que ve el usuario en Ajustes → Actualizaciones está en `app/src/main/res/raw*/changelog.txt` (inglés, español y alemán).
 
 ## Sin publicar
+
+## 2.4.1 — 2026-11-22
 - Arreglo: las novedades de la versión actual salían vacías en Actualizaciones (el changelog empezaba con BOM y la versión más nueva no se leía). El kit ignora el BOM y release.ps1 escribe sin BOM. Probado en emulador.
 
 ## 2.4.0 — 2026-11-22

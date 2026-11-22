@@ -1,4 +1,4 @@
-﻿import java.util.Properties
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
@@ -14,8 +14,8 @@ android {
         applicationId = "com.cenotes.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 45
-        versionName = "2.4.0"
+        versionCode = 46
+        versionName = "2.4.1"
     }
 
     // Firma propia: keystore/keystore.properties (fuera de git; copia en Drive: Ce Apps/Común).

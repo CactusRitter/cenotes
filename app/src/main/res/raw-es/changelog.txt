@@ -1,3 +1,6 @@
+## 2.4.1
+- Arreglo: las «Novedades» de Ajustes → Actualizaciones salían vacías en la versión actual.
+
 ## 2.4.0
 - La copia de seguridad y los ajustes usan el código común de las apps Ce (mismo formato de archivo, mismas claves).
 - El cajón vuelve a ser cristal con desenfoque; los menús y avisos son más opacos.
