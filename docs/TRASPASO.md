@@ -2,6 +2,7 @@
 
 Estado vivo de la app para retomar el trabajo tras un `/clear`. Mantenerlo al día al cerrar cada bloque.
 Última actualización: 22-11-2026.
+Normas comunes de las apps Ce (turnos de emulador/S26/tableta con `emu-lock.ps1 acquire Cenotes [-Dev s26|tableta]`, burn-in, informes a Ce Líder): `D:cesarDocumentsClaude ProjectsCeCLAUDE.md`.
 
 ## Estado
 - Versión publicada: **2.3.0** (versionCode 44), release `v2.3.0` en GitHub (`releases/latest`). Antes, el 18-11: 2.1.0 (Cristal V2), 2.1.1 (arreglo grave: el cajón no recibía `LocalHazeState` y salía transparente) y 2.2.0 (Ajustes → Diagnóstico).
