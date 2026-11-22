@@ -2,6 +2,10 @@ package com.cenotes.app.data
 
 import android.content.Context
 import android.net.Uri
+import com.ce.kit.backup.BackupFormat
+import com.ce.kit.backup.NotABackupException
+import com.ce.kit.backup.PrefsBackup
+import com.ce.kit.backup.TooNewException
 import com.ce.kit.log.AppLog
 import com.cenotes.app.BuildConfig
 import com.cenotes.app.ui.markdown.imageNames
@@ -12,7 +16,6 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.io.BufferedInputStream
 import java.io.IOException
-import java.io.InputStream
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
@@ -46,12 +49,6 @@ class Backup(
      */
     data class ImportResult(val added: Int, val skipped: Int, val images: Int, val updated: Int = 0, val kept: Int = 0, val settingsRestored: Boolean = false, val notesRestored: Boolean = false)
 
-    /** Not a Cenotes backup (another app's zip, or anything else). */
-    class NotABackupException : Exception()
-
-    /** A backup made by a newer container version than this app understands. */
-    class TooNewException : Exception()
-
     // ---- Export ----
 
     /**
@@ -69,7 +66,7 @@ class Backup(
         var imageCount = 0
         val out = context.contentResolver.openOutputStream(uri, "wt") ?: error("No se pudo escribir el archivo")
         ZipOutputStream(out.buffered()).use { zip ->
-            zip.putJson(ManifestEntry, manifest(listOfNotNull(ContentNotes.takeIf { includeNotes }, ContentSettings.takeIf { includeSettings })))
+            BackupFormat.putJson(zip, ManifestEntry, BackupFormat.manifest(ManifestApp, BuildConfig.VERSION_NAME, listOfNotNull(ContentNotes.takeIf { includeNotes }, ContentSettings.takeIf { includeSettings })))
 
             if (includeNotes) {
             val array = JSONArray()
@@ -95,10 +92,10 @@ class Backup(
                 .put("notes", array)
                 // Notes deleted for good, so an old backup or another phone does not bring them back.
                 .put("deleted", JSONArray(dao.deletedNotes().map { JSONObject().put("uuid", it.uuid).put("deletedAt", it.deletedAt) }))
-            zip.putText(NotesEntry, root.toString(2))
+            BackupFormat.putText(zip, NotesEntry, root.toString(2))
             }
             // The settings as the old "Settings backup" wrote them; never anything that looks like a secret (the file is plain text).
-            if (includeSettings) zip.putText(SettingsEntry, settings.exportJson())
+            if (includeSettings) BackupFormat.putText(zip, SettingsEntry, settings.exportJson())
 
             if (includeImages) {
                 notes.flatMap { imageNames(it.content) }.distinct().forEach { name ->
@@ -114,21 +111,6 @@ class Backup(
         }
         AppLog.i("backup", "exported ${notes.size} notes, $imageCount images, settings=$includeSettings")
         ExportResult(notes.size, imageCount)
-    }
-
-    private fun manifest(contents: List<String>) = JSONObject()
-        .put("app", ManifestApp)
-        .put("container", Container)
-        .put("appVersion", BuildConfig.VERSION_NAME)
-        .put("createdAt", System.currentTimeMillis())
-        .put("contents", JSONArray(contents))
-
-    private fun ZipOutputStream.putJson(name: String, json: JSONObject) = putText(name, json.toString(2))
-
-    private fun ZipOutputStream.putText(name: String, text: String) {
-        putNextEntry(ZipEntry(name))
-        write(text.toByteArray(Charsets.UTF_8))
-        closeEntry()
     }
 
     // ---- Import ----
@@ -149,23 +131,21 @@ class Backup(
             ZipInputStream(it).use { zip ->
                 while (true) {
                     val entry = zip.nextEntry ?: break
-                    if (++entries > MaxEntries) throw NotABackupException()
+                    BackupFormat.checkEntryCount(++entries)
                     when {
                         entry.isDirectory -> Unit
-                        entry.name == ManifestEntry -> manifest = runCatching { JSONObject(readLimited(zip, MaxJsonBytes).toString(Charsets.UTF_8)) }.getOrNull()
+                        entry.name == ManifestEntry -> manifest = runCatching { JSONObject(BackupFormat.readLimited(zip).toString(Charsets.UTF_8)) }.getOrNull()
                         entry.name == NotesEntry -> {
                             hasNotes = true
-                            notesApp = runCatching { JSONObject(readLimited(zip, MaxJsonBytes).toString(Charsets.UTF_8)) }.getOrNull()?.optString("app").orEmpty()
+                            notesApp = runCatching { JSONObject(BackupFormat.readLimited(zip).toString(Charsets.UTF_8)) }.getOrNull()?.optString("app").orEmpty()
                         }
-                        entry.name == SettingsEntry -> hasSettings = looksLikeSettings(readLimited(zip, MaxJsonBytes).toString(Charsets.UTF_8))
+                        entry.name == SettingsEntry -> hasSettings = PrefsBackup.looksLikeSettings(BackupFormat.readLimited(zip).toString(Charsets.UTF_8), ManifestApp)
                     }
                     zip.closeEntry()
                 }
             }
             // The manifest says whose zip it is: another app's (or no manifest at all) is not a backup of ours.
-            val m = manifest ?: throw NotABackupException()
-            if (!m.optString("app").equals(ManifestApp, ignoreCase = true)) throw NotABackupException()
-            if (m.optInt("container", 0) > Container) throw TooNewException()
+            BackupFormat.checkManifest(manifest, ManifestApp)
             if (hasNotes && !notesApp.equals(AppId, ignoreCase = true)) hasNotes = false
             if (!hasNotes && !hasSettings) throw NotABackupException()
             Contents(hasNotes, hasSettings)
@@ -183,19 +163,19 @@ class Backup(
             ZipInputStream(it).use { zip ->
                 while (true) {
                     val entry = zip.nextEntry ?: break
-                    if (++entries > MaxEntries) throw NotABackupException()
+                    BackupFormat.checkEntryCount(++entries)
                     when {
                         entry.isDirectory -> Unit
-                        entry.name == NotesEntry -> if (notes) notesJson = readLimited(zip, MaxJsonBytes).toString(Charsets.UTF_8)
-                        entry.name == SettingsEntry -> if (settings) settingsJson = readLimited(zip, MaxJsonBytes).toString(Charsets.UTF_8)
+                        entry.name == NotesEntry -> if (notes) notesJson = BackupFormat.readLimited(zip).toString(Charsets.UTF_8)
+                        entry.name == SettingsEntry -> if (settings) settingsJson = BackupFormat.readLimited(zip).toString(Charsets.UTF_8)
                         notes && entry.name.startsWith(ImagesDir) -> {
                             // Only plain file names: nothing in the archive can write outside our folder.
                             val name = entry.name.removePrefix(ImagesDir)
-                            if (SafeName.matches(name)) {
+                            if (BackupFormat.SafeName.matches(name)) {
                                 val f = images.file(name)
                                 if (!f.exists()) {
                                     try {
-                                        f.outputStream().use { out -> copyLimited(zip, out, MaxImageBytes) }
+                                        f.outputStream().use { out -> BackupFormat.copyLimited(zip, out) }
                                     } catch (e: IOException) {
                                         f.delete() // no half-written picture is left behind
                                         throw e
@@ -293,58 +273,17 @@ class Backup(
         return ImportResult(added, skipped, imageCount, updated, kept, notesRestored = true)
     }
 
-    // ---- Helpers ----
-
-    /** A settings file ([SettingsRepository.exportJson]): app "cenotes" with a "settings" object. */
-    private fun looksLikeSettings(text: String): Boolean {
-        val o = runCatching { JSONObject(text) }.getOrNull() ?: return false
-        return o.optString("app").equals(ManifestApp, ignoreCase = true) && o.optJSONObject("settings") != null
-    }
-
-    /** Reads at most [max] bytes of an entry; a bigger one is not a backup (guards against zip bombs). */
-    private fun readLimited(input: InputStream, max: Int): ByteArray {
-        val out = java.io.ByteArrayOutputStream()
-        val buffer = ByteArray(16 * 1024)
-        while (true) {
-            val n = input.read(buffer)
-            if (n < 0) break
-            if (out.size() + n > max) throw NotABackupException()
-            out.write(buffer, 0, n)
-        }
-        return out.toByteArray()
-    }
-
-    private fun copyLimited(input: InputStream, out: java.io.OutputStream, max: Long) {
-        val buffer = ByteArray(16 * 1024)
-        var total = 0L
-        while (true) {
-            val n = input.read(buffer)
-            if (n < 0) break
-            total += n
-            if (total > max) throw IOException("Entry too big")
-            out.write(buffer, 0, n)
-        }
-    }
-
     private companion object {
         /** The app's name inside the old `notes.json` ("Cenotes") and in the manifest and settings file ("cenotes"); compared ignoring case. */
         const val AppId = "Cenotes"
         const val ManifestApp = "cenotes"
-        const val Container = 1
-        const val ManifestEntry = "manifest.json"
+        const val ManifestEntry = BackupFormat.MANIFEST
         const val NotesEntry = "notes.json"
-        const val SettingsEntry = "settings.json"
+        const val SettingsEntry = BackupFormat.SETTINGS
         const val ImagesDir = "images/"
         const val ContentNotes = "notes"
         const val ContentSettings = "settings"
-
-        /** Limits for an untrusted zip: JSON entries, each image, and the number of entries. */
-        const val MaxJsonBytes = 64 * 1024 * 1024
-        const val MaxImageBytes = 64L * 1024 * 1024
-        const val MaxEntries = 20_000
-
         /** 1 = notes only (0.7); 2 = + labels and archive (0.8); 3 = + label colours (0.9); 4 = + note colour and creation date (0.12); 5 = + reminders (0.13); 6 = + protected notes (0.14); 7 = + order by hand (0.16); 8 = + reminders at a place (0.17); 9 = + uuid and modifiedAt per note and notes deleted for good (next version). Only 9 is imported. The Trash and the history of each note are not exported. */
         const val Format = 9
-        val SafeName = Regex("""^[\w.-]+$""")
     }
 }

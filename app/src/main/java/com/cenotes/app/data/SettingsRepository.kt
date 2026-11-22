@@ -11,7 +11,9 @@ import com.ce.kit.ui.theme.customPalette
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import org.json.JSONArray
+import com.ce.kit.backup.PrefsBackup
+import com.ce.kit.settings.CommonKeys
+import com.ce.kit.settings.CommonSettings
 import org.json.JSONObject
 
 enum class NoteLayout { GRID, LIST }
@@ -63,23 +65,26 @@ class SettingsRepository(context: Context) {
     private inline fun <reified E : Enum<E>> enumPref(key: String, default: E): E =
         prefs.getString(key, null)?.let { name -> enumValues<E>().firstOrNull { it.name == name } } ?: default
 
-    private fun read() = AppSettings(
-        accent = enumPref(KEY_ACCENT, Accent.INDIGO),
-        customHue = prefs.getFloat(KEY_HUE, -1f).takeIf { it >= 0f },
-        themeMode = enumPref(KEY_THEME, ThemeMode.SYSTEM),
-        themeStyle = enumPref(KEY_STYLE, ThemeStyle.AURORA),
-        skin = enumPref(KEY_SKIN, Skin.GLASS),
-        depth3d = prefs.getBoolean(KEY_DEPTH, false),
-        transparency = prefs.getInt(KEY_TRANSPARENCY, 65),
-        layout = enumPref(KEY_LAYOUT, NoteLayout.GRID),
-        customColors = prefs.getString(KEY_COLORS, null).orEmpty()
-            .split(',').mapNotNull { it.toIntOrNull() }.take(MaxCustomColors),
-        checkUpdates = prefs.getBoolean(KEY_UPDATES, true),
-        sort = enumPref(KEY_SORT, NoteSort.EDITED),
-        checkedToBottom = prefs.getBoolean(KEY_CHECKED_BOTTOM, true),
-        listOnRight = prefs.getBoolean(KEY_LIST_RIGHT, false),
-        settingsDock = prefs.getInt(KEY_SETTINGS_DOCK, 0).coerceIn(-1, 1),
-    )
+    private fun read(): AppSettings {
+        val c = CommonSettings.read(prefs, CommonKeys(depth3d = KEY_DEPTH))
+        return AppSettings(
+            accent = c.accent,
+            customHue = c.customHue,
+            themeMode = c.themeMode,
+            themeStyle = c.themeStyle,
+            skin = c.skin,
+            depth3d = c.depth3d,
+            transparency = c.transparency,
+            layout = enumPref(KEY_LAYOUT, NoteLayout.GRID),
+            customColors = prefs.getString(KEY_COLORS, null).orEmpty()
+                .split(',').mapNotNull { it.toIntOrNull() }.take(MaxCustomColors),
+            checkUpdates = c.checkUpdates,
+            sort = enumPref(KEY_SORT, NoteSort.EDITED),
+            checkedToBottom = prefs.getBoolean(KEY_CHECKED_BOTTOM, true),
+            listOnRight = prefs.getBoolean(KEY_LIST_RIGHT, false),
+            settingsDock = prefs.getInt(KEY_SETTINGS_DOCK, 0).coerceIn(-1, 1),
+        )
+    }
 
     fun setSettingsDock(value: Int) {
         prefs.edit().putInt(KEY_SETTINGS_DOCK, value.coerceIn(-1, 1)).apply()
@@ -114,23 +119,8 @@ class SettingsRepository(context: Context) {
         JSONObject().put("app", "cenotes").put("format", 1).put("settings", exportValues()).toString(2)
 
     /** The settings as typed JSON (also embedded in the notes backup). Keys that look like secrets are never included. */
-    fun exportValues(): JSONObject {
-        val values = JSONObject()
-        prefs.all.forEach { (key, value) ->
-            if (isSecretKey(key)) return@forEach
-            val typed = when (value) {
-                is Boolean -> JSONObject().put("b", value)
-                is Int -> JSONObject().put("i", value)
-                is Long -> JSONObject().put("l", value)
-                is Float -> JSONObject().put("f", value.toDouble())
-                is String -> JSONObject().put("s", value)
-                is Set<*> -> JSONObject().put("set", JSONArray(value.filterIsInstance<String>()))
-                else -> null
-            }
-            if (typed != null) values.put(key, typed)
-        }
-        return values
-    }
+    fun exportValues(): JSONObject = PrefsBackup.export(prefs)
+
 
     /** Applies a backup made by [exportJson]; returns false (and changes nothing) if [text] is not one. */
     fun importJson(text: String): Boolean {
@@ -143,24 +133,10 @@ class SettingsRepository(context: Context) {
 
     /** Applies typed settings made by [exportValues]; secret-looking keys are ignored even if a file carries them. */
     fun importValues(values: JSONObject) {
-        val edit = prefs.edit()
-        values.keys().forEach { key ->
-            if (isSecretKey(key)) return@forEach
-            val typed = values.optJSONObject(key) ?: return@forEach
-            when {
-                typed.has("b") -> edit.putBoolean(key, typed.getBoolean("b"))
-                typed.has("i") -> edit.putInt(key, typed.getInt("i"))
-                typed.has("l") -> edit.putLong(key, typed.getLong("l"))
-                typed.has("f") -> edit.putFloat(key, typed.getDouble("f").toFloat())
-                typed.has("s") -> edit.putString(key, typed.getString("s"))
-                typed.has("set") -> typed.getJSONArray("set").let { list ->
-                    edit.putStringSet(key, (0 until list.length()).map { list.getString(it) }.toSet())
-                }
-            }
-        }
-        edit.apply()
+        PrefsBackup.import(prefs, values)
         _state.value = read()
     }
+
 
     private fun saveColors(colors: List<Int>) {
         val list = colors.distinct().take(MaxCustomColors)
@@ -218,11 +194,6 @@ class SettingsRepository(context: Context) {
     }
 
     companion object {
-        /** Settings that look like secrets (tokens, passwords, keys) never go into a backup: backups are plain text. */
-        private val SecretPattern = Regex("pass(word|phrase)?|secret|token|credential|api.?key|private.?key|master|auth|salt|pin$", RegexOption.IGNORE_CASE)
-
-        fun isSecretKey(key: String) = SecretPattern.containsMatchIn(key)
-
         /** Every key this class writes (the backup test checks none of them looks like a secret). */
         val AllKeys = listOf("accent", "accent_hue", "theme_mode", "theme_style", "skin", "depth3d", "transparency", "layout", "customColors", "check_updates", "sort", "checked_to_bottom", "list_on_right", "settings_dock")
 

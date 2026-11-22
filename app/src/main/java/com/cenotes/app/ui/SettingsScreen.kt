@@ -1,5 +1,7 @@
 package com.cenotes.app.ui
 
+import com.ce.kit.backup.NotABackupException
+import com.ce.kit.backup.TooNewException
 import com.ce.kit.ui.settings.AppearancePage as KitAppearancePage
 import com.ce.kit.ui.settings.CeAppearanceActions
 import com.ce.kit.ui.settings.ChoiceChip
@@ -314,9 +316,9 @@ private fun rememberBackupUi(backup: Backup, onNotesImported: () -> Unit, onSett
         scope.launch {
             message = try {
                 block()
-            } catch (e: Backup.NotABackupException) {
+            } catch (e: NotABackupException) {
                 resources.getString(R.string.backup_not_cenotes)
-            } catch (e: Backup.TooNewException) {
+            } catch (e: TooNewException) {
                 resources.getString(R.string.backup_too_new)
             } catch (e: Exception) {
                 resources.getString(R.string.backup_failed, e.localizedMessage ?: e.javaClass.simpleName)
