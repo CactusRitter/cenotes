@@ -12,7 +12,7 @@ Estado vivo de la app para retomar el trabajo tras un `/clear`. Mantenerlo al d�
 
 ## En curso
 - Hecho (21-11, encargo de Ce Líder): tests de migración con datos reales (`app/src/test/.../MigrationTest.kt`, `gradlew testDebugUnitTest`). Toda migración nueva (9→10…) se añade a `NotesDatabase.AllMigrations` y el test la cubre solo; el esquema 10 lo exporta Room a `app/schemas/`.
-- R8: fusionado en main (21-11, aprobado por César vía Ce Líder), sin publicar. Probado con la release R8 en emulador (ver CHANGELOG). Falta en un dispositivo real: texto de foto (ML Kit) y aviso al llegar a un lugar; en el emulador fallan igual sin R8. Para probar una release en el emulador sin borrar datos: `assembleRelease` con `-Pandroid.injected.signing.*` apuntando a `~/.android/debug.keystore`.
+- R8: fusionado en main (21-11, aprobado por César vía Ce Líder), sin publicar. Probado con la release R8 en emulador (ver CHANGELOG). En el S26 (22-11): texto de foto OK y lugar registrado OK; falta solo ver el aviso al llegar de verdad. En el S26 queda una nota de prueba en la Papelera de Cenotes (se borra sola a los 7 días). Para probar una release en el emulador sin borrar datos: `assembleRelease` con `-Pandroid.injected.signing.*` apuntando a `~/.android/debug.keystore`.
 
 ## Pendiente
 - Probar en tableta/S26/OPPO las 2.1.x–2.2.0 y lo de CeKit (sin probar: instalar el release sobre la versión anterior, tableta).
