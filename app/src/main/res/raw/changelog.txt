@@ -1,3 +1,6 @@
+## 2.4.2
+- Diagnostics: the buttons now wrap to a new line when they don't fit.
+
 ## 2.4.1
 - Fixed: "What's new" in Settings → Updates was empty for the current version.
 

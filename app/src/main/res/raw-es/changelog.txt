@@ -1,3 +1,6 @@
+## 2.4.2
+- Diagnóstico: los botones bajan de línea cuando no caben.
+
 ## 2.4.1
 - Arreglo: las «Novedades» de Ajustes → Actualizaciones salían vacías en la versión actual.
 

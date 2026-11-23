@@ -1,3 +1,6 @@
+## 2.4.2
+- Diagnose: Die Schaltflächen springen in eine neue Zeile, wenn sie nicht passen.
+
 ## 2.4.1
 - Behoben: „Neuigkeiten“ unter Einstellungen → Updates war für die aktuelle Version leer.
 
